@@ -1,0 +1,422 @@
+export const rasiList = [
+  {
+    id: "mesha",
+    name: "Mesha",
+    englishName: "Aries",
+    symbol: "♈",
+    element: "Fire (Agni)",
+    lord: "Mangala (Mars)",
+    lordIcon: "🔴",
+    luckyColor: "Crimson Red & Coral",
+    luckyNumber: "9, 18, 27",
+    luckyDeity: "Lord Subrahmanya (Kartikeya)",
+    stone: "Red Coral (Moonga)",
+    dailyPrediction: {
+      overview: "Mars energizes your house of courage. Auspicious period for initiating spiritual disciplines and career leadership initiatives.",
+      career: "Opportunities for promotion or launching new ventures arise today. Colleagues will look to you for guidance.",
+      health: "High vitality, but avoid sudden fiery arguments to keep blood pressure balanced. Drink cooling herbal waters.",
+      finance: "Unexpected financial gains through real estate or past investments. Good day for debt clearance.",
+      family: "Peaceful family discussions bring clarity to unresolved property or auspicious event decisions.",
+      remedy: "Recite Subrahmanya Bhujangam or offer red hibiscus flowers to Lord Kartikeya."
+    },
+    nakshatras: ["Aswini (4)", "Bharani (4)", "Krittika (1)"]
+  },
+  {
+    id: "vrishabha",
+    name: "Vrishabha",
+    englishName: "Taurus",
+    symbol: "♉",
+    element: "Earth (Prithvi)",
+    lord: "Shukra (Venus)",
+    lordIcon: "⚪",
+    luckyColor: "Lotus White & Pastel Pink",
+    luckyNumber: "6, 15, 24",
+    luckyDeity: "Goddess Mahalakshmi",
+    stone: "Diamond (Heera) or White Zircon",
+    dailyPrediction: {
+      overview: "Venus radiates aesthetic grace and domestic joy. Excellent day for artistic pursuits, temple visits, and family harmony.",
+      career: "Creative solutions impress senior leaders. Negotiations conclude in your favor with substantial long-term benefits.",
+      health: "Throat and vocal cords require mild care; warm water with honey and tulsi is beneficial.",
+      finance: "Expenses on sacred rituals or home embellishment are likely, but fortune remains buoyant.",
+      family: "Spouse or life partner brings joyous news. Evening spent in devotional singing elevates home vibrations.",
+      remedy: "Chant Sri Suktam or offer kheer (payasam) to Goddess Lakshmi."
+    },
+    nakshatras: ["Krittika (2,3,4)", "Rohini (4)", "Mrigasira (1,2)"]
+  },
+  {
+    id: "mithuna",
+    name: "Mithuna",
+    englishName: "Gemini",
+    symbol: "♊",
+    element: "Air (Vayu)",
+    lord: "Budha (Mercury)",
+    lordIcon: "🟢",
+    luckyColor: "Emerald Green & Light Yellow",
+    luckyNumber: "5, 14, 23",
+    luckyDeity: "Lord Maha Vishnu / Narayana",
+    stone: "Emerald (Panna)",
+    dailyPrediction: {
+      overview: "Mercury stimulates intellectual agility and persuasive communication. Great for academic, trade, and philosophical studies.",
+      career: "Presentations, publishing, and client meetings turn exceptionally successful today. Contracts receive approvals.",
+      health: "Mind may be overactive; practice 10 minutes of Pranayama or Anulom Vilom before sleep.",
+      finance: "Trading, writing, and consultative work yield handsome returns. Avoid hasty speculative bets.",
+      family: "Siblings offer heartwarming support. A memorable phone call from a long-lost friend re-energizes you.",
+      remedy: "Feed green grass or spinach to cows (Go-Seva) and chant Om Namo Bhagavate Vasudevaya 108 times."
+    },
+    nakshatras: ["Mrigasira (3,4)", "Ardra (4)", "Punarvasu (1,2,3)"]
+  },
+  {
+    id: "karkataka",
+    name: "Karkataka",
+    englishName: "Cancer",
+    symbol: "♋",
+    element: "Water (Jala)",
+    lord: "Chandra (Moon)",
+    lordIcon: "🌙",
+    luckyColor: "Pearl White & Silver",
+    luckyNumber: "2, 11, 20",
+    luckyDeity: "Lord Shiva (Chandrashekhara)",
+    stone: "Natural Pearl (Moti)",
+    dailyPrediction: {
+      overview: "The Moon enhances your intuitive empathy and emotional peace. Auspicious day for spiritual dhyana and motherly blessings.",
+      career: "Collaborative teamwork runs smoothly. Your empathetic handling of workplace challenges wins profound respect.",
+      health: "Emotional balance is strong. Ensure adequate hydration and avoid cold dairy at nighttime.",
+      finance: "Safe investments and gold purchases prove auspicious today. Good time for liquid wealth consolidation.",
+      family: "Blessings from mother or maternal elders open new doors of auspiciousness for the entire household.",
+      remedy: "Perform milk abhishekam to Shiva Lingam or chant Om Namah Shivaya with devotion."
+    },
+    nakshatras: ["Punarvasu (4)", "Pushyami (4)", "Aslesha (4)"]
+  },
+  {
+    id: "simha",
+    name: "Simha",
+    englishName: "Leo",
+    symbol: "♌",
+    element: "Fire (Agni)",
+    lord: "Surya (Sun)",
+    lordIcon: "☀️",
+    luckyColor: "Gold, Saffron & Royal Orange",
+    luckyNumber: "1, 10, 19, 28",
+    luckyDeity: "Surya Narayana & Lord Rama",
+    stone: "Ruby (Manikya)",
+    dailyPrediction: {
+      overview: "The Sun blesses you with sovereign radiance, authority, and divine protection. Obstacles dissolve through righteous action.",
+      career: "Government clearances, corporate authority, and leadership mandates come effortlessly. High recognition day.",
+      health: "Cardiovascular and bone health remain robust. Early morning sun-salutations (Surya Namaskar) amplify energy.",
+      finance: "Royal expenditure will be balanced by unexpected legacy gains or state honors.",
+      family: "Father's guidance will solve a complex life riddle. Joyous celebrations planned at home.",
+      remedy: "Offer Arghya (water with red sandalwood & akshata) to the rising Sun while reciting Aditya Hridaya Stotram."
+    },
+    nakshatras: ["Makha (4)", "Pubba (Purva Phalguni 4)", "Uttara (Uttara Phalguni 1)"]
+  },
+  {
+    id: "kanya",
+    name: "Kanya",
+    englishName: "Virgo",
+    symbol: "♍",
+    element: "Earth (Prithvi)",
+    lord: "Budha (Mercury)",
+    lordIcon: "🟢",
+    luckyColor: "Grass Green & Olive",
+    luckyNumber: "5, 14, 23",
+    luckyDeity: "Goddess Saraswati & Ganapati",
+    stone: "Peridot or Emerald",
+    dailyPrediction: {
+      overview: "Meticulous analytical skills bring breakthrough solutions to complex audits, accounts, and spiritual studies.",
+      career: "Attention to fine detail spares your organization a major compliance issue. Commendations from superiors.",
+      health: "Digestive system thrives with satvik, steamed meals. Avoid excessive caffeine or street food.",
+      finance: "Prudent budget management bears fruit. Long-pending reimbursements or dues are credited.",
+      family: "Children achieve academic excellence. Warm, tranquil domestic atmosphere prevails.",
+      remedy: "Offer Durva grass to Lord Ganesha and chant Om Gam Ganapataye Namaha."
+    },
+    nakshatras: ["Uttara (2,3,4)", "Hasta (4)", "Chitta (1,2)"]
+  },
+  {
+    id: "tula",
+    name: "Tula",
+    englishName: "Libra",
+    symbol: "♎",
+    element: "Air (Vayu)",
+    lord: "Shukra (Venus)",
+    lordIcon: "⚪",
+    luckyColor: "Sky Blue & Diamond White",
+    luckyNumber: "6, 15, 24",
+    luckyDeity: "Goddess Durga / Lalitha Tripura Sundari",
+    stone: "Opal or White Sapphire",
+    dailyPrediction: {
+      overview: "Balance, justice, and refined diplomacy govern your day. Perfect moment for resolving legal or marital matters with grace.",
+      career: "Partnership contracts and international collaborations receive green flags. Excellent rapport with clients.",
+      health: "Kidneys and lower back need gentle stretching. Stay well-hydrated throughout your work hours.",
+      finance: "Luxurious amenities purchased for the household without disturbing long-term savings.",
+      family: "Spouse exhibits profound affection. Harmonious evening with refined music or devotional satsang.",
+      remedy: "Light a cow ghee lamp before Goddess Durga or recite the 32 names of Durga."
+    },
+    nakshatras: ["Chitta (3,4)", "Swati (4)", "Visakha (1,2,3)"]
+  },
+  {
+    id: "vrischika",
+    name: "Vrischika",
+    englishName: "Scorpio",
+    symbol: "♏",
+    element: "Water (Jala)",
+    lord: "Mangala & Ketu",
+    lordIcon: "🔴",
+    luckyColor: "Deep Maroon & Rust Gold",
+    luckyNumber: "9, 18, 27",
+    luckyDeity: "Lord Narasimha & Lord Hanuman",
+    stone: "Red Coral or Cat's Eye",
+    dailyPrediction: {
+      overview: "Mystical insight and transformative resolve are at peak. Hidden spiritual truths and deep meditation come effortlessly.",
+      career: "Confidential research or strategic crisis management handled with unmatched bravery. Adversaries step back.",
+      health: "Regenerative energy is formidable. Channel excess energy into physical exercise or martial sadhana.",
+      finance: "Windfall through insurance, royalties, or inherited estate. Strictly avoid impulsive debt lending.",
+      family: "Emotional bonding with elders deepens as you show genuine care and filial duty.",
+      remedy: "Chant Hanuman Chalisa or Narasimha Kavacham for invulnerable spiritual protection."
+    },
+    nakshatras: ["Visakha (4)", "Anuradha (4)", "Jyeshtha (4)"]
+  },
+  {
+    id: "dhanu",
+    name: "Dhanu",
+    englishName: "Sagittarius",
+    symbol: "♐",
+    element: "Fire (Agni)",
+    lord: "Guru (Jupiter)",
+    lordIcon: "🟡",
+    luckyColor: "Turmeric Yellow & Golden Saffron",
+    luckyNumber: "3, 12, 21, 30",
+    luckyDeity: "Lord Dakshinamurthy & Lord Dattatreya",
+    stone: "Yellow Sapphire (Pukhraj)",
+    dailyPrediction: {
+      overview: "Brihaspati illuminates your intellect with divine wisdom, philosophical clarity, and righteousness (Dharma).",
+      career: "Teaching, counseling, advisory, and higher education sectors witness soaring accomplishments. Guru's grace is tangible.",
+      health: "Liver and thigh health stay optimal. Consume turmeric milk and practice mild yogasanas.",
+      finance: "Generous charity given to Vedic pathashalas returns tenfold in unexpected prosperity.",
+      family: "Pilgrimage journey or temple visit planned with parents and elders. Peaceful household.",
+      remedy: "Chant Guru Gayatri Mantra or Guru Paduka Stotram. Offer yellow chana dal to temple priests."
+    },
+    nakshatras: ["Moola (4)", "Purvashada (4)", "Uttarashada (1)"]
+  },
+  {
+    id: "makara",
+    name: "Makara",
+    englishName: "Capricorn",
+    symbol: "♑",
+    element: "Earth (Prithvi)",
+    lord: "Shani (Saturn)",
+    lordIcon: "🔵",
+    luckyColor: "Royal Blue & Charcoal Navy",
+    luckyNumber: "8, 17, 26",
+    luckyDeity: "Lord Venkateswara & Lord Shani Dev",
+    stone: "Blue Sapphire (Neelam) or Amethyst",
+    dailyPrediction: {
+      overview: "Disciplined effort and patience yield monumental victories. Lord Shani rewards sincere dedication and humble service.",
+      career: "High-stake enterprise projects, construction, and administrative duties achieve historic milestone completions.",
+      health: "Knees and joint flexibility benefit from sesame oil massage. Avoid excessive exhaustion.",
+      finance: "Long-term fixed assets and land holdings exhibit exceptional capital appreciation.",
+      family: "Disciplined habits inspire younger family members. Deep mutual trust established with in-laws.",
+      remedy: "Light a sesame oil lamp (Til Taila Deepam) under a Peepal tree on Saturday or chant Dasharatha Shani Stotram."
+    },
+    nakshatras: ["Uttarashada (2,3,4)", "Sravana (4)", "Dhanishta (1,2)"]
+  },
+  {
+    id: "kumbha",
+    name: "Kumbha",
+    englishName: "Aquarius",
+    symbol: "♒",
+    element: "Air (Vayu)",
+    lord: "Shani & Rahu",
+    lordIcon: "🌌",
+    luckyColor: "Electric Blue & Violet",
+    luckyNumber: "4, 8, 13, 22",
+    luckyDeity: "Lord Rudra & Lord Bhairava",
+    stone: "Blue Sapphire or Hessonite (Gomed)",
+    dailyPrediction: {
+      overview: "Visionary humanitarian initiatives and breakthrough technological or community ideas receive widespread acclaim.",
+      career: "Collaborative NGO work, digital innovations, and team expansions prosper beyond initial expectations.",
+      health: "Calves and blood circulation require mindful walks in fresh air. Avoid sitting stationary for prolonged hours.",
+      finance: "Multiple diversified income streams begin paying steady dividends. Sound financial stability.",
+      family: "Social gatherings and association with spiritually enlightened souls bring immense inner peace.",
+      remedy: "Donate black sesame seeds, black blankets, or warm clothes to needy laborers on Saturdays."
+    },
+    nakshatras: ["Dhanishta (3,4)", "Satabhisha (4)", "Poorvabhadra (1,2,3)"]
+  },
+  {
+    id: "meena",
+    name: "Meena",
+    englishName: "Pisces",
+    symbol: "♓",
+    element: "Water (Jala)",
+    lord: "Guru (Jupiter)",
+    lordIcon: "🟡",
+    luckyColor: "Golden Yellow, Sea Green & Aquamarine",
+    luckyNumber: "3, 7, 12, 21",
+    luckyDeity: "Lord Matsya Narayana & Goddess Kamakshi",
+    stone: "Yellow Topaz or Pearl",
+    dailyPrediction: {
+      overview: "Supreme spiritual awakening, compassion, and divine intuition guide your footsteps today. Dreams bear prophetic wisdom.",
+      career: "Creative writing, spiritual counseling, hospital management, and international diplomacy bring honor.",
+      health: "Feet and immune balance flourish. Restful sleep with Vedic chanting in background rejuvenates spirit.",
+      finance: "Inflow of wealth from foreign lands or spiritual services. Auspicious donations made happily.",
+      family: "Divine bliss surrounds the family altar. Pilgrimage aspirations materialize with divine blessings.",
+      remedy: "Chant Vishnu Sahasranamam or feed grains and breadcrumbs to water birds and fish."
+    },
+    nakshatras: ["Poorvabhadra (4)", "Uttarabhadra (4)", "Revati (4)"]
+  }
+];
+
+export const navagrahas = [
+  {
+    id: "surya",
+    name: "Surya Deva (Sun)",
+    mantra: "Om Hram Hreem Hroum Sah Suryaya Namaha",
+    deity: "Lord Surya Narayana",
+    dosha: "Pitru Dosha & Low Vitality",
+    remedy: "Offer Arghya at dawn with red copper vessel. Chant Aditya Hridaya Stotram daily.",
+    temple: "Konark Sun Temple / Suryanar Kovil (Tamil Nadu)",
+    gem: "Ruby",
+    color: "bg-amber-500",
+    icon: "☀️"
+  },
+  {
+    id: "chandra",
+    name: "Chandra Deva (Moon)",
+    mantra: "Om Shram Shreem Shroum Sah Chandraya Namaha",
+    deity: "Lord Shiva (Chandramouli)",
+    dosha: "Matru Dosha & Mental Anxiety",
+    remedy: "Offer milk abhishekam to Shiva Lingam on Mondays. Wear natural pearl set in silver.",
+    temple: "Thingalur Temple / Somnath Jyotirlinga",
+    gem: "Pearl",
+    color: "bg-slate-300",
+    icon: "🌙"
+  },
+  {
+    id: "mangala",
+    name: "Mangala Deva (Mars)",
+    mantra: "Om Kram Kreem Kroum Sah Bhaumaya Namaha",
+    deity: "Lord Subrahmanya & Hanuman",
+    dosha: "Kuja Dosha & Marital Delays",
+    remedy: "Fast on Tuesdays. Recite Kuja Dosha Nivarana Stotram or visit Tiruchendur Murugan.",
+    temple: "Vaitheeswaran Kovil / Kukke Subramanya",
+    gem: "Red Coral",
+    color: "bg-red-500",
+    icon: "🔴"
+  },
+  {
+    id: "budha",
+    name: "Budha Deva (Mercury)",
+    mantra: "Om Bram Breem Broum Sah Budhaya Namaha",
+    deity: "Lord Maha Vishnu",
+    dosha: "Speech Impediment & Intellectual Hurdles",
+    remedy: "Feed green fodder to cows on Wednesdays. Chant Vishnu Sahasranama with devotion.",
+    temple: "Thiruvenkadu Temple / Madurai Meenakshi",
+    gem: "Emerald",
+    color: "bg-emerald-500",
+    icon: "🟢"
+  },
+  {
+    id: "guru",
+    name: "Guru Brihaspati (Jupiter)",
+    mantra: "Om Gram Greem Groum Sah Gurave Namaha",
+    deity: "Lord Dakshinamurthy & Dattatreya",
+    dosha: "Guru Chandal Dosha & Delay in Children",
+    remedy: "Donate yellow lentils (chana dal) and saffron on Thursdays. Honor gurus and spiritual elders.",
+    temple: "Alangudi Temple / Guruvayur Sri Krishna",
+    gem: "Yellow Sapphire",
+    color: "bg-yellow-400",
+    icon: "🟡"
+  },
+  {
+    id: "shukra",
+    name: "Shukra Deva (Venus)",
+    mantra: "Om Dram Dreem Droum Sah Shukraya Namaha",
+    deity: "Goddess Mahalakshmi",
+    dosha: "Shukra Dosha & Relationship Discord",
+    remedy: "Offer white sweet kheer and white lotus to Sri Lakshmi on Fridays. Wear fragrant sandalwood.",
+    temple: "Kanjanoor Temple / Kolhapur Mahalakshmi",
+    gem: "Diamond / White Sapphire",
+    color: "bg-rose-300",
+    icon: "⚪"
+  },
+  {
+    id: "shani",
+    name: "Shani Bhagavan (Saturn)",
+    mantra: "Om Pram Preem Proum Sah Shanaishcharaya Namaha",
+    deity: "Lord Shani & Lord Venkateswara",
+    dosha: "Sade Sati, Ashtama Shani & Chronic Obstacles",
+    remedy: "Light black sesame oil lamp on Saturdays. Chant Dasharatha Shani Stotram and feed crows.",
+    temple: "Thirunallar Saniswaran / Shani Shingnapur",
+    gem: "Blue Sapphire",
+    color: "bg-blue-900",
+    icon: "🔵"
+  },
+  {
+    id: "rahu",
+    name: "Rahu Bhagavan (North Node)",
+    mantra: "Om Bhram Bhreem Bhroum Sah Rahave Namaha",
+    deity: "Maa Durga & Lord Bhairava",
+    dosha: "Kala Sarpa Dosha & Unexplained Fears",
+    remedy: "Perform Rahu Kala Durga Puja on Tuesdays. Chant Rahu Stotram and donate black urad dal.",
+    temple: "Thirunageswaram / Srikalahasti Temple",
+    gem: "Hessonite (Gomed)",
+    color: "bg-indigo-900",
+    icon: "🌌"
+  },
+  {
+    id: "ketu",
+    name: "Ketu Bhagavan (South Node)",
+    mantra: "Om Stram Streem Stroum Sah Ketave Namaha",
+    deity: "Lord Ganesha & Matsya Avatara",
+    dosha: "Ketu Dosha & Spiritual Disillusionment",
+    remedy: "Offer coconut and modakas to Lord Ganesha on Sankashti Chaturthi. Feed multi-colored dogs.",
+    temple: "Keezhperumpallam / Kukke Subramanya",
+    gem: "Cat's Eye (Vaidurya)",
+    color: "bg-stone-600",
+    icon: "☄️"
+  }
+];
+
+export const certifiedAstrologers = [
+  {
+    id: "ast-1",
+    name: "Pandit Vidyanath Shastri",
+    title: "Gold Medalist Jyotish Acharya",
+    specialization: "Vedic Kundali, Ashtakoota Milan, Vastu Shastra",
+    experience: "28+ Years Experience",
+    languages: "Telugu, Sanskrit, Hindi, English",
+    rating: 4.9,
+    reviewsCount: 3840,
+    dakshina: "₹ 501",
+    avatar: "https://images.unsplash.com/photo-1544717305-2782549b5136?w=200&auto=format&fit=crop&q=80",
+    verified: true,
+    availableToday: true
+  },
+  {
+    id: "ast-2",
+    name: "Dr. Gayatri Devi Sharma",
+    title: "Ph.D. in Vedic Astrology & Nadi Jyotish",
+    specialization: "Nadi Palm Leaf Reading, Career & Marriage Solutions",
+    experience: "21+ Years Experience",
+    languages: "Telugu, Tamil, English, Hindi",
+    rating: 4.95,
+    reviewsCount: 4210,
+    dakshina: "₹ 751",
+    avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80",
+    verified: true,
+    availableToday: true
+  },
+  {
+    id: "ast-3",
+    name: "Acharya Ramanathan Gurukkal",
+    title: "Chief Astrologer (Srirangam Parampara)",
+    specialization: "Prashna Shastra, Muhurtham Selection, Navagraha Parihara",
+    experience: "32+ Years Experience",
+    languages: "Tamil, Telugu, Sanskrit, English",
+    rating: 4.98,
+    reviewsCount: 5690,
+    dakshina: "₹ 1,001",
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80",
+    verified: true,
+    availableToday: false
+  }
+];
