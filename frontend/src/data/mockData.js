@@ -19,7 +19,7 @@ export const headerData = {
     { label: "Stories", href: "/stories", icon: "BookOpen" },
     { label: "Daily", href: "/slokas", icon: "Clock" },
     { label: "Videos", href: "/videos", icon: "Video" },
-    { label: "Marketplace", href: "#", icon: "ShoppingBag" },
+    { label: "Marketplace", href: "/marketplace", icon: "ShoppingBag" },
   ]
 };
 

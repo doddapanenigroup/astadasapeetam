@@ -115,17 +115,17 @@ export default function HeaderNav() {
             <Search className="w-4 h-4" />
           </button>
 
-          <a 
+          <Link 
             suppressHydrationWarning
-            href="#cart" 
+            href="/marketplace" 
             className="p-1.5 sm:p-2 relative text-stone-600 hover:text-[#78131e] transition-colors rounded-full hover:bg-stone-100 cursor-pointer"
-            aria-label="Cart"
+            aria-label="Cart & Marketplace"
           >
             <ShoppingCart className="w-4 h-4" />
             <span className="absolute top-0.5 right-0.5 bg-amber-500 text-stone-900 font-bold text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
               2
             </span>
-          </a>
+          </Link>
 
           <button 
             suppressHydrationWarning
