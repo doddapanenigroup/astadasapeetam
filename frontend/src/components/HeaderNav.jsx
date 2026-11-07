@@ -8,12 +8,12 @@ import LoginModal from './LoginModal';
 import { 
   Home, Flame, Sparkles, Calendar, Compass, Landmark, 
   BookOpen, Clock, Video, ShoppingBag, ChevronDown, Search, 
-  ShoppingCart, Menu, X 
+  ShoppingCart, Menu, X, Bus 
 } from 'lucide-react';
 
 const iconMap = {
   Home, Flame, Sparkles, Calendar, Compass, Landmark,
-  BookOpen, Clock, Video, ShoppingBag
+  BookOpen, Clock, Video, ShoppingBag, Bus
 };
 
 export default function HeaderNav() {
@@ -80,6 +80,16 @@ export default function HeaderNav() {
                   </div>
                   <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-100 text-amber-900 font-extrabold uppercase">
                     32 Kshetras
+                  </span>
+                </Link>
+
+                <Link href="/yatralu" className="flex items-center justify-between px-3 py-2 hover:bg-amber-50 text-amber-900 font-bold group/item">
+                  <div className="flex items-center gap-2">
+                    <Bus className="w-3.5 h-3.5 text-amber-700" />
+                    <span>Tirtha Yatralu</span>
+                  </div>
+                  <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-200 text-amber-950 font-bold uppercase">
+                    Packages
                   </span>
                 </Link>
 

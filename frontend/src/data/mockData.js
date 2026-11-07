@@ -19,11 +19,13 @@ export const headerData = {
     { label: "Stories", href: "/stories", icon: "BookOpen" },
     { label: "Daily", href: "/slokas", icon: "Clock" },
     { label: "Videos", href: "/videos", icon: "Video" },
+    { label: "Yatralu", href: "/yatralu", icon: "Bus" },
     { label: "Marketplace", href: "/marketplace", icon: "ShoppingBag" },
   ]
 };
 
 export const exploreCategories = [
+  { id: "yatralu", name: "Tirtha Yatralu", desc: "Pilgrim Packages", icon: "Bus", href: "/yatralu", bg: "bg-amber-50", border: "border-amber-200" },
   { id: "sloka", name: "Daily Sloka", desc: "Read Slokas", icon: "ScrollText", href: "/slokas", bg: "bg-amber-50", border: "border-amber-200" },
   { id: "vrathalu", name: "Vrathalu", desc: "Pooja & Vrathas", icon: "Flame", href: "/festivals", bg: "bg-orange-50", border: "border-orange-200" },
   { id: "panchangam", name: "Panchangam", desc: "Daily Calendar", icon: "Calendar", href: "/panchangam", bg: "bg-yellow-50", border: "border-yellow-200" },
