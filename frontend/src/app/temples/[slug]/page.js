@@ -273,17 +273,14 @@ export default function TempleDetailPage() {
 
               {/* Action Buttons underneath map */}
               <div className="p-4 bg-stone-50 space-y-2">
-                <a
+                <button
                   suppressHydrationWarning
-                  href={gmapsDirectionsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  onClick={() => setDirectionsModalOpen(true)}
                   className="w-full bg-[#78131e] hover:bg-[#600e17] text-white font-bold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 text-xs sm:text-sm shadow-md transition-colors cursor-pointer"
                 >
                   <Navigation className="w-4 h-4 text-amber-300 fill-current" />
-                  <span>Open Turn-by-Turn GPS in Google Maps</span>
-                  <ExternalLink className="w-3.5 h-3.5 text-stone-300" />
-                </a>
+                  <span>View Full In-Website Route & GPS Navigation</span>
+                </button>
 
                 <button
                   suppressHydrationWarning
@@ -291,7 +288,7 @@ export default function TempleDetailPage() {
                   className="w-full bg-white hover:bg-amber-50 text-stone-800 border border-stone-300 font-bold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 text-xs transition-colors cursor-pointer"
                 >
                   <Compass className="w-4 h-4 text-amber-700" />
-                  <span>Calculate Distance & Travel Times From Your City</span>
+                  <span>Change Starting City & Transport Modes</span>
                 </button>
               </div>
             </div>
