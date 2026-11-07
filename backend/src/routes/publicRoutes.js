@@ -1,12 +1,17 @@
 const express = require('express');
 const Product = require('../models/Product');
 const SiteContent = require('../models/SiteContent');
+const { getRssFeed, getSitemapXml } = require('../controllers/postController');
 
 const router = express.Router();
 
-// @desc    Get active marketplace products for public website
-// @route   GET /api/public/products
-// @access  Public
+// Public RSS 2.0 Feed
+router.get('/rss', getRssFeed);
+
+// Public XML Sitemap
+router.get('/sitemap', getSitemapXml);
+
+// Public marketplace products
 router.get('/products', async (req, res, next) => {
   try {
     const { category, search } = req.query;
@@ -34,9 +39,7 @@ router.get('/products', async (req, res, next) => {
   }
 });
 
-// @desc    Get active website section contents for public website
-// @route   GET /api/public/content
-// @access  Public
+// Public website section contents
 router.get('/content', async (req, res, next) => {
   try {
     const { page, sectionKey } = req.query;

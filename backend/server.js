@@ -15,6 +15,7 @@ const authRoutes = require('./src/routes/authRoutes');
 const adminRoutes = require('./src/routes/adminRoutes');
 const marketingRoutes = require('./src/routes/marketingRoutes');
 const astrologerRoutes = require('./src/routes/astrologerRoutes');
+const postRoutes = require('./src/routes/postRoutes');
 const publicRoutes = require('./src/routes/publicRoutes');
 const errorHandler = require('./src/middleware/errorHandler');
 
@@ -23,6 +24,7 @@ const User = require('./src/models/User');
 const Product = require('./src/models/Product');
 const SiteContent = require('./src/models/SiteContent');
 const Consultation = require('./src/models/Consultation');
+const Post = require('./src/models/Post');
 
 const app = express();
 
@@ -68,6 +70,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/marketing', marketingRoutes);
 app.use('/api/astrologer', astrologerRoutes);
+app.use('/api/posts', postRoutes);
 
 // Custom Error Handler
 app.use(errorHandler);
@@ -452,6 +455,84 @@ const startServer = async () => {
         ];
         await Consultation.insertMany(initialConsultations);
         console.log(`✅ ${initialConsultations.length} Consultations Seeded Successfully`);
+      }
+
+      // 5. Seed initial Sacred Devotional Posts
+      const postCount = await Post.countDocuments();
+      if (postCount === 0) {
+        console.log('🌱 Seeding initial Sacred Devotional Posts...');
+        const initialPosts = [
+          {
+            title: 'The Mystical Significance of Shankari Devi: First of the 18 Maha Shakti Peethas',
+            titleTelugu: 'లంకాయాం శంకరీ దేవి - ప్రథమ మహా శక్తిపీఠం వైశిష్ట్యం',
+            slug: 'shankari-devi-trincomalee-first-shakti-peetha',
+            category: 'temples',
+            excerpt: 'Exploring the eternal sanctity of Mother Shankari atop Swami Rock in Trincomalee, Sri Lanka, where Mata Satis groin relic fell.',
+            content: 'The foremost among the Ashta Dasa Shakti Peethas as eulogized by Jagadguru Sri Adi Shankaracharya is Mata Shankari Devi in Sri Lanka. Situated on the picturesque Swami Rock cliff overlooking the deep blue waters of the Indian Ocean, this holy kshetra resonates with cosmic divine mother vibrations.\n\nAccording to the ancient Sthala Puranam, Ravana and his mother were ardent devotees of Lord Koneswarar at this cliff. The temple was consecrated in ancient times and continues to bless seekers with courage, marital prosperity, and spiritual liberation.',
+            devotionalVerse: 'ధ్యాన శ్లోకం: లంకాయాం శంకరీ దేవి కామాక్షీ కాంచికాపురే | ప్రద్యుమ్నే శృంఖలా దేవి చాముండీ క్రౌంచపట్టణే ||',
+            featuredImage: '/images/temple_kashi.jpg',
+            deity: 'Mata Shankari Devi & Lord Trikoneshwara',
+            tags: ['Shakti Peetha', 'Sri Lanka', 'Adi Shankara', 'Trincomalee'],
+            seoTitle: 'Shankari Devi Temple Trincomalee - 1st Maha Shakti Peetha Guide',
+            metaDescription: 'Complete spiritual guide to Shankari Devi Temple, Trincomalee Sri Lanka. History, stotra, darshan timings, and travel route.',
+            keywords: ['Shankari Devi', 'Trincomalee Shakti Peetha', 'Swami Rock', 'Sri Lanka Hindu Temple'],
+            status: 'published',
+            viewsCount: 3420
+          },
+          {
+            title: 'Maha Sivaratri Lingodbhava Kalam & Special Bilva Archana Vidhanam',
+            titleTelugu: 'మహా శివరాత్రి లింగోద్భవ కాలం మరియు విశేష బిల్వార్చన విధానం',
+            slug: 'maha-sivaratri-lingodbhava-kalam-archana',
+            category: 'festivals',
+            excerpt: 'The divine midnight hour when Lord Shiva manifested as the infinite Pillar of Fire (Jyotirlinga), and how devotees can observe the sacred vrata.',
+            content: 'Maha Sivaratri is the most auspicious night for devotion to Lord Mahadeva. During the auspicious Nishitha Kaalam (midnight Lingodbhava hour), performing Panchamrita Abhishekam with Bilva leaves destroys sins of lifetimes.\n\nBilva leaves represent the three Gunas (Sattva, Rajas, Tamas) and the three eyes of Lord Shiva. Offering even a single trifoliate leaf with devotion during Lingodbhava yields the merit of thousands of yajnas.',
+            devotionalVerse: 'త్రిదళం త్రిగుణాకారం త్రినేత్రం చ త్రియాయుధం | త్రిజన్మపాపసంహారం ఏకబిల్వం శివార్పణమ్ ||',
+            featuredImage: '/images/fest_shiva.png',
+            deity: 'Lord Kashi Vishwanath & Mahadeva',
+            tags: ['Maha Sivaratri', 'Jyotirlinga', 'Bilva Archana', 'Vrata Vidhi'],
+            seoTitle: 'Maha Sivaratri Lingodbhava Kalam Puja Timings & Bilva Archana',
+            metaDescription: 'Step-by-step guide for Maha Sivaratri fasting, Lingodbhava puja timings, and sacred Bilvarchana benefits.',
+            keywords: ['Maha Sivaratri 2026', 'Lingodbhava Kalam', 'Bilva Patra', 'Shiva Puja'],
+            status: 'published',
+            viewsCount: 5120
+          },
+          {
+            title: 'Authentic 5-Mukhi vs 1-Mukhi Nepal Rudraksha: Astrological Benefits & Testing',
+            titleTelugu: 'రుద్రాక్షల వైశిష్ట్యం: ఏకముఖి మరియు పంచముఖి రుద్రాక్షల ధారణా ఫలితాలు',
+            slug: 'nepal-rudraksha-astrological-benefits-testing',
+            category: 'astrology',
+            excerpt: 'Detailed Vedic guidelines on how to test authenticity, choose beads according to birth horoscope, and maintain pranic purity.',
+            content: 'Rudraksha beads originated from the compassionate tears of Lord Shiva shed for the welfare of mankind. In the Shrimad Devi Bhagavatam and Shiva Purana, each mukhi (facet) of the sacred bead is described with its presiding deity and planetary ruler.\n\nThe 5-Mukhi bead is governed by Jupiter (Guru) and Kalagni Rudra, bestowing peace of mind, intellect, and balanced blood pressure. The rare 1-Mukhi half-moon bead is governed by Surya (the Sun), elevating soul consciousness and destroying malefic planetary doshas.',
+            devotionalVerse: 'ఓం నమః శివాయ • రుద్రాక్ష ధారణాత్ పుణ్యం కోటి జన్మార్జితం ఫలమ్ ||',
+            featuredImage: '/images/rudraksha.png',
+            deity: 'Lord Shiva Kalagni Rudra',
+            tags: ['Rudraksha', 'Vedic Astrology', 'Gemology', 'Spiritual Healing'],
+            seoTitle: 'Nepal Rudraksha Astrological Guide & Authenticity Tests',
+            metaDescription: 'Learn how to wear authentic Nepal Rudraksha beads, choose based on your horoscope, and avoid fake stones.',
+            keywords: ['Nepal Rudraksha', '5 Mukhi Mala', '1 Mukhi Ekamukhi', 'Jyotish Remedy'],
+            status: 'published',
+            viewsCount: 2890
+          },
+          {
+            title: 'Tirtha Yatra Mahatmyam: Why Kashi and Rameswaram Complete the Sacred Cycle',
+            titleTelugu: 'కాశీ - రామేశ్వరం తీర్థ యాత్ర పరిపూర్ణ ఫలితాలు',
+            slug: 'kashi-rameswaram-sacred-yatra-cycle',
+            category: 'temples',
+            excerpt: 'The timeless Vedic tradition of taking holy Gangajal from Kashi and offering it at Rameswaram Jyotirlinga, and bringing holy sand back to Triveni Sangam.',
+            content: 'In Hindu tradition, a pilgrimage to Kashi remains incomplete without offering prayers to Lord Ramanathaswamy at Rameswaram. This sacred North-South axis connects the two holy extremes of Bharatavarsha into one unified spiritual consciousness.\n\nPilgrims collect the sacred water of Mother Ganga at Dashashwamedh Ghat in Kashi, perform the 22 holy wells (Theerthams) bath at Rameswaram, and perform Abhishekam to the sand Linga sculpted by Mata Sita.',
+            devotionalVerse: 'కాశ్యాం తు మరణాన్ముక్తిః స్మరణాదరుణాచలమ్ | దర్శనాదభ్రసదసి జనితా కమలాలయే ||',
+            featuredImage: '/images/temple_tirupati.jpg',
+            deity: 'Lord Ramanathaswamy & Vishwanath',
+            tags: ['Tirtha Yatra', 'Kashi', 'Rameswaram', 'Jyotirlinga Circuit'],
+            seoTitle: 'Kashi to Rameswaram Sacred Pilgrimage Circuit Complete Guide',
+            metaDescription: 'Vedic rituals, train routes, theertham bathing procedure, and significance of Kashi and Rameswaram yatra.',
+            keywords: ['Kashi Yatra', 'Rameswaram Jyotirlinga', 'Tirtha Snanam', 'Char Dham'],
+            status: 'published',
+            viewsCount: 4180
+          }
+        ];
+        await Post.insertMany(initialPosts);
+        console.log(`✅ ${initialPosts.length} Sacred Devotional Posts Seeded Successfully`);
       }
 
     } catch (seedErr) {
