@@ -135,13 +135,47 @@ export default function HeaderNav() {
             </span>
           </Link>
 
-          {userRole === 'digital_marketing' ? (
-            <Link
-              href="/marketing"
-              className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-3 py-1.5 rounded-md shadow-sm transition flex items-center space-x-1"
-            >
-              <span>📢 Marketing Studio</span>
-            </Link>
+          {userRole ? (
+            <div className="flex items-center space-x-2">
+              <Link
+                href={
+                  userRole === 'admin' 
+                    ? '/admin' 
+                    : userRole === 'astrologer' 
+                    ? '/astrologer' 
+                    : userRole === 'digital_marketing' 
+                    ? '/marketing' 
+                    : '/'
+                }
+                className={`text-white text-xs font-bold px-3 py-1.5 rounded-md shadow-sm transition flex items-center space-x-1 ${
+                  userRole === 'admin'
+                    ? 'bg-rose-800 hover:bg-rose-900'
+                    : userRole === 'astrologer'
+                    ? 'bg-purple-800 hover:bg-purple-900'
+                    : 'bg-amber-600 hover:bg-amber-700'
+                }`}
+              >
+                <span>
+                  {userRole === 'admin' && '👑 Admin Portal'}
+                  {userRole === 'astrologer' && '🔮 Astrologer Workspace'}
+                  {userRole === 'digital_marketing' && '📢 Marketing Studio'}
+                  {userRole === 'devotee' && '🙏 My Profile'}
+                </span>
+              </Link>
+              <button
+                onClick={() => {
+                  localStorage.removeItem('astada_token');
+                  localStorage.removeItem('astada_role');
+                  localStorage.removeItem('astada_user');
+                  setUserRole(null);
+                  window.location.href = '/';
+                }}
+                className="text-[11px] text-stone-500 hover:text-stone-800 underline"
+                title="Log out"
+              >
+                Logout
+              </button>
+            </div>
           ) : (
             <button 
               suppressHydrationWarning

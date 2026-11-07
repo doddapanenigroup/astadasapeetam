@@ -22,6 +22,7 @@ const errorHandler = require('./src/middleware/errorHandler');
 const User = require('./src/models/User');
 const Product = require('./src/models/Product');
 const SiteContent = require('./src/models/SiteContent');
+const Consultation = require('./src/models/Consultation');
 
 const app = express();
 
@@ -382,6 +383,75 @@ const startServer = async () => {
         ];
         await SiteContent.insertMany(initialContents);
         console.log(`✅ ${initialContents.length} Website Section Contents Seeded Successfully`);
+      }
+
+      // 4. Seed initial Astrologer Consultations
+      const consultCount = await Consultation.countDocuments();
+      if (consultCount === 0) {
+        console.log('🌱 Seeding initial Astrologer Consultations...');
+        const astrologerUser = await User.findOne({ role: 'astrologer' });
+        const initialConsultations = [
+          {
+            devoteeName: 'Venkata Raman Rao',
+            devoteePhone: '+91 94401 23456',
+            devoteeEmail: 'raman.rao@example.com',
+            birthDetails: {
+              dateOfBirth: '14-Aug-1996',
+              timeOfBirth: '06:45 AM',
+              placeOfBirth: 'Vijayawada, AP',
+              rasi: 'Simha (Leo)',
+              nakshatram: 'Makha',
+              gotram: 'Kasyapa'
+            },
+            consultationType: 'kundali_matching',
+            problemDescription: 'Vivaha Guna Milan check with prospective bride from Visakhapatnam. Check Kuja dosha and longevity compatibility.',
+            status: 'pending',
+            fee: 750,
+            isPaid: true
+          },
+          {
+            devoteeName: 'Ananya Kulkarni',
+            devoteePhone: '+91 98802 87654',
+            devoteeEmail: 'ananya.k@example.com',
+            birthDetails: {
+              dateOfBirth: '22-Nov-1991',
+              timeOfBirth: '10:15 PM',
+              placeOfBirth: 'Hyderabad, Telangana',
+              rasi: 'Vrishabha (Taurus)',
+              nakshatram: 'Rohini',
+              gotram: 'Bharadwaja'
+            },
+            consultationType: 'jathakam_analysis',
+            problemDescription: 'Frequent obstacles in career promotion and foreign travel. Requesting suitable gemstone and mantra remedies.',
+            status: 'confirmed',
+            assignedAstrologer: astrologerUser?._id,
+            scheduledSlot: new Date(Date.now() + 86400000),
+            fee: 750,
+            isPaid: true
+          },
+          {
+            devoteeName: 'Rajesh Sharma',
+            devoteePhone: '+91 98110 33221',
+            devoteeEmail: 'rajesh.sharma@example.com',
+            birthDetails: {
+              dateOfBirth: '05-Jan-1988',
+              timeOfBirth: '04:30 AM',
+              placeOfBirth: 'Tirupati, AP',
+              rasi: 'Karkataka (Cancer)',
+              nakshatram: 'Pushyami',
+              gotram: 'Vashishta'
+            },
+            consultationType: 'dosha_upaya',
+            problemDescription: 'Sade Sati Saturn transit remedy and family peace blessings.',
+            status: 'completed',
+            assignedAstrologer: astrologerUser?._id,
+            fee: 750,
+            isPaid: true,
+            astrologerRemedyNotes: 'Prescribed Shani Shanti Tailabhishekam at Mandapalli Shani temple. Chanting Hanuman Chalisa 11 times every Tuesday & Saturday. Wearing 7-Mukhi certified Nepal Rudraksha recommended.'
+          }
+        ];
+        await Consultation.insertMany(initialConsultations);
+        console.log(`✅ ${initialConsultations.length} Consultations Seeded Successfully`);
       }
 
     } catch (seedErr) {

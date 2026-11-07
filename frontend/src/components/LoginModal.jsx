@@ -108,12 +108,10 @@ export default function LoginModal({ isOpen, onClose }) {
           window.location.reload();
         }
       } else {
-        setErrorMessage(data.message || 'Authentication error');
+        setErrorMessage(data.message || 'Invalid email or password. Please try again.');
       }
     } catch (err) {
-      // Fallback mock if backend is down
-      alert(`${activeTab === 'login' ? 'Signed in' : 'Registered'} successfully! Welcome to Astadasapeetam.`);
-      onClose();
+      setErrorMessage('Server connection error. Please verify backend is running on port 5000.');
     } finally {
       setLoading(false);
     }
