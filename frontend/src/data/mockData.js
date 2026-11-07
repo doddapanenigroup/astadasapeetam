@@ -25,6 +25,7 @@ export const headerData = {
 };
 
 export const exploreCategories = [
+  { id: "sacred-temples", name: "Sacred Temples", desc: "18 Shakti Peethas", icon: "Sparkles", href: "/sacred-temples", bg: "bg-red-50", border: "border-red-200" },
   { id: "yatralu", name: "Tirtha Yatralu", desc: "Pilgrim Packages", icon: "Bus", href: "/yatralu", bg: "bg-amber-50", border: "border-amber-200" },
   { id: "sloka", name: "Daily Sloka", desc: "Read Slokas", icon: "ScrollText", href: "/slokas", bg: "bg-amber-50", border: "border-amber-200" },
   { id: "vrathalu", name: "Vrathalu", desc: "Pooja & Vrathas", icon: "Flame", href: "/festivals", bg: "bg-orange-50", border: "border-orange-200" },

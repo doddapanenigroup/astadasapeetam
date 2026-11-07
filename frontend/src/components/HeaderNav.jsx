@@ -72,14 +72,25 @@ export default function HeaderNav() {
             {/* Dropdown Menu */}
             <div className="absolute right-0 top-full pt-1 hidden group-hover:block z-50">
               <div className="bg-white rounded-xl shadow-xl border border-[#ebdcc7] py-2 w-52 text-stone-800 text-xs">
-                {/* Sacred Temples - Kept as Separate Item */}
-                <Link href="/temples" className="flex items-center justify-between px-3 py-2.5 hover:bg-amber-50 text-[#78131e] font-bold group/item">
+                {/* Sacred Temples (18 Shakti Peethas) */}
+                <Link href="/sacred-temples" className="flex items-center justify-between px-3 py-2.5 hover:bg-amber-50 text-[#78131e] font-bold group/item">
                   <div className="flex items-center gap-2">
-                    <Landmark className="w-4 h-4 text-[#78131e]" />
+                    <Sparkles className="w-4 h-4 text-[#78131e]" />
                     <span>Sacred Temples</span>
                   </div>
                   <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-100 text-amber-900 font-extrabold uppercase">
-                    32 Kshetras
+                    18 Peethas
+                  </span>
+                </Link>
+
+                {/* All Famous Temples */}
+                <Link href="/temples" className="flex items-center justify-between px-3 py-2 hover:bg-amber-50 text-stone-800 font-bold group/item">
+                  <div className="flex items-center gap-2">
+                    <Landmark className="w-3.5 h-3.5 text-amber-700" />
+                    <span>All Indian Temples</span>
+                  </div>
+                  <span className="text-[9px] px-1.5 py-0.2 rounded bg-stone-200 text-stone-800 font-bold uppercase">
+                    37+ Kshetras
                   </span>
                 </Link>
 

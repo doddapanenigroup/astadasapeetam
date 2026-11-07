@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -11,7 +11,45 @@ import {
   Phone, Landmark, BookOpen
 } from 'lucide-react';
 import { shaktiPeethasData } from '../../../data/shaktiPeethasData';
+import { allTemplesData } from '../../../data/templesData';
 import TempleDirectionsModal from '../../../components/TempleDirectionsModal';
+
+// Coordinates mapping for famous all-India temples
+const templeCoordinatesMap = {
+  'somnath-jyotirlinga': { lat: 20.8880, lng: 70.4012 },
+  'kashi-vishwanath': { lat: 25.3109, lng: 83.0107 },
+  'kedarnath-jyotirlinga': { lat: 30.7352, lng: 79.0669 },
+  'mahakaleshwar-ujjain': { lat: 23.1827, lng: 75.7682 },
+  'rameshwaram-jyotirlinga': { lat: 9.2881, lng: 79.3174 },
+  'omkareshwar-jyotirlinga': { lat: 22.2464, lng: 76.1506 },
+  'bhimashankar-jyotirlinga': { lat: 19.0720, lng: 73.5354 },
+  'trimbakeshwar-jyotirlinga': { lat: 19.9324, lng: 73.5308 },
+  'vaidyanath-jyotirlinga': { lat: 24.4925, lng: 86.7001 },
+  'nageshwar-jyotirlinga': { lat: 22.3347, lng: 69.0911 },
+  'grishneshwar-jyotirlinga': { lat: 20.0232, lng: 75.1793 },
+  'badrinath-dham': { lat: 30.7433, lng: 79.4938 },
+  'puri-jagannath': { lat: 19.8049, lng: 85.8179 },
+  'dwarkadhish-temple': { lat: 22.2376, lng: 68.9677 },
+  'tirumala-tirupati': { lat: 13.6833, lng: 79.3472 },
+  'ayodhya-ram-mandir': { lat: 26.7956, lng: 82.1943 },
+  'vaishno-devi': { lat: 33.0308, lng: 74.9490 },
+  'shirdi-sai-temple': { lat: 19.7667, lng: 74.4764 },
+  'madurai-meenakshi': { lat: 9.9195, lng: 78.1193 },
+  'ekambareswarar-earth': { lat: 12.8475, lng: 79.6997 },
+  'jambukeswarar-water': { lat: 10.8534, lng: 78.7054 },
+  'arunachaleswarar-fire': { lat: 12.2319, lng: 79.0677 },
+  'srikalahasti-air': { lat: 13.7498, lng: 79.6984 },
+  'chidambaram-space': { lat: 11.3992, lng: 79.6934 },
+  'srisailam-bhramaramba': { lat: 16.0741, lng: 78.8682 },
+  'kanchi-kamakshi': { lat: 12.8407, lng: 79.7037 },
+  'kolhapur-mahalakshmi': { lat: 16.6944, lng: 74.2238 },
+  'kashi-vishalakshi': { lat: 25.3076, lng: 83.0108 },
+  'kamakhya-temple': { lat: 26.1663, lng: 91.7058 },
+  'alampur-jogulamba': { lat: 15.8778, lng: 78.1368 },
+  'pithapuram-puruhutika': { lat: 17.1166, lng: 82.2575 },
+  'draksharamam-manikyamba': { lat: 16.7937, lng: 82.0628 },
+  'mysore-chamundeshwari': { lat: 12.2727, lng: 76.6710 }
+};
 
 export default function TempleDetailPage() {
   const params = useParams();
@@ -19,8 +57,41 @@ export default function TempleDetailPage() {
   const [directionsModalOpen, setDirectionsModalOpen] = useState(false);
   const [selectedTransitTab, setSelectedTransitTab] = useState('car'); // 'car' | 'bus' | 'train' | 'flight'
 
-  // Find temple
-  const temple = shaktiPeethasData.find(t => t.slug === slug) || shaktiPeethasData[0];
+  // Look up temple in shaktiPeethasData first, then allTemplesData
+  const foundShakti = shaktiPeethasData.find(t => t.slug === slug || t.id === slug);
+  const foundAll = allTemplesData.find(t => t.id === slug);
+
+  const temple = useMemo(() => {
+    if (foundShakti) return foundShakti;
+    if (foundAll) {
+      const coords = templeCoordinatesMap[foundAll.id] || { lat: 13.6833, lng: 79.3472 };
+      return {
+        ...foundAll,
+        peethaNumber: foundAll.peethaNumber || 1,
+        slug: foundAll.id,
+        teluguName: foundAll.name,
+        location: `${foundAll.city}, ${foundAll.state}`,
+        relicFallen: foundAll.element || foundAll.relic || foundAll.graha || 'Sacred Mahakshetra Relic',
+        relicTelugu: foundAll.element ? `${foundAll.element} తత్వ లింగం` : 'పుణ్య క్షేత్రం',
+        stotramFull: foundAll.description,
+        summary: foundAll.description,
+        sthalaPuranam: `${foundAll.description}\n\nThis consecrated shrine has drawn saints, kings, and millions of devotees for centuries. Regular pujas, daily archana, and divine abhishekams continue in strict accordance with the ancient Vedic Agamas.`,
+        architecture: `Classic temple architecture featuring intricate stone carvings, mandapams, and sacred Pushkarini (holy water tank). Located in ${foundAll.city}, ${foundAll.state}.`,
+        festivals: [foundAll.bestTime || 'Annual Brahmotsavams', 'Maha Shivaratri / Navaratri', 'Karthika Deepotsavam'],
+        lat: coords.lat,
+        lng: coords.lng,
+        transitGuide: {
+          roadhead: foundAll.howToReach || 'Direct road access to temple parking',
+          car: foundAll.howToReach || 'Well connected via state and national highways',
+          train: foundAll.howToReach || 'Nearest major railway junction',
+          flight: foundAll.howToReach || 'Nearest operational airport',
+          bus: 'Frequent state RTC buses and pilgrimage tours operate to the temple',
+          specialTransitNote: ''
+        }
+      };
+    }
+    return shaktiPeethasData[0];
+  }, [foundShakti, foundAll]);
 
   const gmapsEmbedUrl = `https://maps.google.com/maps?q=${temple.lat},${temple.lng}&hl=en&z=14&output=embed`;
   const gmapsDirectionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${temple.lat},${temple.lng}&travelmode=driving`;
