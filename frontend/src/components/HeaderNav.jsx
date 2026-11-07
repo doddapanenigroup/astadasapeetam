@@ -83,27 +83,6 @@ export default function HeaderNav() {
                   </span>
                 </Link>
 
-                {/* All Famous Temples */}
-                <Link href="/temples" className="flex items-center justify-between px-3 py-2 hover:bg-amber-50 text-stone-800 font-bold group/item">
-                  <div className="flex items-center gap-2">
-                    <Landmark className="w-3.5 h-3.5 text-amber-700" />
-                    <span>All Indian Temples</span>
-                  </div>
-                  <span className="text-[9px] px-1.5 py-0.2 rounded bg-stone-200 text-stone-800 font-bold uppercase">
-                    37+ Kshetras
-                  </span>
-                </Link>
-
-                <Link href="/yatralu" className="flex items-center justify-between px-3 py-2 hover:bg-amber-50 text-amber-900 font-bold group/item">
-                  <div className="flex items-center gap-2">
-                    <Bus className="w-3.5 h-3.5 text-amber-700" />
-                    <span>Tirtha Yatralu</span>
-                  </div>
-                  <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-200 text-amber-950 font-bold uppercase">
-                    Packages
-                  </span>
-                </Link>
-
                 <div className="h-px bg-[#ebdcc7] my-1.5" />
 
                 <Link href="/panchangam" className="flex items-center gap-2 px-3 py-2 hover:bg-amber-50 hover:text-[#78131e] font-medium text-stone-700">
