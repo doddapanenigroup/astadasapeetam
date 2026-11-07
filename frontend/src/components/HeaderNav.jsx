@@ -20,7 +20,15 @@ export default function HeaderNav() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
+  const [userRole, setUserRole] = useState(null);
   const pathname = usePathname();
+
+  React.useEffect(() => {
+    try {
+      const role = localStorage.getItem('astada_role');
+      if (role) setUserRole(role);
+    } catch {}
+  }, []);
 
   return (
     <header className="bg-white border-b border-[#ebdcc7] sticky top-0 z-40 shadow-xs">
@@ -127,13 +135,22 @@ export default function HeaderNav() {
             </span>
           </Link>
 
-          <button 
-            suppressHydrationWarning
-            onClick={() => setLoginModalOpen(true)}
-            className="bg-[#78131e] hover:bg-[#600e17] text-white text-xs font-semibold px-3 sm:px-4 py-1.5 sm:py-2 rounded-md shadow-sm transition-colors whitespace-nowrap shrink-0 cursor-pointer"
-          >
-            Login
-          </button>
+          {userRole === 'digital_marketing' ? (
+            <Link
+              href="/marketing"
+              className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-3 py-1.5 rounded-md shadow-sm transition flex items-center space-x-1"
+            >
+              <span>📢 Marketing Studio</span>
+            </Link>
+          ) : (
+            <button 
+              suppressHydrationWarning
+              onClick={() => setLoginModalOpen(true)}
+              className="bg-[#78131e] hover:bg-[#600e17] text-white text-xs font-semibold px-3 sm:px-4 py-1.5 sm:py-2 rounded-md shadow-sm transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+            >
+              Login
+            </button>
+          )}
 
           {/* Mobile hamburger button */}
           <button 

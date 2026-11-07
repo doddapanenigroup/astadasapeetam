@@ -1,7 +1,23 @@
-import React from 'react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Sparkles } from 'lucide-react';
 
 export default function AdBanner({ type = 'leaderboard', label = 'Ad Space', className = '' }) {
+  const [festivalAlert, setFestivalAlert] = useState(null);
+
+  useEffect(() => {
+    fetch('http://localhost:5000/api/public/content?sectionKey=festival_alert')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data && data.data.length > 0) {
+          setFestivalAlert(data.data[0]);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   if (type === 'sidebar') {
     return (
       <div className={`w-full bg-[#fceddf] border border-dashed border-[#e6bca2] rounded-lg p-3 text-center flex flex-col items-center justify-center min-h-[250px] ${className}`}>
@@ -17,6 +33,36 @@ export default function AdBanner({ type = 'leaderboard', label = 'Ad Space', cla
   }
 
   if (type === 'top-sponsored') {
+    // If marketing has an active festival/campaign alert, render live dynamic banner!
+    if (festivalAlert && festivalAlert.isActive) {
+      return (
+        <div className="w-[98.5%] max-w-[1920px] mx-auto py-2.5">
+          <div className="bg-gradient-to-r from-[#2c1306] via-[#632909] to-[#2c1306] rounded-xl p-3 px-6 flex flex-col sm:flex-row items-center justify-between shadow-sm border border-amber-500/40 text-white gap-3">
+            <div className="flex items-center gap-3 text-center sm:text-left">
+              <span className="text-[10px] bg-amber-400 text-stone-900 uppercase px-2 py-0.5 rounded font-black tracking-wider">
+                {festivalAlert.badge || 'FESTIVAL SPECIAL'}
+              </span>
+              <div>
+                <div className="text-sm sm:text-base font-bold text-amber-200 tracking-wide flex items-center gap-2 justify-center sm:justify-start">
+                  <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span>{festivalAlert.title}</span>
+                </div>
+                <div className="text-xs text-amber-100/80">
+                  {festivalAlert.subtitle}
+                </div>
+              </div>
+            </div>
+            <Link
+              href={festivalAlert.ctaLink || '/marketplace'}
+              className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-900 font-bold text-xs px-4 py-2 rounded-lg shadow transition-all whitespace-nowrap shrink-0"
+            >
+              {festivalAlert.ctaText || 'Order Now'} &rarr;
+            </Link>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="w-[98.5%] max-w-[1920px] mx-auto py-2.5">
         <div className="bg-gradient-to-r from-[#2c1306] via-[#632909] to-[#2c1306] rounded-lg p-2.5 px-6 flex flex-col sm:flex-row items-center justify-between shadow-sm border border-amber-500/30 text-white gap-3">
@@ -34,12 +80,12 @@ export default function AdBanner({ type = 'leaderboard', label = 'Ad Space', cla
               </div>
             </div>
           </div>
-          <a
-            href="#"
+          <Link
+            href="/marketplace"
             className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-900 font-bold text-xs px-4 py-1.5 rounded shadow transition-all whitespace-nowrap"
           >
             Shop Now &rarr;
-          </a>
+          </Link>
         </div>
       </div>
     );

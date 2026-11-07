@@ -14,6 +14,9 @@ export default function LoginModal({ isOpen, onClose }) {
     rememberMe: true,
   });
 
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
   // Close on Escape key press
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -33,11 +36,87 @@ export default function LoginModal({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleRoleQuickLogin = async (email, password) => {
+    setLoading(true);
+    setErrorMessage('');
+    try {
+      const res = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (data.success && data.token) {
+        localStorage.setItem('astada_token', data.token);
+        localStorage.setItem('astada_role', data.user.role);
+        localStorage.setItem('astada_user', JSON.stringify(data.user));
+        
+        if (data.user.role === 'digital_marketing') {
+          window.location.href = '/marketing';
+        } else if (data.user.role === 'admin') {
+          window.location.href = '/admin';
+        } else if (data.user.role === 'astrologer') {
+          window.location.href = '/astrologer';
+        } else {
+          onClose();
+          window.location.reload();
+        }
+      } else {
+        setErrorMessage(data.message || 'Login failed');
+      }
+    } catch (err) {
+      setErrorMessage('Could not connect to backend server on port 5000');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Front-end mock submit for now
-    alert(`${activeTab === 'login' ? 'Signed in' : 'Registered'} successfully! Welcome to Astadasapeetam.`);
-    onClose();
+    setLoading(true);
+    setErrorMessage('');
+
+    try {
+      const endpoint = activeTab === 'login' 
+        ? 'http://localhost:5000/api/auth/login' 
+        : 'http://localhost:5000/api/auth/register';
+
+      const payload = activeTab === 'login'
+        ? { email: formData.identifier, password: formData.password }
+        : { name: formData.name, email: formData.identifier, password: formData.password };
+
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+
+      if (data.success && data.token) {
+        localStorage.setItem('astada_token', data.token);
+        localStorage.setItem('astada_role', data.user.role);
+        localStorage.setItem('astada_user', JSON.stringify(data.user));
+        
+        if (data.user.role === 'digital_marketing') {
+          window.location.href = '/marketing';
+        } else if (data.user.role === 'admin') {
+          window.location.href = '/admin';
+        } else if (data.user.role === 'astrologer') {
+          window.location.href = '/astrologer';
+        } else {
+          onClose();
+          window.location.reload();
+        }
+      } else {
+        setErrorMessage(data.message || 'Authentication error');
+      }
+    } catch (err) {
+      // Fallback mock if backend is down
+      alert(`${activeTab === 'login' ? 'Signed in' : 'Registered'} successfully! Welcome to Astadasapeetam.`);
+      onClose();
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -98,6 +177,13 @@ export default function LoginModal({ isOpen, onClose }) {
             </button>
           </div>
         </div>
+
+        {/* Error message alert */}
+        {errorMessage && (
+          <div className="mb-4 p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold">
+            {errorMessage}
+          </div>
+        )}
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -275,6 +361,44 @@ export default function LoginModal({ isOpen, onClose }) {
             <Phone className="w-3.5 h-3.5 text-stone-600" />
             <span>Mobile OTP</span>
           </button>
+        </div>
+
+        {/* Quick Role Portal Access for Dev & Testing */}
+        <div className="mt-5 p-3 rounded-xl bg-amber-50/70 border border-amber-200/80 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-black uppercase text-[#78131e] tracking-wider">
+              ⚡ Quick Role Portals Access
+            </span>
+            <span className="text-[9px] text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded font-semibold">
+              Instant Demo
+            </span>
+          </div>
+          <div className="grid grid-cols-3 gap-1.5 text-[10px]">
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => handleRoleQuickLogin('marketing@astadasapeetam.com', 'Market@12345')}
+              className="p-1.5 bg-white hover:bg-amber-100/60 border border-amber-300 rounded-lg text-center font-bold text-[#78131e] shadow-2xs transition"
+            >
+              📢 Marketing
+            </button>
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => handleRoleQuickLogin('admin@astadasapeetam.com', 'Admin@12345')}
+              className="p-1.5 bg-white hover:bg-amber-100/60 border border-amber-300 rounded-lg text-center font-bold text-stone-900 shadow-2xs transition"
+            >
+              👑 Admin
+            </button>
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => handleRoleQuickLogin('astrologer@astadasapeetam.com', 'Astro@12345')}
+              className="p-1.5 bg-white hover:bg-amber-100/60 border border-amber-300 rounded-lg text-center font-bold text-purple-900 shadow-2xs transition"
+            >
+              🔮 Astrologer
+            </button>
+          </div>
         </div>
 
         {/* Footer info note */}

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { 
@@ -11,6 +11,39 @@ import {
 import { marketplaceCategories, marketplaceProducts } from '../../data/marketplaceData';
 
 export default function MarketplacePage() {
+  // Live dynamic products synced with Digital Marketing backend
+  const [allProducts, setAllProducts] = useState(marketplaceProducts);
+
+  useEffect(() => {
+    fetch('http://localhost:5000/api/public/products')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data && data.data.length > 0) {
+          // Merge dynamic products with fallback attributes if needed
+          setAllProducts(data.data.map(p => ({
+            id: p.customId || p._id,
+            name: p.name,
+            category: p.category,
+            subtitle: p.subtitle,
+            rating: p.rating || 4.9,
+            reviewsCount: p.reviewsCount || 100,
+            price: p.price,
+            originalPrice: p.originalPrice || Math.round(p.price * 1.3),
+            discount: p.discount || 'Special Offer',
+            image: p.image || '/images/poojakit.png',
+            certified: p.certified || '100% Satvik & Energized',
+            inStock: p.inStock,
+            fastDelivery: p.fastDelivery,
+            description: p.description,
+            features: p.features || []
+          })));
+        }
+      })
+      .catch(() => {
+        // Graceful fallback to local marketplace data
+      });
+  }, []);
+
   // State
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -42,7 +75,7 @@ export default function MarketplacePage() {
 
   // Filter & Sort Logic
   const filteredProducts = useMemo(() => {
-    return marketplaceProducts.filter((product) => {
+    return allProducts.filter((product) => {
       const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
       const matchesQuery = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            product.subtitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -54,7 +87,7 @@ export default function MarketplacePage() {
       if (sortBy === 'rating') return b.rating - a.rating;
       return 0; // featured order
     });
-  }, [selectedCategory, searchQuery, sortBy]);
+  }, [allProducts, selectedCategory, searchQuery, sortBy]);
 
   // Cart actions
   const addToCart = (product, openDrawer = true) => {
