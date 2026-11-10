@@ -38,7 +38,8 @@ import {
   EyeOff, 
   ShieldCheck, 
   Sliders,
-  DollarSign
+  DollarSign,
+  Sunrise
 } from 'lucide-react';
 import { FacebookIcon, TwitterXIcon, InstagramIcon, YoutubeIcon, WhatsAppIcon } from '../../components/SocialIcons';
 
@@ -377,45 +378,70 @@ export default function UnifiedConsolePage() {
     return productCategoryFilter === 'all' || p.category === productCategoryFilter;
   });
 
-  // Sidebar items cleanly ordered exactly as requested
-  const sidebarItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'marketplace', label: 'Marketplace', icon: ShoppingBag, badge: products.length },
-    { id: 'banners', label: 'Banners & Ads', icon: Megaphone },
-    { id: 'websections', label: 'Website Sections', icon: Layers },
-    { id: 'spirituals', label: 'Spirituals & Peethas', icon: Sparkles, badge: '18' },
-    { id: 'coupons', label: 'Coupons & Campaigns', icon: Tag, badge: campaigns.length },
-    { id: 'addPost', label: 'Add Post', icon: PlusCircle },
-    { id: 'postList', label: 'Post List', icon: FileText, badge: posts.length },
-    { id: 'users', label: 'User Management', icon: Users, badge: users.length },
-    { id: 'astrology', label: 'Astrologer Desk', icon: Compass, badge: consultations.length },
-    { id: 'seo', label: 'SEO & RSS Feeds', icon: Rss },
-    { id: 'socialConnections', label: 'Social Connections', icon: Share2, highlight: true },
-    { id: 'softwareSetup', label: 'Software Setup', icon: Settings },
-    { id: 'analytics', label: 'Platform Analytics', icon: TrendingUp }
+  // Sidebar items categorized with bespoke colors & icons (strictly ordered as requested)
+  const sidebarSections = [
+    {
+      heading: 'Dharma & Governance',
+      items: [
+        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, accent: 'from-amber-500 to-amber-600', textAccent: 'text-amber-400' },
+        { id: 'analytics', label: 'Platform Analytics', icon: TrendingUp, accent: 'from-emerald-500 to-emerald-600', textAccent: 'text-emerald-400' }
+      ]
+    },
+    {
+      heading: 'Sacred Commerce',
+      items: [
+        { id: 'marketplace', label: 'Marketplace', icon: ShoppingBag, badge: products.length, accent: 'from-orange-500 to-amber-600', textAccent: 'text-orange-400' },
+        { id: 'banners', label: 'Banners & Ads', icon: Megaphone, accent: 'from-rose-500 to-red-600', textAccent: 'text-rose-400' },
+        { id: 'coupons', label: 'Coupons & Campaigns', icon: Tag, badge: campaigns.length, accent: 'from-purple-500 to-fuchsia-600', textAccent: 'text-purple-400' }
+      ]
+    },
+    {
+      heading: 'Temple & Vedic Content',
+      items: [
+        { id: 'websections', label: 'Website Sections', icon: Layers, accent: 'from-yellow-500 to-amber-600', textAccent: 'text-yellow-400' },
+        { id: 'spirituals', label: 'Spirituals & Peethas', icon: Sparkles, badge: '18', accent: 'from-pink-500 to-rose-600', textAccent: 'text-pink-400' },
+        { id: 'addPost', label: 'Add Post', icon: PlusCircle, accent: 'from-teal-500 to-emerald-600', textAccent: 'text-teal-400' },
+        { id: 'postList', label: 'Post List', icon: FileText, badge: posts.length, accent: 'from-sky-500 to-blue-600', textAccent: 'text-sky-400' }
+      ]
+    },
+    {
+      heading: 'Devotee Services',
+      items: [
+        { id: 'astrology', label: 'Astrologer Desk', icon: Compass, badge: consultations.length, accent: 'from-indigo-500 to-purple-600', textAccent: 'text-indigo-400' },
+        { id: 'users', label: 'User Management', icon: Users, badge: users.length, accent: 'from-blue-500 to-indigo-600', textAccent: 'text-blue-400' },
+        { id: 'socialConnections', label: 'Social Connections', icon: Share2, highlight: true, accent: 'from-emerald-500 to-teal-600', textAccent: 'text-emerald-400' }
+      ]
+    },
+    {
+      heading: 'Platform Infrastructure',
+      items: [
+        { id: 'seo', label: 'SEO & RSS Feeds', icon: Rss, accent: 'from-cyan-500 to-teal-600', textAccent: 'text-cyan-400' },
+        { id: 'softwareSetup', label: 'Software Setup', icon: Settings, accent: 'from-stone-500 to-zinc-600', textAccent: 'text-stone-300' }
+      ]
+    }
   ];
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#f1f5f9] font-sans text-slate-800">
+    <div className="flex h-screen w-screen overflow-hidden bg-[#fdfaf5] font-sans text-stone-900">
       {/* ========================================================= */}
-      {/* 1. LEFT SIDEBAR (EXACT JANATHA MIRROR FOREST GREEN THEME) */}
+      {/* 1. UNIQUE TEMPLE MAROON & GOLD LEFT SIDEBAR               */}
       {/* ========================================================= */}
-      <aside className={`bg-[#064e3b] text-slate-100 flex flex-col border-r border-emerald-900/60 flex-shrink-0 h-screen transition-all duration-300 z-40 select-none ${
+      <aside className={`bg-gradient-to-b from-[#240409] via-[#330811] to-[#1c0206] text-amber-100 flex flex-col border-r border-amber-900/50 flex-shrink-0 h-screen transition-all duration-300 z-40 select-none shadow-2xl ${
         sidebarCollapsed ? 'w-20' : 'w-72'
       }`}>
         {/* Brand Header */}
-        <div className="p-4 border-b border-emerald-800/60 flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-3 overflow-hidden">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-300 flex items-center justify-center font-black text-emerald-950 text-2xl shadow-md shrink-0">
+        <div className="p-4 border-b border-amber-800/40 bg-black/20 flex items-center justify-between">
+          <Link href="/" className="flex items-center space-x-3 overflow-hidden group">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#78131e] via-[#b91c1c] to-[#f59e0b] border border-amber-300/50 flex items-center justify-center font-black text-white text-xl shadow-lg shrink-0 group-hover:scale-105 transition-transform">
               🕉️
             </div>
             {!sidebarCollapsed && (
               <div className="flex flex-col leading-tight">
-                <span className="font-extrabold text-sm tracking-wide text-white font-serif uppercase">
-                  Astadasapeetam
+                <span className="font-extrabold text-xs tracking-wider text-amber-200 font-serif uppercase">
+                  ASTADASAPEETAM
                 </span>
-                <span className="text-[10px] text-amber-300 font-semibold uppercase tracking-wider">
-                  {user?.role === 'digital_marketing' ? 'Marketing Studio' : user?.role === 'astrologer' ? 'Astrologer Studio' : 'Super Admin Console'}
+                <span className="text-[10px] text-amber-400 font-black tracking-widest uppercase">
+                  {user?.role === 'digital_marketing' ? 'Marketing Studio' : user?.role === 'astrologer' ? 'Astrologer Studio' : 'Divine Sanctuary'}
                 </span>
               </div>
             )}
@@ -423,61 +449,74 @@ export default function UnifiedConsolePage() {
 
           <button
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="text-emerald-300 hover:text-white p-1 rounded-lg hover:bg-emerald-800/40 text-xs"
+            className="text-amber-300 hover:text-white p-1 rounded-lg hover:bg-white/10 text-xs transition"
             title="Toggle Sidebar"
           >
             {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </button>
         </div>
 
-        {/* Categories on the Left (Properly Ordered) */}
-        <nav className="flex-1 overflow-y-auto p-3 space-y-1 text-xs">
-          {sidebarItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeTab === item.id;
+        {/* Categories on the Left (Grouped & Ordered with Distinct Spiritual Badges) */}
+        <nav className="flex-1 overflow-y-auto p-3 space-y-3 text-xs custom-scrollbar">
+          {sidebarSections.map((sec, secIdx) => (
+            <div key={secIdx} className="space-y-1">
+              {!sidebarCollapsed && (
+                <div className="text-[9px] uppercase tracking-widest font-black text-amber-400/60 px-3 pt-2 pb-0.5 font-mono">
+                  {sec.heading}
+                </div>
+              )}
+              {sec.items.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.id;
 
-            return (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl font-bold transition text-left ${
-                  isActive
-                    ? 'bg-[#d97706] text-white shadow-md'
-                    : 'text-slate-200 hover:text-white hover:bg-emerald-800/50'
-                }`}
-              >
-                <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : item.highlight ? 'text-emerald-300' : 'text-slate-300'}`} />
-                {!sidebarCollapsed && (
-                  <div className="flex items-center justify-between flex-1">
-                    <span>{item.label}</span>
-                    {item.badge !== undefined && (
-                      <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                        isActive ? 'bg-amber-800 text-white' : 'bg-emerald-950/80 text-amber-300'
-                      }`}>
-                        {item.badge}
-                      </span>
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl font-bold transition-all duration-150 text-left cursor-pointer ${
+                      isActive
+                        ? 'bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-stone-950 font-black shadow-lg shadow-amber-950/60 border-l-4 border-amber-200 scale-[1.02]'
+                        : 'text-stone-300 hover:text-white hover:bg-white/10 hover:border-l-2 hover:border-amber-400/70'
+                    }`}
+                  >
+                    <Icon className={`w-4 h-4 shrink-0 transition-colors ${
+                      isActive ? 'text-stone-950' : item.highlight ? 'text-emerald-400' : item.textAccent
+                    }`} />
+                    {!sidebarCollapsed && (
+                      <div className="flex items-center justify-between flex-1">
+                        <span className="truncate">{item.label}</span>
+                        {item.badge !== undefined && (
+                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-black tracking-wide ${
+                            isActive 
+                              ? 'bg-stone-950 text-amber-300' 
+                              : 'bg-amber-900/50 text-amber-200 border border-amber-600/30'
+                          }`}>
+                            {item.badge}
+                          </span>
+                        )}
+                      </div>
                     )}
-                  </div>
-                )}
-              </button>
-            );
-          })}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
         </nav>
 
-        {/* Sidebar Footer User Card */}
-        <div className="p-3 border-t border-emerald-800/60 bg-emerald-950/40 text-xs">
+        {/* Sidebar Footer User Card with Spiritual Gold Touch */}
+        <div className="p-3 border-t border-amber-800/40 bg-black/40 text-xs">
           {!sidebarCollapsed ? (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 rounded-full bg-amber-400 text-stone-900 font-black flex items-center justify-center text-xs shadow">
+                <div className="flex items-center space-x-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-300 text-stone-950 font-black flex items-center justify-center text-xs shadow-md border border-amber-200">
                     {(user?.name || 'Gowrav Vungarala').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                   </div>
                   <div>
-                    <div className="font-bold text-white text-[11px] truncate max-w-[130px]">
+                    <div className="font-extrabold text-amber-100 text-[11px] truncate max-w-[125px]">
                       {user?.name || 'Gowrav Vungarala'}
                     </div>
-                    <div className="text-[10px] text-amber-300 font-semibold uppercase">
+                    <div className="text-[9px] text-amber-400 font-bold uppercase tracking-wider">
                       {user?.role === 'digital_marketing' ? 'Digital Marketing' : user?.role === 'astrologer' ? 'Astrologer' : 'Super Admin'}
                     </div>
                   </div>
@@ -490,7 +529,7 @@ export default function UnifiedConsolePage() {
                     localStorage.removeItem('astada_user');
                     window.location.href = '/';
                   }}
-                  className="text-emerald-300 hover:text-rose-400 p-1 transition"
+                  className="text-amber-300 hover:text-rose-400 p-1.5 rounded-lg hover:bg-white/10 transition"
                   title="Logout"
                 >
                   <LogOut className="w-4 h-4" />
@@ -498,16 +537,16 @@ export default function UnifiedConsolePage() {
               </div>
 
               {/* Fast Social Test Strip in Sidebar */}
-              <div className="pt-1 flex items-center justify-between text-[11px] text-emerald-200 border-t border-emerald-800/40">
-                <span className="text-[10px] text-emerald-300">Live Links:</span>
+              <div className="pt-1.5 flex items-center justify-between text-[11px] text-amber-200 border-t border-amber-800/30">
+                <span className="text-[10px] text-amber-400 font-bold">Social Feeds:</span>
                 <div className="flex items-center space-x-2">
-                  <a href={socialProfiles.whatsapp} target="_blank" rel="noreferrer" title="Chat on WhatsApp" className="text-emerald-400 hover:text-white">
+                  <a href={socialProfiles.whatsapp} target="_blank" rel="noreferrer" title="Chat on WhatsApp" className="text-emerald-400 hover:text-white p-1 hover:bg-white/10 rounded">
                     <WhatsAppIcon className="w-3.5 h-3.5" />
                   </a>
-                  <a href={socialProfiles.instagram} target="_blank" rel="noreferrer" title="Open Instagram" className="text-pink-300 hover:text-white">
+                  <a href={socialProfiles.instagram} target="_blank" rel="noreferrer" title="Open Instagram" className="text-pink-400 hover:text-white p-1 hover:bg-white/10 rounded">
                     <InstagramIcon className="w-3.5 h-3.5" />
                   </a>
-                  <a href={socialProfiles.facebook} target="_blank" rel="noreferrer" title="Open Facebook" className="text-blue-300 hover:text-white">
+                  <a href={socialProfiles.facebook} target="_blank" rel="noreferrer" title="Open Facebook" className="text-blue-400 hover:text-white p-1 hover:bg-white/10 rounded">
                     <FacebookIcon className="w-3.5 h-3.5" />
                   </a>
                 </div>
@@ -520,7 +559,7 @@ export default function UnifiedConsolePage() {
                   localStorage.removeItem('astada_token');
                   window.location.href = '/';
                 }}
-                className="text-emerald-300 hover:text-rose-400"
+                className="text-amber-300 hover:text-rose-400 p-1.5 rounded-lg hover:bg-white/10"
                 title="Logout"
               >
                 <LogOut className="w-4 h-4" />
@@ -531,42 +570,49 @@ export default function UnifiedConsolePage() {
       </aside>
 
       {/* ========================================================= */}
-      {/* 2. MAIN CONSOLE CONTENT (NO PUBLIC FOOTER/HEADER)         */}
+      {/* 2. MAIN CONSOLE CONTENT (BESPOKE VEDIC IVORY & GOLD)     */}
       {/* ========================================================= */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+      <div className="flex-1 flex flex-col h-screen overflow-hidden bg-[#fbf8f3]">
         {/* Top Header Bar */}
-        <header className="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between shrink-0 shadow-xs">
+        <header className="bg-white/90 backdrop-blur-md border-b border-amber-200/60 px-6 py-3.5 flex items-center justify-between shrink-0 shadow-xs">
           <div className="flex items-center space-x-3">
-            <h1 className="text-base sm:text-lg font-black text-slate-900 tracking-tight flex items-center space-x-2">
-              <span>Welcome back, {user?.name || 'Gowrav Vungarala'}!</span>
-              <span>👏</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <h1 className="text-base sm:text-lg font-black text-stone-900 font-serif tracking-tight flex items-center space-x-2">
+              <span>Namaste, {user?.name || 'Gowrav Vungarala'}!</span>
+              <span>🙏</span>
             </h1>
 
-            <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full">
+            <span className={`text-[10px] font-black uppercase px-3 py-1 rounded-full shadow-xs ${
+              user?.role === 'digital_marketing'
+                ? 'bg-amber-600 text-white border border-amber-300'
+                : user?.role === 'astrologer'
+                ? 'bg-indigo-900 text-indigo-100 border border-indigo-400'
+                : 'bg-gradient-to-r from-rose-900 to-[#78131e] text-amber-200 border border-amber-400/50'
+            }`}>
               {user?.role === 'digital_marketing' ? 'Digital Marketing' : user?.role === 'astrologer' ? 'Astrologer' : 'Super Admin'}
             </span>
 
             <button
               onClick={() => setUserGuideOpen(true)}
-              className="bg-emerald-950 hover:bg-emerald-900 text-white text-[11px] font-bold px-3 py-1 rounded-lg flex items-center space-x-1 transition shadow-xs cursor-pointer"
+              className="bg-stone-900 hover:bg-stone-800 text-amber-200 text-[11px] font-bold px-3 py-1 rounded-lg flex items-center space-x-1.5 transition shadow-xs cursor-pointer border border-amber-500/20"
             >
-              <BookOpen className="w-3.5 h-3.5 text-amber-300" />
+              <BookOpen className="w-3.5 h-3.5 text-amber-400" />
               <span>User Guide</span>
             </button>
           </div>
 
           <div className="flex items-center space-x-3">
-            <div className="hidden md:flex items-center space-x-2 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-lg text-xs font-semibold text-emerald-800">
-              <Compass className="w-3.5 h-3.5 text-emerald-600" />
-              <span>National &amp; Sacred Circuit Feed</span>
+            <div className="hidden md:flex items-center space-x-2 bg-amber-50 border border-amber-200/80 px-3 py-1 rounded-xl text-xs font-semibold text-amber-900">
+              <Sunrise className="w-3.5 h-3.5 text-amber-600" />
+              <span>18 Maha Shakti Peethas Network</span>
             </div>
 
             <Link
               href="/"
               target="_blank"
-              className="text-xs bg-[#064e3b] hover:bg-[#0b3d2c] text-white font-bold px-3.5 py-1.5 rounded-lg flex items-center space-x-1.5 transition shadow cursor-pointer"
+              className="text-xs bg-gradient-to-r from-[#78131e] via-[#8c1724] to-[#78131e] hover:brightness-110 text-white font-bold px-4 py-1.5 rounded-xl flex items-center space-x-1.5 transition shadow-sm cursor-pointer border border-amber-300/30"
             >
-              <span>View Public Website</span>
+              <span>View Public Sanctuary</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -593,13 +639,23 @@ export default function UnifiedConsolePage() {
         {/* Scrollable Work Area */}
         <main className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Headline & Beat Subheader */}
-          <div>
-            <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-              Global Yield &amp; System Performance
-            </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Beat/Scope: National &amp; International Sacred Peethas Network
-            </p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-200/50 pb-4">
+            <div>
+              <h2 className="text-xl sm:text-2xl font-black text-stone-900 font-serif tracking-tight">
+                Spiritual Governance &amp; Sacred Operations
+              </h2>
+              <p className="text-xs text-stone-500 mt-0.5">
+                Centralized management for 18 Maha Shakti Peethas, Temple Marketplace, and Vedic Services
+              </p>
+            </div>
+            <div className="flex items-center space-x-2 text-xs">
+              <span className="px-2.5 py-1 rounded-lg bg-white border border-amber-200 text-amber-900 font-bold">
+                Port: 3001
+              </span>
+              <span className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold">
+                API: Live
+              </span>
+            </div>
           </div>
 
           {/* ========================================================= */}
@@ -607,29 +663,30 @@ export default function UnifiedConsolePage() {
           {/* ========================================================= */}
           {activeTab === 'dashboard' && (
             <div className="space-y-6">
-              {/* Root Console Hero Card (Exact Janatha Mirror Styling) */}
-              <div className="bg-[#102d24] text-white rounded-3xl p-7 shadow-xl border border-emerald-800/80 relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+              {/* Grand Vedic Sanctuary Hero Card */}
+              <div className="bg-gradient-to-r from-[#2c050b] via-[#450b15] to-[#1c0827] text-white rounded-3xl p-7 shadow-2xl border border-amber-500/40 relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div className="space-y-3 max-w-2xl z-10">
-                  <div className="text-[11px] font-black uppercase tracking-widest text-emerald-400 font-mono">
-                    ROOT ACCESS — ALL SYSTEMS
+                  <div className="text-[10px] font-black uppercase tracking-widest text-amber-300 font-mono flex items-center space-x-2">
+                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+                    <span>✦ శ్రీ అష్టాదశ మహాశక్తి పీఠ సర్వోన్నత వేదిక • SACRED COMMAND SUITE</span>
                   </div>
                   <h3 className="text-2xl sm:text-3xl font-black tracking-tight text-white font-serif">
-                    Super Admin Console
+                    Astadasapeetam Divine Operations Console
                   </h3>
-                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                    Platform owner. Full unrestricted access — create &amp; delete any role, override any publish gate, manage social profiles (WhatsApp, Instagram, Facebook), control marketplace, curate spirituals, and access all 18 Peethas.
+                  <p className="text-xs sm:text-sm text-amber-100/80 leading-relaxed font-sans">
+                    Complete governance over the 18 Maha Shakti Peethas, 37+ Kshetras, Satvik Prasad Bazaar, Daily Panchangam, Devotee Yatras, and live social channels (WhatsApp, Instagram, Facebook).
                   </p>
                 </div>
 
-                <div className="bg-black/40 border border-emerald-700/40 p-4 rounded-2xl flex flex-col space-y-2 text-xs shrink-0 z-10">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400 font-mono">
-                    GEO ACCESS
+                <div className="bg-black/50 border border-amber-500/30 p-4 rounded-2xl flex flex-col space-y-2 text-xs shrink-0 z-10 shadow-lg">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-300 font-mono">
+                    SACRED JURISDICTION
                   </span>
                   <div className="flex flex-wrap gap-1.5">
-                    {['National', 'State', 'District', '18 Peethas', '37+ Kshetras'].map((geo, idx) => (
+                    {['18 Maha Peethas', '37+ Kshetras', 'Daily Darshan', 'Vedic Panchangam', 'All-India Yatras'].map((geo, idx) => (
                       <span
                         key={idx}
-                        className="bg-emerald-950/80 border border-emerald-700/60 px-2 py-0.5 rounded-full text-[10px] text-amber-200 font-bold"
+                        className="bg-amber-950/70 border border-amber-500/40 px-2.5 py-0.5 rounded-full text-[10px] text-amber-200 font-bold"
                       >
                         {geo}
                       </span>
@@ -638,135 +695,219 @@ export default function UnifiedConsolePage() {
                 </div>
               </div>
 
-              {/* 10 Pastel Action Cards Grid */}
+              {/* 4 Unique Quick Metric Counters */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-gradient-to-br from-amber-50 to-orange-100/60 border border-amber-200 p-4 rounded-2xl shadow-xs">
+                  <div className="text-xs text-amber-800 font-bold">Sacred Peethas &amp; Kshetras</div>
+                  <div className="text-2xl font-black text-amber-950 mt-1">18 + 37</div>
+                  <div className="text-[10px] text-amber-700/80 mt-0.5">All-India Divine Network</div>
+                </div>
+                <div className="bg-gradient-to-br from-rose-50 to-pink-100/60 border border-rose-200 p-4 rounded-2xl shadow-xs">
+                  <div className="text-xs text-rose-800 font-bold">Bazaar Products Active</div>
+                  <div className="text-2xl font-black text-rose-950 mt-1">{products.length}</div>
+                  <div className="text-[10px] text-rose-700/80 mt-0.5">Puja kits, rudraksha &amp; prasad</div>
+                </div>
+                <div className="bg-gradient-to-br from-emerald-50 to-teal-100/60 border border-emerald-200 p-4 rounded-2xl shadow-xs">
+                  <div className="text-xs text-emerald-800 font-bold">Devotees &amp; Staff</div>
+                  <div className="text-2xl font-black text-emerald-950 mt-1">{users.length}</div>
+                  <div className="text-[10px] text-emerald-700/80 mt-0.5">Registered devotee accounts</div>
+                </div>
+                <div className="bg-gradient-to-br from-indigo-50 to-purple-100/60 border border-indigo-200 p-4 rounded-2xl shadow-xs">
+                  <div className="text-xs text-indigo-800 font-bold">Jyotisha Consultations</div>
+                  <div className="text-2xl font-black text-indigo-950 mt-1">{consultations.length}</div>
+                  <div className="text-[10px] text-indigo-700/80 mt-0.5">Birth chart &amp; remedy inquiries</div>
+                </div>
+              </div>
+
+              {/* 10 Bespoke, Unique-Type Action Cards Grid with Distinct Colors */}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                {/* 1. Marketplace */}
                 <button
                   onClick={() => setActiveTab('marketplace')}
-                  className="bg-[#f0fdf4] hover:bg-[#dcfce7] border border-emerald-200 p-4 rounded-2xl text-left transition shadow-xs flex flex-col justify-between space-y-3"
+                  className="bg-gradient-to-br from-amber-50 to-orange-100/70 hover:from-amber-100 hover:to-orange-200 border border-amber-300 p-4.5 rounded-2xl text-left transition-all duration-200 hover:-translate-y-1 shadow-xs hover:shadow-md flex flex-col justify-between space-y-3 cursor-pointer group"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-700 text-xl font-bold">
-                    🛍️
+                  <div className="flex items-center justify-between">
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-800 flex items-center justify-center text-xl font-bold shadow-inner">
+                      🛍️
+                    </div>
+                    <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-600 text-white">
+                      BAZAAR
+                    </span>
                   </div>
                   <div>
-                    <h4 className="font-black text-slate-900 text-xs sm:text-sm">Marketplace</h4>
-                    <p className="text-[11px] text-slate-500 mt-1">Puja kits, certified rudraksha &amp; prasadam.</p>
+                    <h4 className="font-black text-stone-900 text-xs sm:text-sm group-hover:text-amber-900 transition">Marketplace</h4>
+                    <p className="text-[11px] text-amber-900/70 mt-1 leading-snug">Puja kits, certified rudraksha &amp; prasadams.</p>
                   </div>
                 </button>
 
+                {/* 2. Banners & Ads */}
                 <button
                   onClick={() => setActiveTab('banners')}
-                  className="bg-[#fff7ed] hover:bg-[#ffedd5] border border-amber-200 p-4 rounded-2xl text-left transition shadow-xs flex flex-col justify-between space-y-3"
+                  className="bg-gradient-to-br from-rose-50 to-red-100/70 hover:from-rose-100 hover:to-red-200 border border-rose-300 p-4.5 rounded-2xl text-left transition-all duration-200 hover:-translate-y-1 shadow-xs hover:shadow-md flex flex-col justify-between space-y-3 cursor-pointer group"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700 text-xl font-bold">
-                    📢
+                  <div className="flex items-center justify-between">
+                    <div className="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-800 flex items-center justify-center text-xl font-bold shadow-inner">
+                      📢
+                    </div>
+                    <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-rose-600 text-white">
+                      ALERTS
+                    </span>
                   </div>
                   <div>
-                    <h4 className="font-black text-slate-900 text-xs sm:text-sm">Banners &amp; Ads</h4>
-                    <p className="text-[11px] text-slate-500 mt-1">Top sponsored, sidebar &amp; festival banners.</p>
+                    <h4 className="font-black text-stone-900 text-xs sm:text-sm group-hover:text-rose-900 transition">Banners &amp; Ads</h4>
+                    <p className="text-[11px] text-rose-900/70 mt-1 leading-snug">Top sponsored, sidebar &amp; festival banners.</p>
                   </div>
                 </button>
 
+                {/* 3. Website Sections */}
                 <button
                   onClick={() => setActiveTab('websections')}
-                  className="bg-[#ecfdf5] hover:bg-[#d1fae5] border border-teal-200 p-4 rounded-2xl text-left transition shadow-xs flex flex-col justify-between space-y-3"
+                  className="bg-gradient-to-br from-yellow-50 to-amber-100/70 hover:from-yellow-100 hover:to-amber-200 border border-yellow-300 p-4.5 rounded-2xl text-left transition-all duration-200 hover:-translate-y-1 shadow-xs hover:shadow-md flex flex-col justify-between space-y-3 cursor-pointer group"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-teal-100 flex items-center justify-center text-teal-700 text-xl font-bold">
-                    🏛️
+                  <div className="flex items-center justify-between">
+                    <div className="w-10 h-10 rounded-xl bg-yellow-500/20 text-yellow-900 flex items-center justify-center text-xl font-bold shadow-inner">
+                      🏛️
+                    </div>
+                    <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-700 text-white">
+                      VEDIC CURATION
+                    </span>
                   </div>
                   <div>
-                    <h4 className="font-black text-slate-900 text-xs sm:text-sm">Web Sections</h4>
-                    <p className="text-[11px] text-slate-500 mt-1">Live ticker, hero banner &amp; daily sloka.</p>
+                    <h4 className="font-black text-stone-900 text-xs sm:text-sm group-hover:text-amber-900 transition">Web Sections</h4>
+                    <p className="text-[11px] text-yellow-950/70 mt-1 leading-snug">Live ticker, hero banner &amp; daily sloka.</p>
                   </div>
                 </button>
 
+                {/* 4. Spirituals & Peethas */}
                 <button
                   onClick={() => setActiveTab('spirituals')}
-                  className="bg-[#faf5ff] hover:bg-[#f3e8ff] border border-purple-200 p-4 rounded-2xl text-left transition shadow-xs flex flex-col justify-between space-y-3"
+                  className="bg-gradient-to-br from-fuchsia-50 to-pink-100/70 hover:from-fuchsia-100 hover:to-pink-200 border border-fuchsia-300 p-4.5 rounded-2xl text-left transition-all duration-200 hover:-translate-y-1 shadow-xs hover:shadow-md flex flex-col justify-between space-y-3 cursor-pointer group"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center text-purple-700 text-xl font-bold">
-                    📿
+                  <div className="flex items-center justify-between">
+                    <div className="w-10 h-10 rounded-xl bg-fuchsia-500/20 text-fuchsia-800 flex items-center justify-center text-xl font-bold shadow-inner">
+                      📿
+                    </div>
+                    <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-fuchsia-700 text-white">
+                      18 PEETHAS
+                    </span>
                   </div>
                   <div>
-                    <h4 className="font-black text-slate-900 text-xs sm:text-sm">Spirituals</h4>
-                    <p className="text-[11px] text-slate-500 mt-1">18 Shakti Peethas &amp; 37+ Kshetras directory.</p>
+                    <h4 className="font-black text-stone-900 text-xs sm:text-sm group-hover:text-fuchsia-900 transition">18 Peethas Hub</h4>
+                    <p className="text-[11px] text-fuchsia-900/70 mt-1 leading-snug">18 Shakti Peethas &amp; 37+ Kshetras directory.</p>
                   </div>
                 </button>
 
+                {/* 5. Coupons & Campaigns */}
                 <button
                   onClick={() => setActiveTab('coupons')}
-                  className="bg-[#fefce8] hover:bg-[#fef9c3] border border-yellow-200 p-4 rounded-2xl text-left transition shadow-xs flex flex-col justify-between space-y-3"
+                  className="bg-gradient-to-br from-purple-50 to-indigo-100/70 hover:from-purple-100 hover:to-indigo-200 border border-purple-300 p-4.5 rounded-2xl text-left transition-all duration-200 hover:-translate-y-1 shadow-xs hover:shadow-md flex flex-col justify-between space-y-3 cursor-pointer group"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-yellow-100 flex items-center justify-center text-yellow-700 text-xl font-bold">
-                    🎟️
+                  <div className="flex items-center justify-between">
+                    <div className="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-800 flex items-center justify-center text-xl font-bold shadow-inner">
+                      🎟️
+                    </div>
+                    <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-purple-700 text-white">
+                      DEALS
+                    </span>
                   </div>
                   <div>
-                    <h4 className="font-black text-slate-900 text-xs sm:text-sm">Coupons &amp; Deals</h4>
-                    <p className="text-[11px] text-slate-500 mt-1">Spiritual coupon codes &amp; campaign metrics.</p>
+                    <h4 className="font-black text-stone-900 text-xs sm:text-sm group-hover:text-purple-900 transition">Coupons &amp; Deals</h4>
+                    <p className="text-[11px] text-purple-900/70 mt-1 leading-snug">Spiritual coupon codes &amp; campaign metrics.</p>
                   </div>
                 </button>
 
+                {/* 6. Social Connections */}
                 <button
                   onClick={() => setActiveTab('socialConnections')}
-                  className="bg-[#eef2ff] hover:bg-[#e0e7ff] border border-indigo-200 p-4 rounded-2xl text-left transition shadow-xs flex flex-col justify-between space-y-3"
+                  className="bg-gradient-to-br from-teal-50 to-emerald-100/70 hover:from-teal-100 hover:to-emerald-200 border border-teal-300 p-4.5 rounded-2xl text-left transition-all duration-200 hover:-translate-y-1 shadow-xs hover:shadow-md flex flex-col justify-between space-y-3 cursor-pointer group"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-700 text-xl font-bold">
-                    🔗
+                  <div className="flex items-center justify-between">
+                    <div className="w-10 h-10 rounded-xl bg-teal-500/20 text-teal-800 flex items-center justify-center text-xl font-bold shadow-inner">
+                      🔗
+                    </div>
+                    <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-teal-700 text-white">
+                      WHATSAPP &amp; IG
+                    </span>
                   </div>
                   <div>
-                    <h4 className="font-black text-slate-900 text-xs sm:text-sm">Social Connections</h4>
-                    <p className="text-[11px] text-slate-500 mt-1">Link WhatsApp, Instagram &amp; Facebook.</p>
+                    <h4 className="font-black text-stone-900 text-xs sm:text-sm group-hover:text-teal-900 transition">Social Connections</h4>
+                    <p className="text-[11px] text-teal-900/70 mt-1 leading-snug">Link WhatsApp, Instagram &amp; Facebook.</p>
                   </div>
                 </button>
 
+                {/* 7. Add Post */}
                 <button
                   onClick={() => setActiveTab('addPost')}
-                  className="bg-[#fff1f2] hover:bg-[#ffe4e6] border border-rose-200 p-4 rounded-2xl text-left transition shadow-xs flex flex-col justify-between space-y-3"
+                  className="bg-gradient-to-br from-emerald-50 to-teal-100/70 hover:from-emerald-100 hover:to-teal-200 border border-emerald-300 p-4.5 rounded-2xl text-left transition-all duration-200 hover:-translate-y-1 shadow-xs hover:shadow-md flex flex-col justify-between space-y-3 cursor-pointer group"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center text-rose-700 text-xl font-bold">
-                    ✍️
+                  <div className="flex items-center justify-between">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-800 flex items-center justify-center text-xl font-bold shadow-inner">
+                      ✍️
+                    </div>
+                    <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-700 text-white">
+                      BILINGUAL
+                    </span>
                   </div>
                   <div>
-                    <h4 className="font-black text-slate-900 text-xs sm:text-sm">Add Sacred Post</h4>
-                    <p className="text-[11px] text-slate-500 mt-1">Compose bilingual articles &amp; slokas.</p>
+                    <h4 className="font-black text-stone-900 text-xs sm:text-sm group-hover:text-emerald-900 transition">Add Sacred Post</h4>
+                    <p className="text-[11px] text-emerald-900/70 mt-1 leading-snug">Compose bilingual articles &amp; slokas.</p>
                   </div>
                 </button>
 
+                {/* 8. Post List */}
                 <button
                   onClick={() => setActiveTab('postList')}
-                  className="bg-[#fef2f2] hover:bg-[#fee2e2] border border-orange-200 p-4 rounded-2xl text-left transition shadow-xs flex flex-col justify-between space-y-3"
+                  className="bg-gradient-to-br from-sky-50 to-blue-100/70 hover:from-sky-100 hover:to-blue-200 border border-sky-300 p-4.5 rounded-2xl text-left transition-all duration-200 hover:-translate-y-1 shadow-xs hover:shadow-md flex flex-col justify-between space-y-3 cursor-pointer group"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-orange-700 text-xl font-bold">
-                    📋
+                  <div className="flex items-center justify-between">
+                    <div className="w-10 h-10 rounded-xl bg-sky-500/20 text-sky-800 flex items-center justify-center text-xl font-bold shadow-inner">
+                      📋
+                    </div>
+                    <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-sky-700 text-white">
+                      REGISTRY
+                    </span>
                   </div>
                   <div>
-                    <h4 className="font-black text-slate-900 text-xs sm:text-sm">Post List</h4>
-                    <p className="text-[11px] text-slate-500 mt-1">Track published articles &amp; views.</p>
+                    <h4 className="font-black text-stone-900 text-xs sm:text-sm group-hover:text-sky-900 transition">Post Registry</h4>
+                    <p className="text-[11px] text-sky-900/70 mt-1 leading-snug">Track published articles &amp; views.</p>
                   </div>
                 </button>
 
+                {/* 9. Astrologer Desk */}
                 <button
-                  onClick={() => setActiveTab('users')}
-                  className="bg-[#f0f4ff] hover:bg-[#e4ebff] border border-blue-200 p-4 rounded-2xl text-left transition shadow-xs flex flex-col justify-between space-y-3"
+                  onClick={() => setActiveTab('astrology')}
+                  className="bg-gradient-to-br from-indigo-50 to-purple-100/70 hover:from-indigo-100 hover:to-purple-200 border border-indigo-300 p-4.5 rounded-2xl text-left transition-all duration-200 hover:-translate-y-1 shadow-xs hover:shadow-md flex flex-col justify-between space-y-3 cursor-pointer group"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-700 text-xl font-bold">
-                    👥
+                  <div className="flex items-center justify-between">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-800 flex items-center justify-center text-xl font-bold shadow-inner">
+                      🔮
+                    </div>
+                    <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-indigo-800 text-white">
+                      JYOTISHA
+                    </span>
                   </div>
                   <div>
-                    <h4 className="font-black text-slate-900 text-xs sm:text-sm">User Management</h4>
-                    <p className="text-[11px] text-slate-500 mt-1">Staff registry &amp; role permissions.</p>
+                    <h4 className="font-black text-stone-900 text-xs sm:text-sm group-hover:text-indigo-900 transition">Astrologer Desk</h4>
+                    <p className="text-[11px] text-indigo-900/70 mt-1 leading-snug">Devotee birth charts &amp; remedies.</p>
                   </div>
                 </button>
 
+                {/* 10. Software Setup */}
                 <button
                   onClick={() => setActiveTab('softwareSetup')}
-                  className="bg-[#f8fafc] hover:bg-[#f1f5f9] border border-slate-300 p-4 rounded-2xl text-left transition shadow-xs flex flex-col justify-between space-y-3"
+                  className="bg-gradient-to-br from-stone-50 to-amber-100/50 hover:from-stone-100 hover:to-amber-200/50 border border-stone-300 p-4.5 rounded-2xl text-left transition-all duration-200 hover:-translate-y-1 shadow-xs hover:shadow-md flex flex-col justify-between space-y-3 cursor-pointer group"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-slate-200 flex items-center justify-center text-slate-700 text-xl font-bold">
-                    ⚙️
+                  <div className="flex items-center justify-between">
+                    <div className="w-10 h-10 rounded-xl bg-stone-500/20 text-stone-800 flex items-center justify-center text-xl font-bold shadow-inner">
+                      ⚙️
+                    </div>
+                    <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-stone-800 text-amber-200">
+                      SYSTEM
+                    </span>
                   </div>
                   <div>
-                    <h4 className="font-black text-slate-900 text-xs sm:text-sm">Software Setup</h4>
-                    <p className="text-[11px] text-slate-500 mt-1">Diagnostics, ports &amp; cache purge.</p>
+                    <h4 className="font-black text-stone-900 text-xs sm:text-sm group-hover:text-stone-900 transition">Software Setup</h4>
+                    <p className="text-[11px] text-stone-700/70 mt-1 leading-snug">Diagnostics, ports &amp; cache purge.</p>
                   </div>
                 </button>
               </div>
@@ -914,9 +1055,9 @@ export default function UnifiedConsolePage() {
                   <button
                     type="submit"
                     disabled={actionLoading}
-                    className="bg-[#064e3b] hover:bg-[#0b3d2c] text-white px-6 py-2.5 rounded-xl font-black text-xs shadow-md flex items-center space-x-2"
+                    className="bg-gradient-to-r from-[#78131e] to-[#911b27] hover:from-[#5c0d16] hover:to-[#78131e] text-white px-6 py-2.5 rounded-xl font-black text-xs shadow-md flex items-center space-x-2 border border-amber-300/30 cursor-pointer transition"
                   >
-                    <Check className="w-4 h-4 text-amber-400" />
+                    <Check className="w-4 h-4 text-amber-300" />
                     <span>{actionLoading ? 'Saving...' : 'Save & Sync Social Connections Platform-wide'}</span>
                   </button>
                 </div>
@@ -942,9 +1083,9 @@ export default function UnifiedConsolePage() {
 
                 <button
                   onClick={() => setIsAddProductOpen(true)}
-                  className="bg-[#064e3b] hover:bg-[#0b3d2c] text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center space-x-1.5 shadow"
+                  className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:brightness-110 text-stone-950 px-4 py-2 rounded-xl text-xs font-black flex items-center space-x-1.5 shadow border border-amber-300/40 cursor-pointer transition"
                 >
-                  <PlusCircle className="w-4 h-4 text-amber-400" />
+                  <PlusCircle className="w-4 h-4 text-stone-950" />
                   <span>Add New Product</span>
                 </button>
               </div>
@@ -1159,7 +1300,7 @@ export default function UnifiedConsolePage() {
 
               <div className="bg-white rounded-2xl border overflow-hidden shadow-xs">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-[#064e3b] text-white uppercase text-[10px] tracking-wider">
+                  <thead className="bg-gradient-to-r from-[#3b0811] via-[#4d0c17] to-[#3b0811] text-amber-200 uppercase text-[10px] tracking-wider border-b border-amber-900/40">
                     <tr>
                       <th className="py-3 px-4">Campaign Title</th>
                       <th className="py-3 px-4">Coupon Code</th>
@@ -1300,9 +1441,9 @@ export default function UnifiedConsolePage() {
                   <button
                     type="submit"
                     disabled={actionLoading}
-                    className="bg-[#064e3b] hover:bg-[#0b3d2c] text-white px-6 py-2.5 rounded-xl font-bold text-xs shadow flex items-center space-x-2"
+                    className="bg-gradient-to-r from-[#78131e] to-[#911b27] hover:from-[#5c0d16] hover:to-[#78131e] text-white px-6 py-2.5 rounded-xl font-bold text-xs shadow flex items-center space-x-2 border border-amber-300/30 cursor-pointer"
                   >
-                    <Send className="w-4 h-4 text-amber-400" />
+                    <Send className="w-4 h-4 text-amber-300" />
                     <span>Publish Post</span>
                   </button>
                 </div>
@@ -1325,7 +1466,7 @@ export default function UnifiedConsolePage() {
 
                 <button
                   onClick={() => setActiveTab('addPost')}
-                  className="bg-[#064e3b] hover:bg-[#0b3d2c] text-white px-4 py-2 rounded-xl text-xs font-bold"
+                  className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:brightness-110 text-stone-950 px-4 py-2 rounded-xl text-xs font-black cursor-pointer shadow border border-amber-300/40"
                 >
                   + Add Post
                 </button>
@@ -1333,7 +1474,7 @@ export default function UnifiedConsolePage() {
 
               <div className="bg-white rounded-2xl border overflow-hidden shadow-xs">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-[#064e3b] text-white uppercase text-[10px] tracking-wider">
+                  <thead className="bg-gradient-to-r from-[#3b0811] via-[#4d0c17] to-[#3b0811] text-amber-200 uppercase text-[10px] tracking-wider border-b border-amber-900/40">
                     <tr>
                       <th className="py-3 px-4">Title</th>
                       <th className="py-3 px-4">Category</th>
@@ -1384,7 +1525,7 @@ export default function UnifiedConsolePage() {
 
               <div className="bg-white rounded-2xl border overflow-hidden shadow-xs">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-[#064e3b] text-white uppercase text-[10px] tracking-wider">
+                  <thead className="bg-gradient-to-r from-[#3b0811] via-[#4d0c17] to-[#3b0811] text-amber-200 uppercase text-[10px] tracking-wider border-b border-amber-900/40">
                     <tr>
                       <th className="py-3 px-4">Name</th>
                       <th className="py-3 px-4">Email</th>
@@ -1517,7 +1658,7 @@ export default function UnifiedConsolePage() {
                   fetchAllData(token);
                   showToast('success', 'Diagnostics refreshed and cache purged!');
                 }}
-                className="bg-[#064e3b] text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center space-x-1.5"
+                className="bg-gradient-to-r from-[#78131e] to-[#911b27] hover:from-[#5c0d16] hover:to-[#78131e] text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center space-x-1.5 shadow-sm cursor-pointer border border-amber-300/30"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
                 <span>Purge Cache &amp; Refresh Diagnostics</span>
@@ -1563,19 +1704,19 @@ export default function UnifiedConsolePage() {
       {userGuideOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
           <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-emerald-200">
-            <div className="bg-[#064e3b] text-white p-4 flex items-center justify-between">
+            <div className="bg-gradient-to-r from-[#3b0811] via-[#4d0c17] to-[#3b0811] text-amber-200 p-4 flex items-center justify-between border-b border-amber-900/40">
               <h3 className="font-bold text-sm flex items-center space-x-2">
                 <BookOpen className="w-4 h-4 text-amber-300" />
                 <span>Super Admin Operational Guide</span>
               </h3>
-              <button onClick={() => setUserGuideOpen(false)} className="text-emerald-200 hover:text-white">
+              <button onClick={() => setUserGuideOpen(false)} className="text-amber-200 hover:text-white cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="p-6 space-y-3 text-xs leading-relaxed text-slate-700">
               <p>
-                This console is structured just like <strong>Janatha Mirror</strong>. All categories are placed on the left side:
+                Welcome to the <strong>Astadasapeetam Divine Sanctuary Console</strong>. All categories are placed on the left side:
               </p>
               <ul className="list-disc pl-4 space-y-1">
                 <li><strong>Marketplace:</strong> Real-time toggle of stock availability, prices, and discounts.</li>
@@ -1586,7 +1727,7 @@ export default function UnifiedConsolePage() {
               <div className="pt-2 flex justify-end">
                 <button
                   onClick={() => setUserGuideOpen(false)}
-                  className="bg-[#064e3b] text-white font-bold px-5 py-2 rounded-xl text-xs"
+                  className="bg-gradient-to-r from-[#78131e] to-[#911b27] hover:from-[#5c0d16] hover:to-[#78131e] text-white font-bold px-5 py-2 rounded-xl text-xs cursor-pointer shadow-xs border border-amber-300/30"
                 >
                   Close Guide
                 </button>
@@ -1599,10 +1740,10 @@ export default function UnifiedConsolePage() {
       {/* Add Product Modal */}
       {isAddProductOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border">
-            <div className="bg-[#064e3b] text-white p-4 flex items-center justify-between">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-amber-200">
+            <div className="bg-gradient-to-r from-[#3b0811] via-[#4d0c17] to-[#3b0811] text-amber-200 p-4 flex items-center justify-between border-b border-amber-900/40">
               <h3 className="font-bold text-sm">Add Product to Marketplace</h3>
-              <button onClick={() => setIsAddProductOpen(false)} className="text-emerald-200 hover:text-white">
+              <button onClick={() => setIsAddProductOpen(false)} className="text-amber-200 hover:text-white cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -1663,14 +1804,14 @@ export default function UnifiedConsolePage() {
                 <button
                   type="button"
                   onClick={() => setIsAddProductOpen(false)}
-                  className="px-4 py-2 border rounded-lg"
+                  className="px-4 py-2 border rounded-lg hover:bg-stone-50 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={actionLoading}
-                  className="bg-[#064e3b] text-white px-5 py-2 rounded-lg font-bold"
+                  className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:brightness-110 text-stone-950 px-5 py-2 rounded-lg font-black shadow border border-amber-300/40 cursor-pointer"
                 >
                   Add Product
                 </button>
