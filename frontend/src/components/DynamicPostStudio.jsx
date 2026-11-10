@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import ImageOptimizationStudio from './ImageOptimizationStudio';
 import {
   Sparkles,
   Eye,
@@ -20,7 +21,13 @@ import {
   Flame,
   Sun,
   Compass,
-  Heart
+  Heart,
+  Globe,
+  Search,
+  Copy,
+  Check,
+  Share2,
+  Lock
 } from 'lucide-react';
 
 export const DEVOTIONAL_CATEGORIES = [
@@ -301,6 +308,10 @@ export const DEFAULT_POST_DATA = {
   content: '',
   tags: 'Shakti Peethas, Vedic Culture, Temples',
   keywords: 'Astadasapeetam, Shakti Peetha, Panchangam',
+  metaTitle: '',
+  metaDescription: '',
+  metaKeywords: 'Astadasapeetam, Shakti Peethas, Vedic Culture, Daily Panchangam, Devotional Guide',
+  imageMeta: null,
   status: 'published',
   templeLocation: 'Srisailam, Andhra Pradesh',
   darshanTimings: '5:00 AM - 9:30 PM',
@@ -521,13 +532,25 @@ export default function DynamicPostStudio({
               {/* Bilingual Titles */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="font-bold text-stone-700 block mb-1 text-xs">Title (English) *</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="font-bold text-stone-700 text-xs">Title (English) *</label>
+                    <span className="text-[10px] text-stone-400">Primary Headline</span>
+                  </div>
                   <input
                     type="text"
                     required
                     placeholder="e.g. Srisailam Bhramaramba Devi Temple Puranam"
                     value={newPost.title}
-                    onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const autoSlug = val.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+                      setNewPost(prev => ({
+                        ...prev,
+                        title: val,
+                        slug: (!prev.slug || prev.slug === prev.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')) ? autoSlug : prev.slug,
+                        metaTitle: (!prev.metaTitle || prev.metaTitle === prev.title) ? val : prev.metaTitle
+                      }));
+                    }}
                     className="w-full border border-stone-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-500 font-medium"
                   />
                 </div>
@@ -540,6 +563,49 @@ export default function DynamicPostStudio({
                     onChange={(e) => setNewPost({ ...newPost, titleTelugu: e.target.value })}
                     className="w-full border border-stone-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-amber-600 font-serif"
                   />
+                </div>
+              </div>
+
+              {/* Permanent Devotional URL Slug & Category Continuation */}
+              <div className="bg-stone-50 border border-stone-200 rounded-2xl p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-stone-800 text-xs flex items-center space-x-1.5">
+                    <Globe className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Permanent Devotional URL Slug (వర్గం శాశ్వత లంకె) *</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const gen = newPost.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'sacred-article';
+                      setNewPost(prev => ({ ...prev, slug: gen }));
+                    }}
+                    className="text-[10px] text-amber-700 hover:text-amber-900 font-bold underline cursor-pointer"
+                  >
+                    Regenerate from Title
+                  </button>
+                </div>
+
+                <div className="flex items-center rounded-xl border border-stone-300 bg-white overflow-hidden shadow-2xs focus-within:border-amber-600 focus-within:ring-1 focus-within:ring-amber-500">
+                  <span className="px-3 py-2 text-xs font-mono text-stone-600 bg-stone-100 border-r border-stone-200 shrink-0 font-bold flex items-center space-x-1">
+                    <span>https://astadasapeetam.org/</span>
+                    <span className="text-amber-800 bg-amber-100/70 px-1.5 py-0.5 rounded text-[11px]">{newPost.category}</span>
+                    <span>/</span>
+                  </span>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. sri-krishna-avataram or srisailam-bhramaramba"
+                    value={newPost.slug || ''}
+                    onChange={(e) => setNewPost({ ...newPost, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, '') })}
+                    className="w-full p-2.5 text-xs font-mono font-bold text-stone-800 bg-transparent focus:outline-none"
+                  />
+                </div>
+
+                <div className="text-[11px] text-stone-500 flex items-center space-x-1 font-mono">
+                  <span>Canonical URL:</span>
+                  <span className="text-amber-800 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-200/80">
+                    https://astadasapeetam.org/{newPost.category}/{newPost.slug || '(avatar-or-post-slug)'}
+                  </span>
                 </div>
               </div>
 
@@ -571,36 +637,7 @@ export default function DynamicPostStudio({
                 </div>
               </div>
 
-              {/* Featured Image URL with Presets */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="font-bold text-stone-700 text-xs">Featured Image URL</label>
-                  <div className="flex items-center space-x-1.5 text-[10px]">
-                    <span className="text-stone-400">Presets:</span>
-                    <button
-                      type="button"
-                      onClick={() => setNewPost({ ...newPost, featuredImage: '/images/temple_kashi.jpg' })}
-                      className="text-amber-700 hover:underline font-semibold cursor-pointer"
-                    >
-                      Temple
-                    </button>
-                    <span className="text-stone-300">•</span>
-                    <button
-                      type="button"
-                      onClick={() => setNewPost({ ...newPost, featuredImage: '/images/panchangam_hero.jpg' })}
-                      className="text-amber-700 hover:underline font-semibold cursor-pointer"
-                    >
-                      Vedic
-                    </button>
-                  </div>
-                </div>
-                <input
-                  type="text"
-                  value={newPost.featuredImage}
-                  onChange={(e) => setNewPost({ ...newPost, featuredImage: e.target.value })}
-                  className="w-full border border-stone-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-amber-600 font-mono"
-                />
-              </div>
+
 
               {/* Excerpt / Summary */}
               <div>
@@ -614,6 +651,19 @@ export default function DynamicPostStudio({
                 />
               </div>
             </div>
+
+            {/* IMAGE ATTACHMENT, ZOOM/CROP & WEBP/AVIF CONVERTER STUDIO */}
+            <ImageOptimizationStudio
+              featuredImage={newPost.featuredImage}
+              onImageChange={(optimizedDataUrl, meta) => {
+                setNewPost(prev => ({
+                  ...prev,
+                  featuredImage: optimizedDataUrl,
+                  imageMeta: meta
+                }));
+              }}
+              showToast={showToast}
+            />
 
             {/* SECTION 2: DYNAMIC CATEGORY-SPECIFIC FORM FIELDS */}
             <div className="bg-amber-50/50 rounded-3xl border border-amber-300/80 p-6 sm:p-7 shadow-xs space-y-4">
@@ -1498,27 +1548,129 @@ export default function DynamicPostStudio({
                 />
               </div>
 
-              {/* SEO Tags & Keywords */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                <div>
-                  <label className="font-bold text-stone-700 block mb-1 text-xs">Devotional Tags (Comma-separated)</label>
-                  <input
-                    type="text"
-                    placeholder="Shakti Peethas, Daily Slokas, Panchangam"
-                    value={newPost.tags || ''}
-                    onChange={(e) => setNewPost({ ...newPost, tags: e.target.value })}
-                    className="w-full border border-stone-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-amber-600"
-                  />
+              {/* Basic Tags */}
+              <div className="pt-2">
+                <label className="font-bold text-stone-700 block mb-1 text-xs">Devotional Taxonomy Tags (Comma-separated)</label>
+                <input
+                  type="text"
+                  placeholder="Shakti Peethas, Daily Slokas, Panchangam"
+                  value={newPost.tags || ''}
+                  onChange={(e) => setNewPost({ ...newPost, tags: e.target.value })}
+                  className="w-full border border-stone-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-amber-600 font-medium"
+                />
+              </div>
+            </div>
+
+            {/* SECTION 4: ADVANCED SEO & META SEARCH INDEXING STUDIO */}
+            <div className="bg-white rounded-3xl border border-stone-200 p-6 sm:p-7 shadow-xs space-y-5">
+              <div className="flex items-center justify-between border-b border-stone-100 pb-3">
+                <div className="flex items-center space-x-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
+                  <h3 className="font-black text-stone-900 text-sm uppercase tracking-wider flex items-center space-x-2">
+                    <Search className="w-4 h-4 text-blue-600" />
+                    <span>4. Search Engine Optimization (Meta Description &amp; Meta Keywords)</span>
+                  </h3>
                 </div>
-                <div>
-                  <label className="font-bold text-stone-700 block mb-1 text-xs">SEO Keywords (for Search Engines &amp; AI)</label>
-                  <input
-                    type="text"
-                    placeholder="Astadasapeetam, Shakti Peetha, Daily Darshan"
-                    value={newPost.keywords || ''}
-                    onChange={(e) => setNewPost({ ...newPost, keywords: e.target.value })}
-                    className="w-full border border-stone-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-amber-600"
-                  />
+                <span className="text-[10px] text-blue-700 font-mono font-bold bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
+                  Google &amp; AI Indexing
+                </span>
+              </div>
+
+              {/* Meta Title */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="font-bold text-stone-700 text-xs">
+                    SEO Meta Title (శోధన శీర్షిక)
+                  </label>
+                  <span className={`text-[10px] font-mono font-bold ${
+                    (newPost.metaTitle || newPost.title || '').length > 60 ? 'text-amber-600' : 'text-stone-400'
+                  }`}>
+                    {(newPost.metaTitle || newPost.title || '').length}/60 characters (Optimal)
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  placeholder="e.g. Srisailam Temple History, Timings & Sacred Shakti Peetha Darshan"
+                  value={newPost.metaTitle || newPost.title || ''}
+                  onChange={(e) => setNewPost({ ...newPost, metaTitle: e.target.value })}
+                  className="w-full border border-stone-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-blue-600 font-medium"
+                />
+              </div>
+
+              {/* Meta Description */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="font-bold text-stone-700 text-xs">
+                    SEO Meta Description (శోధన సారాంశ వివరణ) *
+                  </label>
+                  <span className={`text-[10px] font-mono font-bold ${
+                    (newPost.metaDescription || newPost.excerpt || '').length > 160 ? 'text-rose-600' : 'text-stone-400'
+                  }`}>
+                    {(newPost.metaDescription || newPost.excerpt || '').length}/160 characters (Optimal: 140-160)
+                  </span>
+                </div>
+                <textarea
+                  rows={3}
+                  placeholder="Provide a compelling 140-160 character description of this sacred post for Google snippets and WhatsApp / Facebook sharing previews..."
+                  value={newPost.metaDescription || newPost.excerpt || ''}
+                  onChange={(e) => setNewPost({ ...newPost, metaDescription: e.target.value, excerpt: e.target.value })}
+                  className="w-full border border-stone-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-blue-600 leading-relaxed"
+                />
+              </div>
+
+              {/* Meta Keywords */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="font-bold text-stone-700 text-xs">
+                    SEO Meta Keywords &amp; Focus Keyphrases (శోధన కీలకపదాలు) *
+                  </label>
+                  <span className="text-[10px] text-stone-400">Comma-separated</span>
+                </div>
+                <input
+                  type="text"
+                  placeholder="e.g. Srisailam Temple, Bhramaramba Devi, 18 Shakti Peethas, Daily Panchangam, Andhra Pradesh Temples"
+                  value={newPost.metaKeywords || newPost.keywords || ''}
+                  onChange={(e) => setNewPost({ ...newPost, metaKeywords: e.target.value, keywords: e.target.value })}
+                  className="w-full border border-stone-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-blue-600 font-medium"
+                />
+                {/* Quick Keyword Suggestion Chips */}
+                <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                  <span className="text-[10px] text-stone-400">Quick Devotional Tags:</span>
+                  {[activeCategoryObj.label, newPost.deity, 'Astadasapeetam', 'Vedic Culture', 'Panchangam'].filter(Boolean).map((kw, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => {
+                        const existing = newPost.metaKeywords || '';
+                        if (!existing.includes(kw)) {
+                          const updated = existing ? `${existing}, ${kw}` : kw;
+                          setNewPost({ ...newPost, metaKeywords: updated, keywords: updated });
+                        }
+                      }}
+                      className="px-2 py-0.5 rounded-md bg-stone-100 hover:bg-amber-50 text-[10px] text-stone-600 hover:text-amber-800 border border-stone-200 cursor-pointer transition"
+                    >
+                      + {kw}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Google SERP Snippet Preview */}
+              <div className="bg-stone-50 border border-stone-200 rounded-2xl p-4 space-y-2">
+                <div className="text-[10px] uppercase font-bold text-stone-400 tracking-wider flex items-center space-x-1">
+                  <span>Google Search Live SERP Snippet Preview</span>
+                </div>
+                <div className="bg-white p-3.5 rounded-xl border border-stone-200 shadow-2xs space-y-1">
+                  <div className="flex items-center space-x-1.5 text-[11px] text-emerald-800 font-sans">
+                    <span className="w-4 h-4 rounded-full bg-amber-500/20 text-[9px] font-bold text-amber-900 flex items-center justify-center">🕉️</span>
+                    <span className="truncate">https://astadasapeetam.org &rsaquo; {newPost.category} &rsaquo; {newPost.slug || 'sacred-article'}</span>
+                  </div>
+                  <div className="text-sm font-semibold text-blue-700 hover:underline cursor-pointer leading-tight">
+                    {newPost.metaTitle || newPost.title || 'Untitled Sacred Post'} | Astadasapeetam Divine Sanctuary
+                  </div>
+                  <div className="text-xs text-stone-600 line-clamp-2 leading-relaxed">
+                    {newPost.metaDescription || newPost.excerpt || 'Sacred devotional guide, history, significance, and daily rituals from Astadasapeetam.'}
+                  </div>
                 </div>
               </div>
             </div>
@@ -1567,6 +1719,25 @@ export default function DynamicPostStudio({
                     {activeCategoryObj.badge}
                   </span>
                 </div>
+
+                {/* Devotional Featured Media Preview */}
+                {newPost.featuredImage && (
+                  <div className="relative rounded-2xl overflow-hidden border border-amber-500/30 bg-stone-950 max-h-48 group">
+                    <img
+                      src={newPost.featuredImage}
+                      alt={newPost.title || 'Sacred Devotional'}
+                      className="w-full h-44 object-cover"
+                    />
+                    {newPost.imageMeta && (
+                      <div className="absolute bottom-2 right-2 px-2.5 py-1 rounded-lg bg-stone-950/85 backdrop-blur-md text-[10px] font-mono font-bold text-amber-300 border border-amber-400/40 shadow-sm flex items-center space-x-1">
+                        <span>⚡ {newPost.imageMeta.format}</span>
+                        <span>•</span>
+                        <span>{newPost.imageMeta.convertedSizeFormatted}</span>
+                        <span className="text-emerald-400">(-{newPost.imageMeta.savingsPercent}%)</span>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Deity Avatar & Category Badge */}
                 <div className="flex items-center space-x-3">
@@ -1664,7 +1835,7 @@ export default function DynamicPostStudio({
                   <span className="flex items-center space-x-1">
                     <span>👁️ 0 Devotee Reads</span>
                   </span>
-                  <span className="text-amber-400 font-bold">
+                  <span className="text-amber-400 font-bold truncate max-w-[200px]" title={`/${newPost.category}/${newPost.slug || 'sacred-article'}`}>
                     /{newPost.category}/{newPost.slug || 'sacred-article'}
                   </span>
                 </div>
