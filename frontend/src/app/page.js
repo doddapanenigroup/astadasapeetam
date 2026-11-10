@@ -12,8 +12,8 @@ import FooterNewsletterApp from '../components/FooterNewsletterApp';
 export default function HomePage() {
   return (
     <div className="w-full">
-      {/* 1. Top Sponsored Leaderboard Banner Ad (728x90) */}
-      <AdBanner type="top-sponsored" />
+      {/* 1. Top Sponsored Leaderboard Banner Ad (Slot 1: 728x90) */}
+      <AdBanner slotId="slot-1" type="top-sponsored" />
 
       {/* 2. Main 2-Column Layout */}
       <div className="w-[98.5%] max-w-[1920px] mx-auto py-3">
@@ -26,8 +26,8 @@ export default function HomePage() {
             {/* Explore Categories (16 Quick-Access Cards) */}
             <CategoryGrid />
 
-            {/* In-Feed Native Ad (728x90) */}
-            <AdBanner type="leaderboard" label="IN-FEED NATIVE AD" />
+            {/* In-Feed Native Ad Slot 1 (Slot 2: 728x90) */}
+            <AdBanner slotId="slot-2" type="in-feed-1" label="IN-FEED NATIVE AD 1" />
 
             {/* 3-Column Content: Devotional News, Festivals & Events, Popular Temples */}
             <MainDevotionalGrid />
@@ -35,8 +35,8 @@ export default function HomePage() {
             {/* Verified Astrologers Lead Gen Banner */}
             <AstrologerConsultBanner />
 
-            {/* Mid-Page Banner Ad (728x90) */}
-            <AdBanner type="leaderboard" label="MID-PAGE BANNER AD" />
+            {/* In-Feed Native Ad Slot 2 (Slot 4: 728x90) */}
+            <AdBanner slotId="slot-4" type="in-feed-2" label="IN-FEED NATIVE AD 2" />
 
             {/* Latest Articles + Latest Videos */}
             <ArticlesAndVideos />
@@ -47,11 +47,14 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Continuous Right Sidebar (Col 3.5 / 3 on XL) */}
+          {/* Continuous Right Sidebar (Col 3.5 / 3 on XL with Slot 3 Ad) */}
           <div className="lg:col-span-4 xl:col-span-3">
             <RightSidebarFull />
           </div>
         </div>
+
+        {/* 5. Bottom Anchor Leaderboard Banner Ad (Slot 5: 970x250) */}
+        <AdBanner slotId="slot-5" type="bottom-banner" label="BOTTOM LEADERBOARD BANNER" className="my-4" />
 
         {/* 3. Newsletter Subscription & App Download Bar */}
         <FooterNewsletterApp />

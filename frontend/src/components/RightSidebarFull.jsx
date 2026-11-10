@@ -55,7 +55,7 @@ export default function RightSidebarFull() {
       </div>
 
       {/* 3. Top Sidebar Ad Slot (300x250) */}
-      <AdBanner type="sidebar" label="Ad Space" />
+      <AdBanner slotId="slot-3" type="sidebar" label="Right Sidebar Ad (300x250)" />
 
       {/* 4. Daily Panchangam */}
       <div className="bg-[#fffdfa] rounded-2xl p-4 border border-[#ebdcc7] shadow-2xs">

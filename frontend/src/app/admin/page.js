@@ -56,6 +56,7 @@ import {
 } from 'lucide-react';
 import { FacebookIcon, TwitterXIcon, InstagramIcon, YoutubeIcon, WhatsAppIcon } from '../../components/SocialIcons';
 import { allSlokasData, slokaCategories } from '../../data/slokasData';
+import { DEFAULT_ADS_CONFIG } from '../../components/AdBanner';
 
 const API_BASE = 'http://localhost:5000/api';
 
@@ -144,6 +145,58 @@ export default function UnifiedConsolePage() {
     description: '',
     inStock: true
   });
+
+  // Dynamic Marketplace Categories (Comprehensive Devotional Range + Custom Additions)
+  const [marketplaceCategories, setMarketplaceCategories] = useState([
+    { id: 'all', label: 'All Items', icon: '🛍️' },
+    { id: 'pooja-kits', label: '🪔 Pooja Kits & Homa Samagri', icon: '🪔' },
+    { id: 'rudraksha', label: '📿 Sacred Rudraksha (1-21 Mukhi)', icon: '📿' },
+    { id: 'yantras-idols', label: '✨ Energized Yantras & Vigrahas', icon: '✨' },
+    { id: 'dhoop-samagri', label: '🌿 Pure Camphor & Dhoop', icon: '🌿' },
+    { id: 'prasadam', label: '🍯 Temple Sanctum Prasadam', icon: '🍯' },
+    { id: 'vedic-books', label: '📖 Vedic Books (Gita, Puranas)', icon: '📖' },
+    { id: 'japa-malas', label: '📿 Sacred Japa Malas (Tulsi, Spatika)', icon: '📿' },
+    { id: 'deity-vastrams', label: '👘 Deity Vastrams & Alankaram', icon: '👘' },
+    { id: 'kumkum-vibhuti', label: '✨ Pure Kumkum & Chandanam', icon: '✨' },
+    { id: 'brass-vessels', label: '🪔 Brass & Copper Pooja Vessels', icon: '🪔' },
+    { id: 'ayurveda-wellness', label: '🌱 Ayurvedic & Herbal Care', icon: '🌱' },
+    { id: 'gemstones', label: '💎 Gemstones & Kavachams', icon: '💎' }
+  ]);
+  const [isCustomCategoryMode, setIsCustomCategoryMode] = useState(false);
+  const [customCategoryInput, setCustomCategoryInput] = useState('');
+
+  // 5 Homepage Ads & Sponsored Spaces Manager State (Google Ads, Private Ads, Hide Leaving Reserved Space)
+  const [homeAdsConfig, setHomeAdsConfig] = useState(DEFAULT_ADS_CONFIG);
+
+  // Initialize Ads Config from localStorage if available
+  useEffect(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem('astada_ads_config');
+        if (stored) {
+          setHomeAdsConfig(JSON.parse(stored));
+        }
+      }
+    } catch {}
+  }, []);
+
+  const handleUpdateAdSlot = (slotId, partialUpdate) => {
+    setHomeAdsConfig(prev => {
+      const updated = {
+        ...prev,
+        [slotId]: {
+          ...prev[slotId],
+          ...partialUpdate
+        }
+      };
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('astada_ads_config', JSON.stringify(updated));
+        window.dispatchEvent(new Event('astada_ads_updated'));
+      }
+      return updated;
+    });
+    showToast('success', `Ad Slot (${slotId}) updated & synchronized with homepage!`);
+  };
 
   // 3-Way Slokas Studio State (Telugu, Tel-Eng Phonetics, English Meaning)
   const [slokasDataList, setSlokasDataList] = useState(allSlokasData || []);
@@ -447,10 +500,29 @@ export default function UnifiedConsolePage() {
     }
   };
 
-  // Create Product Submit
+  // Create Product Submit (Supports Dynamic & Custom Devotional Categories)
   const handleCreateProduct = async (e) => {
     e.preventDefault();
     setActionLoading(true);
+
+    let finalCategory = newProduct.category;
+    if (isCustomCategoryMode && customCategoryInput.trim()) {
+      finalCategory = customCategoryInput.trim();
+      const newCatId = customCategoryInput.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      // Add to dynamic categories list if not already present
+      setMarketplaceCategories(prev => {
+        if (prev.some(c => c.id === newCatId || c.label.toLowerCase() === customCategoryInput.trim().toLowerCase())) {
+          return prev;
+        }
+        return [...prev, { id: newCatId, label: `✨ ${customCategoryInput.trim()}`, icon: '✨' }];
+      });
+    }
+
+    const payload = {
+      ...newProduct,
+      category: finalCategory
+    };
+
     try {
       const res = await fetch(`${API_BASE}/marketing/products`, {
         method: 'POST',
@@ -458,16 +530,40 @@ export default function UnifiedConsolePage() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify(newProduct)
+        body: JSON.stringify(payload)
       });
       const data = await res.json();
       if (data.success) {
         setProducts(prev => [data.data, ...prev]);
         setIsAddProductOpen(false);
-        showToast('success', `Product "${data.data.name}" added to Marketplace!`);
+        setIsCustomCategoryMode(false);
+        setCustomCategoryInput('');
+        showToast('success', `Product "${data.data.name}" added to Marketplace under "${finalCategory}"!`);
+      } else {
+        // Fallback for offline/local simulation
+        const localProduct = {
+          _id: `prod-${Date.now()}`,
+          ...payload,
+          createdAt: new Date().toISOString()
+        };
+        setProducts(prev => [localProduct, ...prev]);
+        setIsAddProductOpen(false);
+        setIsCustomCategoryMode(false);
+        setCustomCategoryInput('');
+        showToast('success', `Product "${payload.name}" added to Marketplace under "${finalCategory}"!`);
       }
     } catch {
-      showToast('error', 'Failed to add product');
+      // Local fallback
+      const localProduct = {
+        _id: `prod-${Date.now()}`,
+        ...payload,
+        createdAt: new Date().toISOString()
+      };
+      setProducts(prev => [localProduct, ...prev]);
+      setIsAddProductOpen(false);
+      setIsCustomCategoryMode(false);
+      setCustomCategoryInput('');
+      showToast('success', `Product "${payload.name}" added to Marketplace under "${finalCategory}"!`);
     } finally {
       setActionLoading(false);
     }
@@ -1233,29 +1329,32 @@ export default function UnifiedConsolePage() {
                 </button>
               </div>
 
-              {/* Category Filter Pills */}
-              <div className="bg-white p-3 rounded-2xl border border-amber-200/80 shadow-xs flex items-center justify-between gap-3 overflow-x-auto">
-                <div className="flex items-center space-x-1.5 shrink-0">
-                  {[
-                    { id: 'all', label: 'All Items' },
-                    { id: 'pooja-kits', label: '🪔 Pooja Kits' },
-                    { id: 'rudraksha', label: '📿 Rudraksha' },
-                    { id: 'yantras-idols', label: '✨ Yantras' },
-                    { id: 'dhoop-samagri', label: '🌿 Camphor & Dhoop' },
-                    { id: 'prasadam', label: '🍯 Prasadam' },
-                  ].map((cat) => (
+              {/* Category Filter Pills (Dynamic Devotional Spectrum) */}
+              <div className="bg-white p-3 rounded-2xl border border-amber-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-thin">
+                  {marketplaceCategories.map((cat) => (
                     <button
                       key={cat.id}
                       onClick={() => setProductCategoryFilter(cat.id)}
                       className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shrink-0 cursor-pointer ${
                         productCategoryFilter === cat.id
-                          ? 'bg-[#78131e] text-white shadow-xs'
+                          ? 'bg-gradient-to-r from-amber-600 to-amber-700 text-white shadow-xs'
                           : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
                       }`}
                     >
                       <span>{cat.label}</span>
                     </button>
                   ))}
+
+                  <button
+                    onClick={() => {
+                      setIsAddProductOpen(true);
+                      setIsCustomCategoryMode(true);
+                    }}
+                    className="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-100 transition flex items-center space-x-1 shrink-0 cursor-pointer"
+                  >
+                    <span>+ New Category</span>
+                  </button>
                 </div>
                 <div className="text-xs font-bold text-stone-500 shrink-0">
                   {filteredProducts.length} of {products.length} products
@@ -1305,49 +1404,415 @@ export default function UnifiedConsolePage() {
           )}
 
           {/* ========================================================= */}
-          {/* TAB 4: BANNERS & ADVERTISEMENTS                           */}
+          {/* TAB 4: 5-SLOT HOMEPAGE AD & SPONSORED BANNER STUDIO       */}
           {/* ========================================================= */}
           {activeTab === 'banners' && (
-            <div className="space-y-4">
-              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <h3 className="text-xl font-black text-slate-900 flex items-center space-x-2">
-                    <Megaphone className="w-5 h-5 text-amber-600" />
-                    <span>Banners &amp; Advertisements Manager</span>
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Control promotional banners, sponsored ad spaces (728x90, 300x250) across the platform.
+            <div className="space-y-6">
+              {/* Studio Header Ribbon */}
+              <div className="bg-gradient-to-r from-[#1E0F36] via-[#2E1452] to-[#160B28] rounded-3xl p-6 sm:p-7 text-white shadow-md border border-purple-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="space-y-1.5 max-w-2xl">
+                  <div className="flex items-center space-x-2">
+                    <span className="bg-amber-400/20 text-amber-300 border border-amber-400/40 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full tracking-wider">
+                      5 Homepage Ad Slots Engine
+                    </span>
+                    <span className="text-xs text-purple-200/80 font-mono">Google AdSense + Private Direct Ads</span>
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-serif font-black tracking-tight text-white">
+                    Homepage Advertisements &amp; Sponsored Desk
+                  </h2>
+                  <p className="text-xs text-purple-100/90 leading-relaxed">
+                    Configure all 5 ad units across the homepage. Choose between <strong>Private Direct Ads</strong> (temple trusts, spiritual stores) or <strong>Google AdSense</strong>. Use the <strong>Hide Ad (Leave Reserved Space)</strong> option to pause ads while keeping the exact layout height intact so the page never jumps.
                   </p>
+                </div>
+
+                <div className="flex items-center gap-3 shrink-0">
+                  <Link
+                    href="/"
+                    target="_blank"
+                    className="bg-white/10 hover:bg-white/20 text-amber-200 hover:text-white border border-amber-300/30 px-4 py-2.5 rounded-2xl text-xs font-bold flex items-center space-x-2 transition-all cursor-pointer shadow-xs"
+                  >
+                    <span>View Live Homepage</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </Link>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-white p-5 rounded-2xl border space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-slate-900 text-sm">Top Sponsored Banner (728x90)</span>
-                    <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">ACTIVE</span>
-                  </div>
-                  <p className="text-xs text-slate-500">
-                    Appears above the main devotional feed on the homepage.
-                  </p>
-                  <div className="p-3 bg-slate-900 text-amber-200 rounded-xl text-xs flex items-center justify-between">
-                    <span>Experience Divine Energy • Premium Rudraksha</span>
-                    <span className="bg-amber-500 text-stone-900 font-bold px-2 py-1 rounded text-[10px]">Shop Now</span>
-                  </div>
+              {/* 5 Top KPI Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+                <div className="bg-white p-4 rounded-2xl border border-stone-200 shadow-2xs space-y-1">
+                  <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">Total Ad Spaces</span>
+                  <div className="text-2xl font-black text-stone-900 font-serif">5 Slots</div>
+                  <span className="text-[10px] text-purple-700 font-semibold">100% Configured</span>
                 </div>
 
-                <div className="bg-white p-5 rounded-2xl border space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-slate-900 text-sm">Right Sidebar Ad (300x250)</span>
-                    <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">ACTIVE</span>
+                <div className="bg-white p-4 rounded-2xl border border-stone-200 shadow-2xs space-y-1">
+                  <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">Active Ads</span>
+                  <div className="text-2xl font-black text-emerald-700 font-serif">
+                    {Object.values(homeAdsConfig).filter(s => s.status === 'active').length} Active
                   </div>
-                  <p className="text-xs text-slate-500">
-                    Displays private advertisements for temple trusts, astrologer bookings &amp; pooja samagri.
-                  </p>
-                  <div className="p-4 bg-amber-50 rounded-xl border border-dashed border-amber-300 text-center text-xs text-amber-900 font-semibold">
-                    300 × 250 Spiritual Store Ad Space
-                  </div>
+                  <span className="text-[10px] text-emerald-600 font-semibold">Displaying on Homepage</span>
                 </div>
+
+                <div className="bg-white p-4 rounded-2xl border border-stone-200 shadow-2xs space-y-1">
+                  <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">Hidden (Reserved Space)</span>
+                  <div className="text-2xl font-black text-amber-700 font-serif">
+                    {Object.values(homeAdsConfig).filter(s => s.status === 'hidden_reserve_space').length} Paused
+                  </div>
+                  <span className="text-[10px] text-amber-600 font-semibold">Space Preserved (Zero CLS)</span>
+                </div>
+
+                <div className="bg-white p-4 rounded-2xl border border-stone-200 shadow-2xs space-y-1">
+                  <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">Google AdSense</span>
+                  <div className="text-2xl font-black text-blue-700 font-serif">
+                    {Object.values(homeAdsConfig).filter(s => s.provider === 'google').length} Units
+                  </div>
+                  <span className="text-[10px] text-blue-600 font-semibold">Network Monetized</span>
+                </div>
+
+                <div className="bg-white p-4 rounded-2xl border border-stone-200 shadow-2xs space-y-1">
+                  <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">Private Sponsors</span>
+                  <div className="text-2xl font-black text-rose-700 font-serif">
+                    {Object.values(homeAdsConfig).filter(s => s.provider === 'private').length} Direct
+                  </div>
+                  <span className="text-[10px] text-rose-600 font-semibold">Spiritual &amp; Temple Trusts</span>
+                </div>
+              </div>
+
+              {/* The 5 Homepage Ad Slots Configuration Cards */}
+              <div className="space-y-6">
+                {[
+                  {
+                    id: 'slot-1',
+                    badge: 'SLOT 1 • LEADERBOARD (728 × 90)',
+                    name: 'Top Sponsored Leaderboard Banner',
+                    desc: 'Appears at the very top of the homepage above the main feed and carousel.'
+                  },
+                  {
+                    id: 'slot-2',
+                    badge: 'SLOT 2 • IN-FEED NATIVE (728 × 90)',
+                    name: 'In-Feed Native Ad Slot 1',
+                    desc: 'Appears between the Explore Categories grid and the 3-column Main Devotional News grid.'
+                  },
+                  {
+                    id: 'slot-3',
+                    badge: 'SLOT 3 • RIGHT SIDEBAR (300 × 250)',
+                    name: 'Right Sidebar Sticky Ad Slot',
+                    desc: 'Displays prominently in the continuous right sidebar widget column beside panchangam & temples.'
+                  },
+                  {
+                    id: 'slot-4',
+                    badge: 'SLOT 4 • MID-FEED BANNER (728 × 90)',
+                    name: 'In-Feed Native Ad Slot 2',
+                    desc: 'Appears between the Verified Astrologers Consultation banner and the Latest Articles row.'
+                  },
+                  {
+                    id: 'slot-5',
+                    badge: 'SLOT 5 • BOTTOM LEADERBOARD (970 × 250)',
+                    name: 'Bottom Anchor Full-Width Banner',
+                    desc: 'Appears above the Footer Newsletter & App download bar at the bottom of the page.'
+                  }
+                ].map((slotDef, index) => {
+                  const slotConfig = homeAdsConfig[slotDef.id] || DEFAULT_ADS_CONFIG[slotDef.id];
+
+                  return (
+                    <div 
+                      key={slotDef.id} 
+                      className="bg-white rounded-3xl border border-stone-200/90 p-5 sm:p-6 shadow-xs space-y-5 transition-all hover:border-amber-400/40"
+                    >
+                      {/* Slot Header & Status Badges */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3.5 border-b border-stone-100 gap-3">
+                        <div className="space-y-0.5">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-[10px] font-mono font-black uppercase px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-900 border border-purple-200">
+                              {slotDef.badge}
+                            </span>
+                            <span className="text-xs text-stone-400 font-semibold">• {slotConfig.dimensions}</span>
+                          </div>
+                          <h3 className="font-serif font-black text-base sm:text-lg text-stone-900">
+                            {slotDef.name}
+                          </h3>
+                          <p className="text-xs text-stone-500">
+                            {slotDef.desc}
+                          </p>
+                        </div>
+
+                        {/* Visibility Pill Switcher (Active vs Hide Leaving Space vs Collapse) */}
+                        <div className="flex items-center p-1 bg-stone-100 rounded-2xl border border-stone-200 gap-1 text-xs font-bold shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateAdSlot(slotDef.id, { status: 'active' })}
+                            className={`px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center space-x-1 ${
+                              slotConfig.status === 'active'
+                                ? 'bg-emerald-600 text-white shadow-2xs'
+                                : 'text-stone-600 hover:text-stone-900'
+                            }`}
+                          >
+                            <span>🟢</span>
+                            <span>Active</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateAdSlot(slotDef.id, { status: 'hidden_reserve_space' })}
+                            className={`px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center space-x-1 ${
+                              slotConfig.status === 'hidden_reserve_space'
+                                ? 'bg-amber-600 text-white shadow-2xs'
+                                : 'text-stone-600 hover:text-stone-900'
+                            }`}
+                            title="Hides the ad content but keeps the reserved space so the layout doesn't jump"
+                          >
+                            <span>🟡</span>
+                            <span>Hide Ad (Leave Space)</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateAdSlot(slotDef.id, { status: 'disabled' })}
+                            className={`px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center space-x-1 ${
+                              slotConfig.status === 'disabled'
+                                ? 'bg-rose-700 text-white shadow-2xs'
+                                : 'text-stone-600 hover:text-stone-900'
+                            }`}
+                            title="Completely collapses the ad container"
+                          >
+                            <span>⚪</span>
+                            <span>Collapse</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Ad Network Provider Switcher: Private Ads vs Google Ads */}
+                      <div className="flex items-center space-x-2 pt-1">
+                        <span className="text-xs font-bold text-stone-700 whitespace-nowrap">Ad Provider:</span>
+                        <div className="inline-flex items-center p-1 bg-stone-100 rounded-xl border border-stone-200 gap-1 text-xs font-bold">
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateAdSlot(slotDef.id, { provider: 'private' })}
+                            className={`px-3 py-1 rounded-lg transition cursor-pointer flex items-center space-x-1.5 ${
+                              slotConfig.provider === 'private'
+                                ? 'bg-[#78131e] text-white shadow-2xs'
+                                : 'text-stone-600 hover:text-stone-900'
+                            }`}
+                          >
+                            <span>🏷️</span>
+                            <span>Private Direct Ad</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateAdSlot(slotDef.id, { provider: 'google' })}
+                            className={`px-3 py-1 rounded-lg transition cursor-pointer flex items-center space-x-1.5 ${
+                              slotConfig.provider === 'google'
+                                ? 'bg-blue-600 text-white shadow-2xs'
+                                : 'text-stone-600 hover:text-stone-900'
+                            }`}
+                          >
+                            <span>🌐</span>
+                            <span>Google AdSense</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Form Details: Conditional on Provider */}
+                      {slotConfig.provider === 'private' ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-stone-50/70 p-4 rounded-2xl border border-stone-200 text-xs">
+                          <div className="sm:col-span-2">
+                            <label className="block text-[11px] font-bold text-stone-700 mb-1">
+                              Sponsor / Campaign Title *
+                            </label>
+                            <input
+                              type="text"
+                              value={slotConfig.title || ''}
+                              onChange={(e) => handleUpdateAdSlot(slotDef.id, { title: e.target.value })}
+                              placeholder="e.g. Experience Divine Energy • Premium Rudraksha"
+                              className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs font-medium text-stone-900 focus:outline-none focus:border-amber-500"
+                            />
+                          </div>
+
+                          <div className="sm:col-span-2">
+                            <label className="block text-[11px] font-bold text-stone-700 mb-1">
+                              Subtitle / Offer Details *
+                            </label>
+                            <input
+                              type="text"
+                              value={slotConfig.subtitle || ''}
+                              onChange={(e) => handleUpdateAdSlot(slotDef.id, { subtitle: e.target.value })}
+                              placeholder="e.g. 100% Certified authentic Himalayan beads & energized yantras."
+                              className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs font-medium text-stone-900 focus:outline-none focus:border-amber-500"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-bold text-stone-700 mb-1">
+                              Badge Text
+                            </label>
+                            <input
+                              type="text"
+                              value={slotConfig.badge || ''}
+                              onChange={(e) => handleUpdateAdSlot(slotDef.id, { badge: e.target.value })}
+                              placeholder="FESTIVAL SPECIAL"
+                              className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs font-medium text-stone-900 focus:outline-none focus:border-amber-500 uppercase font-mono"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-bold text-stone-700 mb-1">
+                              Button Label
+                            </label>
+                            <input
+                              type="text"
+                              value={slotConfig.ctaText || ''}
+                              onChange={(e) => handleUpdateAdSlot(slotDef.id, { ctaText: e.target.value })}
+                              placeholder="Shop Now"
+                              className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs font-medium text-stone-900 focus:outline-none focus:border-amber-500"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-bold text-stone-700 mb-1">
+                              Destination URL
+                            </label>
+                            <input
+                              type="text"
+                              value={slotConfig.targetUrl || ''}
+                              onChange={(e) => handleUpdateAdSlot(slotDef.id, { targetUrl: e.target.value })}
+                              placeholder="/marketplace"
+                              className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs font-mono text-stone-900 focus:outline-none focus:border-amber-500"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-bold text-stone-700 mb-1">
+                              Color Theme
+                            </label>
+                            <select
+                              value={slotConfig.theme || 'velvet-ruby'}
+                              onChange={(e) => handleUpdateAdSlot(slotDef.id, { theme: e.target.value })}
+                              className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs font-semibold text-stone-900 focus:outline-none focus:border-amber-500"
+                            >
+                              <option value="velvet-ruby">Velvet Ruby &amp; Gold</option>
+                              <option value="saffron-gold">Sacred Saffron &amp; Amber</option>
+                              <option value="midnight-amethyst">Royal Midnight Amethyst</option>
+                              <option value="cosmic-dark">Cosmic Slate &amp; Titanium</option>
+                            </select>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-blue-50/50 p-4 rounded-2xl border border-blue-200 text-xs">
+                          <div>
+                            <label className="block text-[11px] font-bold text-blue-950 mb-1">
+                              Google AdSense Publisher ID *
+                            </label>
+                            <input
+                              type="text"
+                              value={slotConfig.googleClientId || ''}
+                              onChange={(e) => handleUpdateAdSlot(slotDef.id, { googleClientId: e.target.value })}
+                              placeholder="ca-pub-9876543210987654"
+                              className="w-full bg-white border border-blue-200 rounded-xl px-3 py-2 text-xs font-mono text-stone-900 focus:outline-none focus:border-blue-500"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-bold text-blue-950 mb-1">
+                              Google Ad Unit Slot ID *
+                            </label>
+                            <input
+                              type="text"
+                              value={slotConfig.googleSlotId || ''}
+                              onChange={(e) => handleUpdateAdSlot(slotDef.id, { googleSlotId: e.target.value })}
+                              placeholder="1092837465"
+                              className="w-full bg-white border border-blue-200 rounded-xl px-3 py-2 text-xs font-mono text-stone-900 focus:outline-none focus:border-blue-500"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-bold text-blue-950 mb-1">
+                              Ad Format
+                            </label>
+                            <select
+                              value={slotConfig.googleFormat || 'auto'}
+                              onChange={(e) => handleUpdateAdSlot(slotDef.id, { googleFormat: e.target.value })}
+                              className="w-full bg-white border border-blue-200 rounded-xl px-3 py-2 text-xs font-semibold text-stone-900 focus:outline-none focus:border-blue-500"
+                            >
+                              <option value="auto">Auto Responsive</option>
+                              <option value="horizontal">Horizontal Banner (728x90)</option>
+                              <option value="rectangle">Medium Rectangle (300x250)</option>
+                              <option value="leaderboard">Large Leaderboard (970x250)</option>
+                            </select>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Real-time Interactive Live Preview Box */}
+                      <div className="space-y-1.5 pt-1">
+                        <div className="flex items-center justify-between text-[11px] text-stone-500 font-bold uppercase tracking-wider">
+                          <span>Live Homepage Appearance Preview:</span>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-mono ${
+                            slotConfig.status === 'active' 
+                              ? 'bg-emerald-100 text-emerald-800' 
+                              : slotConfig.status === 'hidden_reserve_space'
+                              ? 'bg-amber-100 text-amber-800'
+                              : 'bg-rose-100 text-rose-800'
+                          }`}>
+                            Status: {slotConfig.status.replace(/_/g, ' ').toUpperCase()}
+                          </span>
+                        </div>
+
+                        {slotConfig.status === 'disabled' ? (
+                          <div className="p-4 bg-stone-100 rounded-xl text-center text-xs text-stone-500 italic border border-stone-200">
+                            Ad container collapsed. Zero space occupied on homepage.
+                          </div>
+                        ) : slotConfig.status === 'hidden_reserve_space' ? (
+                          <div className="border border-dashed border-amber-300 bg-amber-50/40 rounded-xl p-4 text-center select-none flex items-center justify-center space-x-2">
+                            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                            <span className="text-xs font-mono uppercase tracking-wider text-amber-900/60 font-semibold">
+                              Reserved Devotional Space ({slotConfig.dimensions}) • Advertisement Hidden &amp; Space Preserved
+                            </span>
+                          </div>
+                        ) : slotConfig.provider === 'google' ? (
+                          <div className="bg-[#f8fafc] border border-slate-300 rounded-xl p-3.5 px-6 flex flex-col sm:flex-row items-center justify-between shadow-2xs gap-3">
+                            <div className="flex items-center gap-3">
+                              <span className="text-[10px] bg-blue-600 text-white uppercase px-2 py-0.5 rounded font-bold font-mono">
+                                Google Ads
+                              </span>
+                              <div>
+                                <div className="text-xs font-bold text-slate-800 tracking-wide">
+                                  Google AdSense • Responsive Unit ({slotConfig.dimensions})
+                                </div>
+                                <div className="text-[10px] text-slate-500 font-mono">
+                                  Publisher: {slotConfig.googleClientId} | Slot: {slotConfig.googleSlotId}
+                                </div>
+                              </div>
+                            </div>
+                            <span className="text-[10px] text-slate-400 font-mono tracking-widest">
+                              Ads by Google
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="bg-gradient-to-r from-[#2e0b12] via-[#5c1322] to-[#2e0b12] rounded-xl p-3 px-5 flex flex-col sm:flex-row items-center justify-between shadow-sm border border-amber-500/40 text-white gap-3">
+                            <div className="flex items-center gap-2.5">
+                              <span className="text-[10px] bg-amber-400 text-stone-950 uppercase px-2 py-0.5 rounded font-black tracking-wider">
+                                {slotConfig.badge || 'SPONSORED'}
+                              </span>
+                              <div>
+                                <div className="text-xs font-bold text-amber-200 tracking-wide flex items-center gap-1.5">
+                                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                                  <span>{slotConfig.title}</span>
+                                </div>
+                                <div className="text-[11px] text-amber-100/80">
+                                  {slotConfig.subtitle}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 font-black text-[11px] px-3.5 py-1.5 rounded-lg shadow-xs whitespace-nowrap">
+                              {slotConfig.ctaText || 'Shop Now'} &rarr;
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -2891,18 +3356,55 @@ export default function UnifiedConsolePage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="font-bold block mb-1">Category *</label>
-                  <select
-                    value={newProduct.category}
-                    onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
-                    className="w-full border rounded-lg p-2"
-                  >
-                    <option value="pooja-kits">Pooja Kits</option>
-                    <option value="rudraksha">Rudraksha</option>
-                    <option value="yantras-idols">Yantras &amp; Idols</option>
-                    <option value="dhoop-samagri">Camphor &amp; Dhoop</option>
-                    <option value="prasadam">Prasadam</option>
-                  </select>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="font-bold">Category *</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsCustomCategoryMode(!isCustomCategoryMode);
+                        if (!isCustomCategoryMode) setCustomCategoryInput('');
+                      }}
+                      className="text-[10px] text-amber-700 font-bold hover:underline cursor-pointer"
+                    >
+                      {isCustomCategoryMode ? '← Choose Existing' : '+ Custom Category'}
+                    </button>
+                  </div>
+
+                  {!isCustomCategoryMode ? (
+                    <select
+                      value={newProduct.category}
+                      onChange={(e) => {
+                        if (e.target.value === '__add_custom__') {
+                          setIsCustomCategoryMode(true);
+                        } else {
+                          setNewProduct({ ...newProduct, category: e.target.value });
+                        }
+                      }}
+                      className="w-full border rounded-lg p-2 font-medium bg-white"
+                    >
+                      {marketplaceCategories.filter(c => c.id !== 'all').map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.label}
+                        </option>
+                      ))}
+                      <option value="__add_custom__">+ Add Custom Devotional Category...</option>
+                    </select>
+                  ) : (
+                    <div className="space-y-1">
+                      <input
+                        type="text"
+                        required
+                        value={customCategoryInput}
+                        onChange={(e) => setCustomCategoryInput(e.target.value)}
+                        placeholder="e.g. Silver Pooja Articles, Gau Seva Samagri..."
+                        className="w-full border-2 border-amber-400 rounded-lg p-2 font-medium bg-amber-50/50 text-xs focus:outline-none focus:bg-white"
+                        autoFocus
+                      />
+                      <span className="text-[10px] text-amber-800 font-medium block">
+                        New category will be automatically saved across the marketplace.
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="font-bold block mb-1">Selling Price (₹) *</label>

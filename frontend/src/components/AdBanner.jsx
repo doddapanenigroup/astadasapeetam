@@ -2,103 +2,290 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, ExternalLink } from 'lucide-react';
 
-export default function AdBanner({ type = 'leaderboard', label = 'Ad Space', className = '' }) {
-  const [festivalAlert, setFestivalAlert] = useState(null);
+export const DEFAULT_ADS_CONFIG = {
+  'slot-1': {
+    id: 'slot-1',
+    name: 'Top Leaderboard Sponsored Banner',
+    location: 'Above Main Homepage Feed',
+    dimensions: '728 × 90',
+    status: 'active', // 'active' | 'hidden_reserve_space' | 'disabled'
+    provider: 'private', // 'private' | 'google'
+    title: 'Experience Divine Energy • Premium Rudraksha',
+    subtitle: 'Lab-certified 1-14 Mukhi authentic Himalayan beads & energized yantras.',
+    badge: 'FESTIVAL SPECIAL',
+    ctaText: 'Shop Now',
+    targetUrl: '/marketplace',
+    theme: 'velvet-ruby',
+    googleClientId: 'ca-pub-9876543210987654',
+    googleSlotId: '1092837465',
+    googleFormat: 'auto'
+  },
+  'slot-2': {
+    id: 'slot-2',
+    name: 'In-Feed Native Ad 1',
+    location: 'Between Explore Categories & Devotional Grid',
+    dimensions: '728 × 90',
+    status: 'active',
+    provider: 'private',
+    title: 'Tirumala Srivari Nitya Laddu & Maha Prasadam Seva',
+    subtitle: 'Direct sanctum blessed prasadam delivered with utmost Satvik purity.',
+    badge: 'DIRECT SANCTUM',
+    ctaText: 'Book Prasadam',
+    targetUrl: '/marketplace',
+    theme: 'saffron-gold',
+    googleClientId: 'ca-pub-9876543210987654',
+    googleSlotId: '2983746510',
+    googleFormat: 'horizontal'
+  },
+  'slot-3': {
+    id: 'slot-3',
+    name: 'Right Sidebar Sticky Ad',
+    location: 'Right Column Continuous Devotional Widget Dock',
+    dimensions: '300 × 250',
+    status: 'active',
+    provider: 'private',
+    title: 'Consult Vedic Panditas & Astrologers',
+    subtitle: 'Instant kundali analysis, dosha nivarana & auspicious muhurtham.',
+    badge: 'VEDIC JYOTISHA',
+    ctaText: 'Consult Now',
+    targetUrl: '/astrology',
+    theme: 'midnight-amethyst',
+    googleClientId: 'ca-pub-9876543210987654',
+    googleSlotId: '3847561920',
+    googleFormat: 'rectangle'
+  },
+  'slot-4': {
+    id: 'slot-4',
+    name: 'In-Feed Native Ad 2',
+    location: 'Between Astrologers Banner & Sacred Articles',
+    dimensions: '728 × 90',
+    status: 'active',
+    provider: 'private',
+    title: 'Pure Copper 3D Maha Meru Sri Yantra (Prana Pratishtha)',
+    subtitle: 'Sacred geometry pyramid energized with Lalita Sahasranama archana.',
+    badge: 'SRI VIDYA ENERGIZED',
+    ctaText: 'View Yantra',
+    targetUrl: '/marketplace',
+    theme: 'velvet-ruby',
+    googleClientId: 'ca-pub-9876543210987654',
+    googleSlotId: '4758691023',
+    googleFormat: 'horizontal'
+  },
+  'slot-5': {
+    id: 'slot-5',
+    name: 'Bottom Anchor Leaderboard Banner',
+    location: 'Above Footer Newsletter & App Download Section',
+    dimensions: '970 × 250',
+    status: 'active',
+    provider: 'google',
+    title: 'Kashi Vishwanath & Rameswaram Sacred Yatra Pass',
+    subtitle: 'All-inclusive guided pilgrimage package with priority sanctum darshan.',
+    badge: 'YATRA SPECIAL',
+    ctaText: 'Explore Yatras',
+    targetUrl: '/yatralu',
+    theme: 'cosmic-dark',
+    googleClientId: 'ca-pub-9876543210987654',
+    googleSlotId: '5869702134',
+    googleFormat: 'auto'
+  }
+};
+
+export default function AdBanner({ 
+  type = 'leaderboard', 
+  slotId, 
+  label = 'Ad Space', 
+  className = '' 
+}) {
+  // Resolve slotId from type if not explicitly passed
+  const resolvedSlotId = slotId || (
+    type === 'top-sponsored' ? 'slot-1' :
+    type === 'in-feed-1' ? 'slot-2' :
+    type === 'sidebar' ? 'slot-3' :
+    type === 'in-feed-2' ? 'slot-4' :
+    type === 'bottom-banner' ? 'slot-5' :
+    'slot-2'
+  );
+
+  const [adConfig, setAdConfig] = useState(DEFAULT_ADS_CONFIG[resolvedSlotId] || DEFAULT_ADS_CONFIG['slot-1']);
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/public/content?sectionKey=festival_alert')
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && data.data && data.data.length > 0) {
-          setFestivalAlert(data.data[0]);
+    const loadConfig = () => {
+      try {
+        if (typeof window !== 'undefined') {
+          const stored = localStorage.getItem('astada_ads_config');
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            if (parsed && parsed[resolvedSlotId]) {
+              setAdConfig(parsed[resolvedSlotId]);
+              return;
+            }
+          }
         }
-      })
-      .catch(() => {});
-  }, []);
+      } catch {}
+      setAdConfig(DEFAULT_ADS_CONFIG[resolvedSlotId] || DEFAULT_ADS_CONFIG['slot-1']);
+    };
 
-  if (type === 'sidebar') {
+    loadConfig();
+
+    if (typeof window !== 'undefined') {
+      const handleStorage = () => loadConfig();
+      window.addEventListener('storage', handleStorage);
+      window.addEventListener('astada_ads_updated', handleStorage);
+      return () => {
+        window.removeEventListener('storage', handleStorage);
+        window.removeEventListener('astada_ads_updated', handleStorage);
+      };
+    }
+  }, [resolvedSlotId]);
+
+  // 1. IF DISABLED: Return null, completely collapse space
+  if (adConfig.status === 'disabled') {
+    return null;
+  }
+
+  // 2. IF HIDDEN LEAVING RESERVED SPACE (Exact feature requested: "hide each add leaving that space there")
+  if (adConfig.status === 'hidden_reserve_space') {
+    const minHeightClass = type === 'sidebar' ? 'min-h-[250px]' : (resolvedSlotId === 'slot-5' ? 'min-h-[140px]' : 'min-h-[88px]');
     return (
-      <div className={`w-full bg-[#fceddf] border border-dashed border-[#e6bca2] rounded-lg p-3 text-center flex flex-col items-center justify-center min-h-[250px] ${className}`}>
-        <span className="text-[11px] font-semibold text-amber-900/60 uppercase tracking-wider mb-2">
-          {label} (Private Ads)
-        </span>
-        <div className="text-xs text-amber-950 font-bold">300 × 250</div>
-        <p className="text-[11px] text-amber-800/70 mt-1 max-w-[200px]">
-          Advertise your spiritual store, temple trust, or astrologer services here.
-        </p>
+      <div 
+        className={`w-full ${minHeightClass} border border-dashed border-[#d8aa8d]/70 bg-[#fbf5ee]/40 rounded-xl p-3 flex flex-col items-center justify-center text-center select-none transition-all ${className}`}
+        style={{ minHeight: type === 'sidebar' ? '250px' : (resolvedSlotId === 'slot-5' ? '120px' : '88px') }}
+      >
+        <div className="flex items-center space-x-2 text-stone-400">
+          <span className="w-2 h-2 rounded-full bg-amber-400/50"></span>
+          <span className="text-[11px] font-mono tracking-wider uppercase text-amber-900/50 font-semibold">
+            Reserved Devotional Space ({adConfig.dimensions}) • Advertisement Hidden
+          </span>
+        </div>
       </div>
     );
   }
 
-  if (type === 'top-sponsored') {
-    // If marketing has an active festival/campaign alert, render live dynamic banner!
-    if (festivalAlert && festivalAlert.isActive) {
+  // 3. IF ACTIVE WITH GOOGLE ADS
+  if (adConfig.provider === 'google') {
+    if (type === 'sidebar') {
       return (
-        <div className="w-[98.5%] max-w-[1920px] mx-auto py-2.5">
-          <div className="bg-gradient-to-r from-[#2c1306] via-[#632909] to-[#2c1306] rounded-xl p-3 px-6 flex flex-col sm:flex-row items-center justify-between shadow-sm border border-amber-500/40 text-white gap-3">
-            <div className="flex items-center gap-3 text-center sm:text-left">
-              <span className="text-[10px] bg-amber-400 text-stone-900 uppercase px-2 py-0.5 rounded font-black tracking-wider">
-                {festivalAlert.badge || 'FESTIVAL SPECIAL'}
-              </span>
-              <div>
-                <div className="text-sm sm:text-base font-bold text-amber-200 tracking-wide flex items-center gap-2 justify-center sm:justify-start">
-                  <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
-                  <span>{festivalAlert.title}</span>
-                </div>
-                <div className="text-xs text-amber-100/80">
-                  {festivalAlert.subtitle}
-                </div>
-              </div>
+        <div className={`w-full bg-[#f8fafc] border border-slate-300 rounded-xl p-3.5 text-center flex flex-col items-center justify-between min-h-[250px] shadow-2xs ${className}`}>
+          <div className="w-full flex items-center justify-between pb-1.5 border-b border-slate-200 text-[10px] text-slate-500 font-mono">
+            <span className="font-bold flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+              Google AdSense
+            </span>
+            <span>{adConfig.dimensions}</span>
+          </div>
+
+          <div className="my-auto py-4 space-y-1">
+            <div className="text-xs font-bold text-slate-700 tracking-wide">
+              Google Network Advertisement
             </div>
-            <Link
-              href={festivalAlert.ctaLink || '/marketplace'}
-              className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-900 font-bold text-xs px-4 py-2 rounded-lg shadow transition-all whitespace-nowrap shrink-0"
-            >
-              {festivalAlert.ctaText || 'Order Now'} &rarr;
-            </Link>
+            <div className="text-[10px] text-slate-400 font-mono">
+              Client: {adConfig.googleClientId}
+            </div>
+            <div className="text-[10px] text-slate-400 font-mono">
+              Slot: {adConfig.googleSlotId}
+            </div>
+          </div>
+
+          <div className="text-[9px] text-slate-400 uppercase tracking-widest">
+            Ads by Google • Responsive
           </div>
         </div>
       );
     }
 
     return (
-      <div className="w-[98.5%] max-w-[1920px] mx-auto py-2.5">
-        <div className="bg-gradient-to-r from-[#2c1306] via-[#632909] to-[#2c1306] rounded-lg p-2.5 px-6 flex flex-col sm:flex-row items-center justify-between shadow-sm border border-amber-500/30 text-white gap-3">
+      <div className={`w-full mx-auto py-2.5 ${className}`}>
+        <div className="bg-[#f8fafc] border border-slate-300 rounded-xl p-3.5 px-6 flex flex-col sm:flex-row items-center justify-between shadow-2xs gap-3">
           <div className="flex items-center gap-3 text-center sm:text-left">
-            <span className="text-[10px] bg-amber-400/20 text-amber-300 uppercase px-1.5 py-0.5 rounded font-mono">
-              Ad Space 1 (Top Banner - 728x90)
+            <span className="text-[10px] bg-blue-600 text-white uppercase px-2 py-0.5 rounded font-bold font-mono tracking-wider">
+              Google Ads
             </span>
             <div>
-              <div className="text-sm sm:text-base font-bold text-amber-200 tracking-wide flex items-center gap-2 justify-center sm:justify-start">
-                <Sparkles className="w-4 h-4 text-amber-400" />
-                Experience Divine Energy
+              <div className="text-xs sm:text-sm font-bold text-slate-800 tracking-wide flex items-center gap-2">
+                <span>Google AdSense • Responsive Leaderboard ({adConfig.dimensions})</span>
               </div>
-              <div className="text-xs text-amber-100/80">
-                Premium Rudraksha & Spiritual Products
+              <div className="text-[11px] text-slate-500 font-mono">
+                Publisher: {adConfig.googleClientId} | Slot: {adConfig.googleSlotId}
               </div>
             </div>
           </div>
-          <Link
-            href="/marketplace"
-            className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-900 font-bold text-xs px-4 py-1.5 rounded shadow transition-all whitespace-nowrap"
-          >
-            Shop Now &rarr;
-          </Link>
+          <span className="text-[10px] text-slate-400 font-mono tracking-widest shrink-0">
+            Ads by Google
+          </span>
         </div>
       </div>
     );
   }
 
-  // Standard in-feed / mid-page banner
+  // 4. IF ACTIVE WITH PRIVATE AD
+
+  // Theme palettes for private ads
+  const themeStyles = {
+    'velvet-ruby': 'from-[#2e0b12] via-[#5c1322] to-[#2e0b12] border-amber-500/40 text-amber-100',
+    'saffron-gold': 'from-[#422006] via-[#78350f] to-[#422006] border-amber-400/50 text-amber-100',
+    'midnight-amethyst': 'from-[#1e0f36] via-[#3b1268] to-[#1e0f36] border-purple-400/40 text-purple-100',
+    'cosmic-dark': 'from-[#0f172a] via-[#1e293b] to-[#0f172a] border-slate-600/50 text-slate-100'
+  }[adConfig.theme || 'velvet-ruby'];
+
+  // Sidebar Private Ad (300x250)
+  if (type === 'sidebar') {
+    return (
+      <div className={`w-full bg-gradient-to-b ${themeStyles} border rounded-2xl p-4.5 text-center flex flex-col items-center justify-between min-h-[250px] shadow-sm ${className}`}>
+        <div className="w-full flex items-center justify-between text-[10px] text-amber-300 font-mono">
+          <span className="bg-white/10 px-2 py-0.5 rounded uppercase font-bold tracking-wider">
+            {adConfig.badge || 'SPONSORED'}
+          </span>
+          <span className="opacity-80">300 × 250</span>
+        </div>
+
+        <div className="my-auto py-3 space-y-1.5">
+          <div className="text-sm font-black text-white font-serif leading-snug">
+            {adConfig.title}
+          </div>
+          <p className="text-[11px] text-amber-100/80 leading-relaxed line-clamp-3">
+            {adConfig.subtitle}
+          </p>
+        </div>
+
+        <Link
+          href={adConfig.targetUrl || '/marketplace'}
+          className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-black text-xs py-2 px-4 rounded-xl shadow-xs transition-all flex items-center justify-center space-x-1"
+        >
+          <span>{adConfig.ctaText || 'Learn More'}</span>
+          <ExternalLink className="w-3 h-3 text-stone-950" />
+        </Link>
+      </div>
+    );
+  }
+
+  // Top Sponsored Leaderboard / In-Feed / Bottom Banner
   return (
-    <div className={`w-full mx-auto my-6 p-4 rounded-lg border border-dashed border-[#d8aa8d] bg-[#fbf2e9] text-center ${className}`}>
-      <span className="text-[10px] font-semibold tracking-wider text-amber-900/60 uppercase block mb-1">
-        Ad Space
-      </span>
-      <div className="text-xs font-bold text-amber-900 uppercase">
-        {label} (728 × 90)
+    <div className={`w-full mx-auto py-2.5 ${className}`}>
+      <div className={`bg-gradient-to-r ${themeStyles} rounded-2xl p-3 px-6 flex flex-col sm:flex-row items-center justify-between shadow-sm border text-white gap-3.5`}>
+        <div className="flex items-center gap-3 text-center sm:text-left">
+          <span className="text-[10px] bg-amber-400 text-stone-950 uppercase px-2 py-0.5 rounded font-black tracking-wider shrink-0 shadow-2xs">
+            {adConfig.badge || 'FESTIVAL SPECIAL'}
+          </span>
+          <div>
+            <div className="text-sm sm:text-base font-bold text-amber-200 tracking-wide flex items-center gap-2 justify-center sm:justify-start">
+              <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+              <span>{adConfig.title}</span>
+            </div>
+            <div className="text-xs text-amber-100/85 line-clamp-1">
+              {adConfig.subtitle}
+            </div>
+          </div>
+        </div>
+
+        <Link
+          href={adConfig.targetUrl || '/marketplace'}
+          className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-black text-xs px-4 py-2 rounded-xl shadow transition-all whitespace-nowrap shrink-0 flex items-center space-x-1"
+        >
+          <span>{adConfig.ctaText || 'Shop Now'}</span>
+          <ExternalLink className="w-3 h-3 text-stone-950" />
+        </Link>
       </div>
     </div>
   );
