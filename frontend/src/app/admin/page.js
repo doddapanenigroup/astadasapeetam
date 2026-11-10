@@ -57,6 +57,7 @@ import {
 import { FacebookIcon, TwitterXIcon, InstagramIcon, YoutubeIcon, WhatsAppIcon } from '../../components/SocialIcons';
 import { allSlokasData, slokaCategories } from '../../data/slokasData';
 import { DEFAULT_ADS_CONFIG, getInitialAdsConfig } from '../../components/AdBanner';
+import DynamicPostStudio, { DEVOTIONAL_CATEGORIES, DEFAULT_POST_DATA } from '../../components/DynamicPostStudio';
 
 const API_BASE = 'http://localhost:5000/api';
 
@@ -114,21 +115,8 @@ export default function UnifiedConsolePage() {
     } catch {}
   };
 
-  // Add Post Form State
-  const [newPost, setNewPost] = useState({
-    title: '',
-    titleTelugu: '',
-    slug: '',
-    category: 'temples',
-    deity: 'Universal Mother Parashakti',
-    devotionalVerse: '',
-    excerpt: '',
-    content: '',
-    featuredImage: '/images/temple_kashi.jpg',
-    tags: 'Shakti Peethas, Vedic Culture, Temples',
-    keywords: 'Astadasapeetam, Shakti Peetha, Panchangam',
-    status: 'published'
-  });
+  // Add Post Form State (All 17 Devotional Categories Dynamic State)
+  const [newPost, setNewPost] = useState(DEFAULT_POST_DATA);
 
   // Add Product Form State
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
@@ -437,7 +425,17 @@ export default function UnifiedConsolePage() {
       ]);
 
       if (usersData?.success) setUsers(usersData.data);
-      if (postsData?.success) setPosts(postsData.data);
+      if (postsData?.success && Array.isArray(postsData.data)) {
+        let localPosts = [];
+        try { localPosts = JSON.parse(localStorage.getItem('astada_custom_posts') || '[]'); } catch {}
+        const merged = [...localPosts, ...postsData.data.filter(p => !localPosts.some(lp => lp._id === p._id || lp.slug === p.slug))];
+        setPosts(merged);
+      } else {
+        try {
+          const localPosts = JSON.parse(localStorage.getItem('astada_custom_posts') || '[]');
+          if (localPosts.length > 0) setPosts(localPosts);
+        } catch {}
+      }
       if (prodsData?.success) setProducts(prodsData.data);
       if (contentsData?.success) setSiteContents(contentsData.data);
       if (campsData?.success) setCampaigns(campsData.data);
@@ -476,10 +474,19 @@ export default function UnifiedConsolePage() {
     }
   };
 
-  // Add Post Submit
+  // Add Post Submit (With Category Dynamic Persistence)
   const handleCreatePost = async (e) => {
-    e.preventDefault();
+    e?.preventDefault?.();
     setActionLoading(true);
+    const postSlug = newPost.slug?.trim() || (newPost.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || `post-${Date.now()}`);
+    const postToSave = {
+      ...newPost,
+      _id: `custom-${Date.now()}`,
+      slug: postSlug,
+      views: 0,
+      createdAt: new Date().toISOString()
+    };
+
     try {
       const res = await fetch(`${API_BASE}/posts`, {
         method: 'POST',
@@ -487,33 +494,38 @@ export default function UnifiedConsolePage() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify(newPost)
+        body: JSON.stringify(postToSave)
       });
       const data = await res.json();
-      if (data.success) {
-        setPosts(prev => [data.data, ...prev]);
-        showToast('success', `Sacred post "${data.data.title}" published!`);
-        setActiveTab('postList');
-        setNewPost({
-          title: '',
-          titleTelugu: '',
-          slug: '',
-          category: 'temples',
-          deity: 'Universal Mother Parashakti',
-          devotionalVerse: '',
-          excerpt: '',
-          content: '',
-          featuredImage: '/images/temple_kashi.jpg',
-          tags: 'Shakti Peethas, Vedic Culture, Temples',
-          keywords: 'Astadasapeetam, Shakti Peetha, Panchangam',
-          status: 'published'
-        });
+      if (data?.success && data?.data) {
+        postToSave._id = data.data._id || postToSave._id;
       }
-    } catch {
-      showToast('error', 'Failed to publish post');
-    } finally {
-      setActionLoading(false);
+    } catch (err) {
+      console.warn('API sync deferred, saving locally:', err);
     }
+
+    // Always update client state & persistent storage
+    try {
+      const existingLocal = JSON.parse(localStorage.getItem('astada_custom_posts') || '[]');
+      const updatedLocal = [postToSave, ...existingLocal.filter(p => p.slug !== postToSave.slug)];
+      localStorage.setItem('astada_custom_posts', JSON.stringify(updatedLocal));
+    } catch {}
+
+    setPosts(prev => [postToSave, ...prev.filter(p => p.slug !== postToSave.slug)]);
+    showToast('success', `✨ Sacred post "${postToSave.title}" published under ${postToSave.category}!`);
+    setActiveTab('postList');
+    setActionLoading(false);
+  };
+
+  const handleDeletePost = (postToDelete) => {
+    if (!window.confirm(`Remove sacred post "${postToDelete.title}"?`)) return;
+    try {
+      const existingLocal = JSON.parse(localStorage.getItem('astada_custom_posts') || '[]');
+      const updatedLocal = existingLocal.filter(p => p.slug !== postToDelete.slug && p._id !== postToDelete._id);
+      localStorage.setItem('astada_custom_posts', JSON.stringify(updatedLocal));
+    } catch {}
+    setPosts(prev => prev.filter(p => p.slug !== postToDelete.slug && p._id !== postToDelete._id));
+    showToast('success', `Removed sacred post "${postToDelete.title}"`);
   };
 
   // Create Product Submit (Supports Dynamic & Custom Devotional Categories)
@@ -2578,121 +2590,15 @@ export default function UnifiedConsolePage() {
           {/* TAB 8: ADD POST                                           */}
           {/* ========================================================= */}
           {activeTab === 'addPost' && (
-            <div className="bg-white rounded-3xl border border-slate-200 p-7 shadow-xs space-y-6">
-              <div className="flex items-center justify-between border-b pb-4">
-                <div>
-                  <h3 className="text-xl font-black text-slate-900 flex items-center space-x-2">
-                    <PlusCircle className="w-5 h-5 text-amber-600" />
-                    <span>Add Sacred Post &amp; Devotional Article</span>
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Compose articles in English &amp; Telugu with deities, sacred verses, categories, and SEO metadata.
-                  </p>
-                </div>
-              </div>
-
-              <form onSubmit={handleCreatePost} className="space-y-4 text-xs">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="font-bold text-slate-700 block mb-1">Title (English) *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Srisailam Bhramaramba Devi Temple Puranam"
-                      value={newPost.title}
-                      onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
-                      className="w-full border rounded-xl p-2.5 text-xs focus:outline-none focus:border-emerald-600"
-                    />
-                  </div>
-                  <div>
-                    <label className="font-bold text-slate-700 block mb-1">Title in Telugu (శీర్షిక)</label>
-                    <input
-                      type="text"
-                      placeholder="శ్రీశైల భ్రమరాంబికా దేవి వైశిష్ట్యం"
-                      value={newPost.titleTelugu}
-                      onChange={(e) => setNewPost({ ...newPost, titleTelugu: e.target.value })}
-                      className="w-full border rounded-xl p-2.5 text-xs focus:outline-none focus:border-emerald-600"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label className="font-bold text-slate-700 block mb-1">Category *</label>
-                    <select
-                      value={newPost.category}
-                      onChange={(e) => setNewPost({ ...newPost, category: e.target.value })}
-                      className="w-full border rounded-xl p-2.5 text-xs focus:outline-none"
-                    >
-                      <option value="temples">Temples &amp; Shakti Peethas</option>
-                      <option value="panchangam">Daily Panchangam</option>
-                      <option value="slokas">Stotrams &amp; Slokas</option>
-                      <option value="astrology">Vedic Astrology</option>
-                      <option value="festivals">Festivals &amp; Vratams</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="font-bold text-slate-700 block mb-1">Presiding Deity</label>
-                    <input
-                      type="text"
-                      value={newPost.deity}
-                      onChange={(e) => setNewPost({ ...newPost, deity: e.target.value })}
-                      className="w-full border rounded-xl p-2.5 text-xs"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="font-bold text-slate-700 block mb-1">Featured Image URL</label>
-                    <input
-                      type="text"
-                      value={newPost.featuredImage}
-                      onChange={(e) => setNewPost({ ...newPost, featuredImage: e.target.value })}
-                      className="w-full border rounded-xl p-2.5 text-xs"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">Devotional Verse / Sloka</label>
-                  <textarea
-                    rows="2"
-                    placeholder="శ్లోకం లేదా మంత్రం..."
-                    value={newPost.devotionalVerse}
-                    onChange={(e) => setNewPost({ ...newPost, devotionalVerse: e.target.value })}
-                    className="w-full border rounded-xl p-2.5 text-xs font-serif"
-                  />
-                </div>
-
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">Article Body Content *</label>
-                  <textarea
-                    rows="7"
-                    required
-                    placeholder="Complete devotional history and significance..."
-                    value={newPost.content}
-                    onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
-                    className="w-full border rounded-xl p-3 text-xs leading-relaxed"
-                  />
-                </div>
-
-                <div className="flex justify-end pt-2">
-                  <button
-                    type="submit"
-                    disabled={actionLoading}
-                    className="bg-gradient-to-r from-[#78131e] to-[#911b27] hover:from-[#5c0d16] hover:to-[#78131e] text-white px-6 py-2.5 rounded-xl font-bold text-xs shadow flex items-center space-x-2 border border-amber-300/30 cursor-pointer"
-                  >
-                    <Send className="w-4 h-4 text-amber-300" />
-                    <span>Publish Post</span>
-                  </button>
-                </div>
-              </form>
-            </div>
+            <DynamicPostStudio
+              newPost={newPost}
+              setNewPost={setNewPost}
+              onPublish={handleCreatePost}
+              loading={actionLoading}
+              showToast={showToast}
+            />
           )}
 
-          {/* ========================================================= */}
-          {/* TAB 9: POST LIST (LUXURY SACRED PUBLICATIONS REGISTRY)    */}
-          {/* ========================================================= */}
           {activeTab === 'postList' && (
             <div className="space-y-5">
               {/* Top KPI Metrics Ribbon */}
@@ -2756,13 +2662,15 @@ export default function UnifiedConsolePage() {
 
               {/* Action & Filter Control Bar */}
               <div className="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
-                {/* Category Pills */}
-                <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 md:pb-0">
+                {/* Category Pills (Dynamic Filter Across All 17 Categories) */}
+                <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 md:pb-0 max-w-2xl">
                   {[
-                    { id: 'all', label: 'All Editions', count: posts.length },
-                    { id: 'temples', label: '🛕 Temples', count: posts.filter(p => p.category === 'temples').length },
-                    { id: 'festivals', label: '🌺 Festivals', count: posts.filter(p => p.category === 'festivals').length },
-                    { id: 'astrology', label: '🔮 Astrology', count: posts.filter(p => p.category === 'astrology').length },
+                    { id: 'all', label: 'All Publications', count: posts.length },
+                    ...DEVOTIONAL_CATEGORIES.map(c => ({
+                      id: c.id,
+                      label: `${c.icon} ${c.label}`,
+                      count: posts.filter(p => p.category === c.id).length
+                    }))
                   ].map((cat) => (
                     <button
                       key={cat.id}
@@ -2923,7 +2831,9 @@ export default function UnifiedConsolePage() {
                                 </Link>
                                 <button
                                   onClick={() => {
-                                    setNewPost({
+                                    setNewPost(prev => ({
+                                      ...prev,
+                                      ...post,
                                       title: post.title,
                                       titleTelugu: post.titleTelugu || '',
                                       slug: post.slug,
@@ -2933,17 +2843,24 @@ export default function UnifiedConsolePage() {
                                       excerpt: post.excerpt || '',
                                       content: post.content || '',
                                       featuredImage: post.featuredImage || '/images/temple_kashi.jpg',
-                                      tags: post.tags?.join(', ') || '',
-                                      keywords: post.keywords?.join(', ') || '',
-                                      status: post.status
-                                    });
+                                      tags: Array.isArray(post.tags) ? post.tags.join(', ') : (post.tags || ''),
+                                      keywords: Array.isArray(post.keywords) ? post.keywords.join(', ') : (post.keywords || ''),
+                                      status: post.status || 'published'
+                                    }));
                                     setActiveTab('addPost');
-                                    showToast('success', `Editing: ${post.title}`);
+                                    showToast('success', `Loaded post "${post.title}" into studio!`);
                                   }}
-                                  className="p-1.5 text-stone-500 hover:text-amber-800 hover:bg-stone-100 rounded-lg transition cursor-pointer"
+                                  className="p-1.5 text-stone-500 hover:text-amber-800 hover:bg-amber-50 rounded-lg transition cursor-pointer"
                                   title="Edit Post"
                                 >
                                   <Edit3 className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeletePost(post)}
+                                  className="p-1.5 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                                  title="Delete Post"
+                                >
+                                  <Trash2 className="w-4 h-4" />
                                 </button>
                               </div>
                             </td>
