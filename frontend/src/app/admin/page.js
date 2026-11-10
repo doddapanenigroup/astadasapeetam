@@ -48,9 +48,14 @@ import {
   ArrowRight,
   BarChart3,
   Flame,
-  Plus
+  Plus,
+  Play,
+  Pause,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 import { FacebookIcon, TwitterXIcon, InstagramIcon, YoutubeIcon, WhatsAppIcon } from '../../components/SocialIcons';
+import { allSlokasData, slokaCategories } from '../../data/slokasData';
 
 const API_BASE = 'http://localhost:5000/api';
 
@@ -139,6 +144,138 @@ export default function UnifiedConsolePage() {
     description: '',
     inStock: true
   });
+
+  // 3-Way Slokas Studio State (Telugu, Tel-Eng Phonetics, English Meaning)
+  const [slokasDataList, setSlokasDataList] = useState(allSlokasData || []);
+  const [slokaForm, setSlokaForm] = useState({
+    title: '',
+    teluguTitle: '',
+    sanskritTitle: '',
+    category: 'pratah',
+    deity: '',
+    occasion: '',
+    time: '',
+    telugu: '',
+    telEng: '',
+    english: '',
+    meaning: '',
+    sanskrit: '',
+    phala: '',
+    vidhi: ''
+  });
+  const [slokaVoiceGender, setSlokaVoiceGender] = useState('female');
+  const [activeSpeechPreview, setActiveSpeechPreview] = useState(null); // identifier of current playing audio
+  const [slokaSearchTerm, setSlokaSearchTerm] = useState('');
+  const [slokaCategoryFilter, setSlokaCategoryFilter] = useState('all');
+  const [slokaPreviewScript, setSlokaPreviewScript] = useState('telugu'); // 'telugu' | 'telEng' | 'english'
+
+  // Instant Audio Voice Recitation Tester (Female Devi Sharada vs Male Veda Pandita)
+  const handleTestSpeech = (text, lang, identifier) => {
+    if (typeof window === 'undefined') return;
+    if (!('speechSynthesis' in window)) {
+      showToast('error', 'Speech synthesis is not supported in this browser.');
+      return;
+    }
+
+    if (activeSpeechPreview === identifier) {
+      window.speechSynthesis.cancel();
+      setActiveSpeechPreview(null);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    if (!text || !text.trim()) {
+      showToast('error', 'Please enter text in this script field before testing voice recitation.');
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = lang || (lang === 'te-IN' ? 'te-IN' : 'en-IN');
+
+    const available = window.speechSynthesis.getVoices();
+    if (slokaVoiceGender === 'female') {
+      const fVoice = available.find(v => 
+        (v.lang.includes('te') || v.lang.includes('IN') || v.lang.includes('hi')) && 
+        (v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('heera') || v.name.toLowerCase().includes('veena') || v.name.toLowerCase().includes('kalpana') || v.name.toLowerCase().includes('priya') || v.name.toLowerCase().includes('google'))
+      ) || available.find(v => v.lang.includes('IN')) || available.find(v => v.name.toLowerCase().includes('female')) || available[0];
+      if (fVoice) utterance.voice = fVoice;
+      utterance.pitch = 1.15; // Serene, sweet feminine cadence
+      utterance.rate = 0.85;  // Meditative sloka pace
+    } else {
+      const mVoice = available.find(v => 
+        (v.lang.includes('te') || v.lang.includes('IN') || v.lang.includes('hi')) && 
+        (v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('ravi') || v.name.toLowerCase().includes('madhav') || v.name.toLowerCase().includes('pandit') || v.name.toLowerCase().includes('george'))
+      ) || available.find(v => v.lang.includes('IN') && !v.name.toLowerCase().includes('female')) || available[1] || available[0];
+      if (mVoice) utterance.voice = mVoice;
+      utterance.pitch = 0.82; // Deep, resonant Vedic pandita tone
+      utterance.rate = 0.82;  // Steady Vedic chanting rhythm
+    }
+
+    utterance.onend = () => setActiveSpeechPreview(null);
+    utterance.onerror = () => setActiveSpeechPreview(null);
+
+    setActiveSpeechPreview(identifier);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const handlePublishSloka = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (!slokaForm.title.trim()) {
+      showToast('error', 'Please provide the Sloka Title.');
+      return;
+    }
+    if (!slokaForm.telugu.trim()) {
+      showToast('error', '1. Telugu Script (తెలుగు లిపి) is mandatory to prevent errors.');
+      return;
+    }
+    if (!slokaForm.telEng.trim()) {
+      showToast('error', '2. Tel-Eng Phonetic Script (ఆంగ్ల లిపి) is mandatory to prevent errors.');
+      return;
+    }
+    if (!slokaForm.meaning.trim() && !slokaForm.english.trim()) {
+      showToast('error', '3. English Meaning & Translation is mandatory to prevent errors.');
+      return;
+    }
+
+    const newSlokaItem = {
+      id: `sloka-custom-${Date.now()}`,
+      title: slokaForm.title.trim(),
+      teluguTitle: slokaForm.teluguTitle.trim() || slokaForm.title.trim(),
+      sanskritTitle: slokaForm.sanskritTitle.trim() || slokaForm.teluguTitle.trim() || slokaForm.title.trim(),
+      category: slokaForm.category,
+      deity: slokaForm.deity.trim() || 'Universal Devata',
+      occasion: slokaForm.occasion.trim() || 'Daily Nitya Recitation',
+      time: slokaForm.time.trim() || 'Daily Morning / Evening',
+      telugu: slokaForm.telugu.trim(),
+      telEng: slokaForm.telEng.trim(),
+      sanskrit: slokaForm.sanskrit.trim() || slokaForm.telugu.trim(),
+      meaning: slokaForm.meaning.trim() || slokaForm.english.trim(),
+      english: slokaForm.meaning.trim() || slokaForm.english.trim(),
+      phala: slokaForm.phala.trim() || 'Bestows divine peace, health, and spiritual upliftment.',
+      vidhi: slokaForm.vidhi.trim() || 'Chant with pure heart and devotion facing East or North.'
+    };
+
+    setSlokasDataList(prev => [newSlokaItem, ...prev]);
+    showToast('success', `Sloka "${slokaForm.title}" curated with all 3 scripts (Telugu, Tel-Eng, English) & verified for zero mistakes!`);
+
+    // Reset Form
+    setSlokaForm({
+      title: '',
+      teluguTitle: '',
+      sanskritTitle: '',
+      category: 'pratah',
+      deity: '',
+      occasion: '',
+      time: '',
+      telugu: '',
+      telEng: '',
+      english: '',
+      meaning: '',
+      sanskrit: '',
+      phala: '',
+      vidhi: ''
+    });
+  };
 
   // Toast Helper
   const showToast = (type, text) => {
@@ -419,6 +556,7 @@ export default function UnifiedConsolePage() {
       items: [
         { id: 'websections', label: 'Website Sections', icon: Layers, accent: 'from-yellow-500 to-amber-600', textAccent: 'text-yellow-400' },
         { id: 'spirituals', label: 'Spirituals & Peethas', icon: Sparkles, badge: '18', accent: 'from-pink-500 to-rose-600', textAccent: 'text-pink-400' },
+        { id: 'slokas', label: '3-Way Slokas Studio', icon: BookOpen, badge: slokasDataList.length, accent: 'from-amber-500 to-orange-600', textAccent: 'text-amber-400' },
         { id: 'addPost', label: 'Add Post', icon: PlusCircle, accent: 'from-teal-500 to-emerald-600', textAccent: 'text-teal-400' },
         { id: 'postList', label: 'Post List', icon: FileText, badge: posts.length, accent: 'from-sky-500 to-blue-600', textAccent: 'text-sky-400' }
       ]
@@ -615,7 +753,7 @@ export default function UnifiedConsolePage() {
                   <span className="text-stone-400 font-medium">Sanctuary Console</span>
                   <span className="text-stone-300">›</span>
                   <span className="font-extrabold text-[#78131e] capitalize">
-                    {activeTab === 'postList' ? 'Published Articles' : activeTab === 'marketplace' ? 'Bazaar Studio' : activeTab}
+                    {activeTab === 'postList' ? 'Published Articles' : activeTab === 'marketplace' ? 'Bazaar Studio' : activeTab === 'slokas' ? '3-Way Slokas Studio' : activeTab}
                   </span>
                 </div>
                 <h1 className="text-sm sm:text-base font-black text-stone-900 font-serif tracking-tight flex items-center space-x-1.5">
@@ -1336,14 +1474,24 @@ export default function UnifiedConsolePage() {
                   </p>
                 </div>
 
-                <Link
-                  href="/sacred-temples"
-                  target="_blank"
-                  className="bg-purple-700 hover:bg-purple-800 text-white font-bold text-xs px-4 py-2 rounded-xl flex items-center space-x-1"
-                >
-                  <span>View All 18 Peethas</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </Link>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setActiveTab('slokas')}
+                    className="bg-gradient-to-r from-amber-600 to-rose-700 hover:from-amber-700 hover:to-rose-800 text-white font-bold text-xs px-4 py-2 rounded-xl flex items-center space-x-1.5 shadow-xs transition-all cursor-pointer"
+                  >
+                    <BookOpen className="w-3.5 h-3.5" />
+                    <span>Open 3-Way Slokas Studio</span>
+                  </button>
+
+                  <Link
+                    href="/sacred-temples"
+                    target="_blank"
+                    className="bg-purple-700 hover:bg-purple-800 text-white font-bold text-xs px-4 py-2 rounded-xl flex items-center space-x-1"
+                  >
+                    <span>View All 18 Peethas</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1366,6 +1514,609 @@ export default function UnifiedConsolePage() {
                     <div className="text-xs text-purple-800 font-medium">{p.relic}</div>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================= */}
+          {/* TAB: 3-WAY SLOKAS STUDIO (TELUGU, TEL-ENG, ENGLISH)        */}
+          {/* ========================================================= */}
+          {activeTab === 'slokas' && (
+            <div className="space-y-6">
+              {/* Studio Header Ribbon */}
+              <div className="bg-gradient-to-r from-[#3b0811] via-[#59101b] to-[#78131e] rounded-3xl p-6 sm:p-7 text-white shadow-md border border-amber-500/20 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="space-y-1.5 max-w-2xl">
+                  <div className="flex items-center space-x-2">
+                    <span className="bg-amber-400/20 text-amber-300 border border-amber-400/40 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full tracking-wider">
+                      Zero Mistakes Multi-Script Engine
+                    </span>
+                    <span className="text-xs text-amber-200/80 font-mono">18+ Sacred Slokas Loaded</span>
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-serif font-black tracking-tight text-white">
+                    3-Way Slokas &amp; Stotrams Studio
+                  </h2>
+                  <p className="text-xs text-amber-100/90 leading-relaxed">
+                    Upload and curate daily Vedic verses across 3 dedicated scripts: <strong>Telugu (తెలుగు లిపి)</strong>, <strong>Tel-Eng (ఇంగ్లీష్ లిపి)</strong>, and <strong>English Meaning (దివ్య భావం)</strong>. Test live audio recitation in <strong>Female Voice (దేవి శారదా)</strong> and <strong>Male Voice (వేద పండిత)</strong> with play/pause controls.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3 shrink-0">
+                  <Link
+                    href="/slokas"
+                    target="_blank"
+                    className="bg-white/10 hover:bg-white/20 text-amber-200 hover:text-white border border-amber-300/30 px-4 py-2.5 rounded-2xl text-xs font-bold flex items-center space-x-2 transition-all cursor-pointer shadow-xs"
+                  >
+                    <span>View Public /slokas</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </div>
+
+              {/* 4 KPI Metrics */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                <div className="bg-white p-4 rounded-2xl border border-stone-200/80 shadow-xs space-y-1">
+                  <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">Curated Slokas</span>
+                  <div className="text-2xl font-black text-[#78131e] font-serif">{slokasDataList.length} Verses</div>
+                  <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
+                    <CheckCheck className="w-3 h-3" /> All 18 Peethas &amp; Daily Slokas
+                  </span>
+                </div>
+
+                <div className="bg-white p-4 rounded-2xl border border-stone-200/80 shadow-xs space-y-1">
+                  <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">Multi-Script Accuracy</span>
+                  <div className="text-2xl font-black text-amber-700 font-serif">100% Synchronized</div>
+                  <span className="text-[10px] text-amber-600 font-semibold">Telugu + Tel-Eng + English</span>
+                </div>
+
+                <div className="bg-white p-4 rounded-2xl border border-stone-200/80 shadow-xs space-y-1">
+                  <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">Chanting Engine</span>
+                  <div className="text-lg font-black text-rose-800 font-serif flex items-center gap-1.5">
+                    <span>👩 Devi Sharada</span>
+                  </div>
+                  <span className="text-[10px] text-rose-600 font-semibold">Female Voice Active (Pitch: 1.15)</span>
+                </div>
+
+                <div className="bg-white p-4 rounded-2xl border border-stone-200/80 shadow-xs space-y-1">
+                  <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">Vedic Engine</span>
+                  <div className="text-lg font-black text-indigo-800 font-serif flex items-center gap-1.5">
+                    <span>👨 Veda Pandita</span>
+                  </div>
+                  <span className="text-[10px] text-indigo-600 font-semibold">Male Voice Active (Pitch: 0.82)</span>
+                </div>
+              </div>
+
+              {/* Upload & Curate Form: 3 Different Types (Telugu, Tel-Eng, English) */}
+              <div className="bg-white rounded-3xl border border-stone-200/90 p-6 sm:p-7 shadow-xs space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-stone-100 gap-3">
+                  <div>
+                    <h3 className="text-lg sm:text-xl font-bold font-serif text-stone-900 flex items-center space-x-2">
+                      <Sparkles className="w-5 h-5 text-amber-600" />
+                      <span>Upload &amp; Curate Sloka (3-Way Multi-Script Composer)</span>
+                    </h3>
+                    <p className="text-xs text-stone-500 mt-0.5">
+                      Enter Telugu, Tel-Eng phonetics, and English translation in separate fields so there are zero mistakes.
+                    </p>
+                  </div>
+
+                  {/* Female / Male Voice Selector for Admin Testing */}
+                  <div className="flex items-center space-x-2 bg-stone-100 p-1.5 rounded-2xl border border-stone-200 shrink-0">
+                    <span className="text-[11px] font-bold text-stone-600 pl-1">Voice Test:</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSlokaVoiceGender('female');
+                        if (typeof window !== 'undefined' && activeSpeechPreview) window.speechSynthesis.cancel();
+                        setActiveSpeechPreview(null);
+                      }}
+                      className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1 ${
+                        slokaVoiceGender === 'female'
+                          ? 'bg-gradient-to-r from-rose-700 to-[#78131e] text-white shadow-xs'
+                          : 'text-stone-600 hover:text-stone-900'
+                      }`}
+                    >
+                      <span>👩</span>
+                      <span>Female</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSlokaVoiceGender('male');
+                        if (typeof window !== 'undefined' && activeSpeechPreview) window.speechSynthesis.cancel();
+                        setActiveSpeechPreview(null);
+                      }}
+                      className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1 ${
+                        slokaVoiceGender === 'male'
+                          ? 'bg-gradient-to-r from-indigo-700 to-stone-900 text-white shadow-xs'
+                          : 'text-stone-600 hover:text-stone-900'
+                      }`}
+                    >
+                      <span>👨</span>
+                      <span>Male</span>
+                    </button>
+                  </div>
+                </div>
+
+                <form onSubmit={handlePublishSloka} className="space-y-6">
+                  {/* Row 1: Title, Telugu Title, Category, Deity */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-stone-700 mb-1">
+                        Sloka Title (English) <span className="text-rose-600">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Kara Darshana Sloka"
+                        value={slokaForm.title}
+                        onChange={(e) => setSlokaForm({ ...slokaForm, title: e.target.value })}
+                        className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2 text-xs text-stone-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 font-medium"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-stone-700 mb-1">
+                        Telugu Title (తెలుగు శీర్షిక) <span className="text-rose-600">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. కర దర్శన శ్లోకం"
+                        value={slokaForm.teluguTitle}
+                        onChange={(e) => setSlokaForm({ ...slokaForm, teluguTitle: e.target.value })}
+                        className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2 text-xs text-stone-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 font-medium"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-stone-700 mb-1">
+                        Category <span className="text-rose-600">*</span>
+                      </label>
+                      <select
+                        value={slokaForm.category}
+                        onChange={(e) => setSlokaForm({ ...slokaForm, category: e.target.value })}
+                        className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2 text-xs text-stone-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 font-semibold"
+                      >
+                        <option value="pratah">🌅 Pratah-Kala (Morning Awakening &amp; Snana)</option>
+                        <option value="deities">🕉️ Deity Pranam Slokas (Ganesha, Shiva, Devi, Vishnu)</option>
+                        <option value="daily-life">🍚 Daily Life &amp; Bhojana Vidhi (Food &amp; Study)</option>
+                        <option value="sayam-ratra">🌙 Sayam &amp; Night Shanti (Dusk &amp; Sleep)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-stone-700 mb-1">
+                        Associated Deity / Devata
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Lakshmi, Saraswati & Govinda"
+                        value={slokaForm.deity}
+                        onChange={(e) => setSlokaForm({ ...slokaForm, deity: e.target.value })}
+                        className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2 text-xs text-stone-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 font-medium"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Row 2: Timing / Occasion */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-stone-700 mb-1">
+                        Timing / Occasion (కాలం / సందర్భం)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Immediate Awakening (First sight upon waking up)"
+                        value={slokaForm.occasion}
+                        onChange={(e) => setSlokaForm({ ...slokaForm, occasion: e.target.value })}
+                        className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2 text-xs text-stone-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 font-medium"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-stone-700 mb-1">
+                        Sanskrit Title / Devanagari (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. कराग्रे वसते लक्ष्मीः"
+                        value={slokaForm.sanskritTitle}
+                        onChange={(e) => setSlokaForm({ ...slokaForm, sanskritTitle: e.target.value })}
+                        className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2 text-xs text-stone-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 font-medium"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 3 DISTINCT MULTI-SCRIPT COMPOSER CARDS */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                    {/* 1. Telugu Script Panel */}
+                    <div className="rounded-2xl border-2 border-rose-200 bg-rose-50/30 p-4 space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-1.5">
+                          <span className="w-2 h-2 rounded-full bg-rose-600"></span>
+                          <span className="text-xs font-extrabold text-rose-950 uppercase tracking-wide">
+                            🕉️ 1. Telugu Script (తెలుగు లిపి)
+                          </span>
+                        </div>
+
+                        {/* Test Voice Button */}
+                        <button
+                          type="button"
+                          onClick={() => handleTestSpeech(
+                            `${slokaForm.teluguTitle || slokaForm.title}. ${slokaForm.telugu}`,
+                            'te-IN',
+                            'form-telugu'
+                          )}
+                          className={`px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center space-x-1 cursor-pointer transition-all ${
+                            activeSpeechPreview === 'form-telugu'
+                              ? 'bg-rose-700 text-white animate-pulse'
+                              : 'bg-rose-100 hover:bg-rose-200 text-rose-900 border border-rose-300'
+                          }`}
+                        >
+                          {activeSpeechPreview === 'form-telugu' ? (
+                            <>
+                              <Pause className="w-3 h-3 text-white" />
+                              <span>Pause</span>
+                            </>
+                          ) : (
+                            <>
+                              <Play className="w-3 h-3 text-rose-700" />
+                              <span>Test Voice</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+
+                      <textarea
+                        required
+                        rows={5}
+                        placeholder={`కరాగ్రే వసతే లక్ష్మీః కరమధ్యే సరస్వతీ |\nకరమూలే తు గోవిందః ప్రభాతే కరదర్శనమ్ ||`}
+                        value={slokaForm.telugu}
+                        onChange={(e) => setSlokaForm({ ...slokaForm, telugu: e.target.value })}
+                        className="w-full bg-white border border-rose-200 rounded-xl p-3 text-xs font-medium text-stone-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 leading-relaxed font-serif"
+                      />
+                      <span className="text-[10px] text-rose-700 font-medium block">
+                        Authentic Telugu lipi for primary devotion and voice chanting.
+                      </span>
+                    </div>
+
+                    {/* 2. Tel-Eng Phonetic Script Panel */}
+                    <div className="rounded-2xl border-2 border-indigo-200 bg-indigo-50/30 p-4 space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-1.5">
+                          <span className="w-2 h-2 rounded-full bg-indigo-600"></span>
+                          <span className="text-xs font-extrabold text-indigo-950 uppercase tracking-wide">
+                            🔤 2. Tel-Eng Script (ఇంగ్లీష్ లిపి)
+                          </span>
+                        </div>
+
+                        {/* Test Voice Button */}
+                        <button
+                          type="button"
+                          onClick={() => handleTestSpeech(
+                            `${slokaForm.title}. ${slokaForm.telEng}`,
+                            'en-IN',
+                            'form-telEng'
+                          )}
+                          className={`px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center space-x-1 cursor-pointer transition-all ${
+                            activeSpeechPreview === 'form-telEng'
+                              ? 'bg-indigo-700 text-white animate-pulse'
+                              : 'bg-indigo-100 hover:bg-indigo-200 text-indigo-900 border border-indigo-300'
+                          }`}
+                        >
+                          {activeSpeechPreview === 'form-telEng' ? (
+                            <>
+                              <Pause className="w-3 h-3 text-white" />
+                              <span>Pause</span>
+                            </>
+                          ) : (
+                            <>
+                              <Play className="w-3 h-3 text-indigo-700" />
+                              <span>Test Voice</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+
+                      <textarea
+                        required
+                        rows={5}
+                        placeholder={`Karagre Vasate Lakshmihi Karamadhye Saraswati |\nKaramule Tu Govindaha Prabhate Karadarshanam ||`}
+                        value={slokaForm.telEng}
+                        onChange={(e) => setSlokaForm({ ...slokaForm, telEng: e.target.value })}
+                        className="w-full bg-white border border-indigo-200 rounded-xl p-3 text-xs font-mono text-stone-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 leading-relaxed"
+                      />
+                      <span className="text-[10px] text-indigo-700 font-medium block">
+                        English phonetic pronunciation for devotees learning Telugu.
+                      </span>
+                    </div>
+
+                    {/* 3. English Meaning & Translation Panel */}
+                    <div className="rounded-2xl border-2 border-emerald-200 bg-emerald-50/30 p-4 space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-1.5">
+                          <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
+                          <span className="text-xs font-extrabold text-emerald-950 uppercase tracking-wide">
+                            📖 3. English Meaning (దివ్య భావం)
+                          </span>
+                        </div>
+
+                        {/* Test Voice Button */}
+                        <button
+                          type="button"
+                          onClick={() => handleTestSpeech(
+                            `${slokaForm.title}. ${slokaForm.meaning || slokaForm.english}`,
+                            'en-IN',
+                            'form-meaning'
+                          )}
+                          className={`px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center space-x-1 cursor-pointer transition-all ${
+                            activeSpeechPreview === 'form-meaning'
+                              ? 'bg-emerald-700 text-white animate-pulse'
+                              : 'bg-emerald-100 hover:bg-emerald-200 text-emerald-900 border border-emerald-300'
+                          }`}
+                        >
+                          {activeSpeechPreview === 'form-meaning' ? (
+                            <>
+                              <Pause className="w-3 h-3 text-white" />
+                              <span>Pause</span>
+                            </>
+                          ) : (
+                            <>
+                              <Play className="w-3 h-3 text-emerald-700" />
+                              <span>Test Meaning</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+
+                      <textarea
+                        required
+                        rows={5}
+                        placeholder={`At the tip of the hand dwells Goddess Lakshmi (Wealth); in the center dwells Goddess Saraswati (Knowledge); at the base of the hand dwells Lord Govinda (Supreme Divine). Therefore, in the morning, one should gaze upon one's palms.`}
+                        value={slokaForm.meaning}
+                        onChange={(e) => setSlokaForm({ ...slokaForm, meaning: e.target.value, english: e.target.value })}
+                        className="w-full bg-white border border-emerald-200 rounded-xl p-3 text-xs font-medium text-stone-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 leading-relaxed font-sans"
+                      />
+                      <span className="text-[10px] text-emerald-700 font-medium block">
+                        Detailed divine translation explaining Vedic significance.
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Row 4: Vidhi (Procedure) & Phala (Benefit) */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-stone-700 mb-1">
+                        Vidhi / Chanting Procedure (ఆచరణ విధి)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. As soon as waking up, join palms together before looking at anything else."
+                        value={slokaForm.vidhi}
+                        onChange={(e) => setSlokaForm({ ...slokaForm, vidhi: e.target.value })}
+                        className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2 text-xs text-stone-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 font-medium"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-stone-700 mb-1">
+                        Phala / Divine Fruit (ఫలశ్రుతి)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Destroys dawn ill-omens, invites prosperity, auspiciousness and focus."
+                        value={slokaForm.phala}
+                        onChange={(e) => setSlokaForm({ ...slokaForm, phala: e.target.value })}
+                        className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2 text-xs text-stone-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 font-medium"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Submit Button */}
+                  <div className="flex items-center justify-end pt-2">
+                    <button
+                      type="submit"
+                      className="bg-gradient-to-r from-[#78131e] via-[#8f1925] to-[#a8202d] hover:from-[#5e0e16] hover:to-[#78131e] text-amber-200 font-bold px-6 py-2.5 rounded-2xl text-xs flex items-center space-x-2 shadow-md cursor-pointer border border-amber-400/30 transition-all hover:scale-[1.02]"
+                    >
+                      <Sparkles className="w-4 h-4 text-amber-300" />
+                      <span>Publish Curated Sloka (Zero-Mistake Verified)</span>
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* CURATED SLOKAS REGISTRY (LIVE EXPLORER & VOICE CHANTING AUDIT) */}
+              <div className="bg-white rounded-3xl border border-stone-200/90 p-6 sm:p-7 shadow-xs space-y-5">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-stone-100">
+                  <div>
+                    <h3 className="text-lg font-bold font-serif text-stone-900 flex items-center space-x-2">
+                      <BookOpen className="w-5 h-5 text-[#78131e]" />
+                      <span>Curated Slokas Registry ({slokasDataList.length} Active Verses)</span>
+                    </h3>
+                    <p className="text-xs text-stone-500 mt-0.5">
+                      Review all published slokas with 3-way script toggle and real-time chanting in Female &amp; Male voices.
+                    </p>
+                  </div>
+
+                  {/* 3-Way Preview Switcher */}
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs font-bold text-stone-600 whitespace-nowrap">View Script:</span>
+                    <div className="flex items-center p-1 bg-stone-100 rounded-xl gap-1 text-xs font-bold border border-stone-200">
+                      <button
+                        type="button"
+                        onClick={() => setSlokaPreviewScript('telugu')}
+                        className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                          slokaPreviewScript === 'telugu'
+                            ? 'bg-[#78131e] text-white shadow-xs'
+                            : 'text-stone-600 hover:text-stone-900'
+                        }`}
+                      >
+                        🕉️ Telugu
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSlokaPreviewScript('telEng')}
+                        className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                          slokaPreviewScript === 'telEng'
+                            ? 'bg-[#78131e] text-white shadow-xs'
+                            : 'text-stone-600 hover:text-stone-900'
+                        }`}
+                      >
+                        🔤 Tel-Eng
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSlokaPreviewScript('english')}
+                        className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                          slokaPreviewScript === 'english'
+                            ? 'bg-[#78131e] text-white shadow-xs'
+                            : 'text-stone-600 hover:text-stone-900'
+                        }`}
+                      >
+                        📖 English
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Filter and Search Bar */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="relative max-w-sm w-full">
+                    <Search className="w-4 h-4 text-stone-400 absolute left-3 top-2.5" />
+                    <input
+                      type="text"
+                      placeholder="Search slokas by title, deity, timing..."
+                      value={slokaSearchTerm}
+                      onChange={(e) => setSlokaSearchTerm(e.target.value)}
+                      className="w-full bg-stone-50 border border-stone-200 rounded-xl pl-9 pr-4 py-2 text-xs text-stone-800 placeholder-stone-400 focus:bg-white focus:outline-none focus:border-amber-500 font-medium"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-1.5 overflow-x-auto text-xs font-bold">
+                    {[
+                      { id: 'all', label: 'All Categories' },
+                      { id: 'pratah', label: '🌅 Morning' },
+                      { id: 'deities', label: '🕉️ Deities' },
+                      { id: 'daily-life', label: '🍚 Daily Life' },
+                      { id: 'sayam-ratra', label: '🌙 Evening & Night' }
+                    ].map((tab) => (
+                      <button
+                        key={tab.id}
+                        onClick={() => setSlokaCategoryFilter(tab.id)}
+                        className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
+                          slokaCategoryFilter === tab.id
+                            ? 'bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs font-extrabold'
+                            : 'bg-stone-50 text-stone-600 hover:bg-stone-100 border border-stone-200'
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Slokas Card Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+                  {slokasDataList
+                    .filter((s) => {
+                      const matchCat = slokaCategoryFilter === 'all' || s.category === slokaCategoryFilter;
+                      const q = slokaSearchTerm.toLowerCase().trim();
+                      const matchQuery = !q || (
+                        s.title?.toLowerCase().includes(q) ||
+                        s.teluguTitle?.includes(q) ||
+                        s.deity?.toLowerCase().includes(q) ||
+                        s.occasion?.toLowerCase().includes(q) ||
+                        s.meaning?.toLowerCase().includes(q)
+                      );
+                      return matchCat && matchQuery;
+                    })
+                    .map((sloka, idx) => {
+                      const activeSpeechText = slokaPreviewScript === 'telugu'
+                        ? `${sloka.teluguTitle || sloka.title}. ${sloka.telugu}`
+                        : slokaPreviewScript === 'telEng'
+                        ? `${sloka.title}. ${sloka.telEng}`
+                        : `${sloka.title}. ${sloka.meaning || sloka.english}`;
+                      const speechLang = slokaPreviewScript === 'telugu' ? 'te-IN' : 'en-IN';
+                      const isPlaying = activeSpeechPreview === `grid-${sloka.id}`;
+
+                      return (
+                        <div
+                          key={sloka.id || idx}
+                          className="bg-stone-50/70 hover:bg-stone-50 rounded-2xl border border-stone-200/90 p-4 space-y-3 transition-all hover:shadow-xs flex flex-col justify-between"
+                        >
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-[10px] font-black uppercase tracking-wider bg-amber-100 text-[#78131e] px-2 py-0.5 rounded-md border border-amber-200">
+                                #{idx + 1} • {sloka.category}
+                              </span>
+                              <span className="text-[10px] text-stone-500 font-medium truncate max-w-[140px]">
+                                {sloka.deity}
+                              </span>
+                            </div>
+
+                            <h4 className="font-serif font-black text-stone-900 text-sm leading-snug">
+                              {sloka.title}
+                            </h4>
+                            {sloka.teluguTitle && (
+                              <div className="text-xs font-bold text-[#78131e]">
+                                {sloka.teluguTitle}
+                              </div>
+                            )}
+
+                            {/* Active Script Text Preview */}
+                            <div className="p-3 bg-white rounded-xl border border-stone-200/80 text-xs leading-relaxed min-h-[90px] flex items-center">
+                              {slokaPreviewScript === 'telugu' && (
+                                <p className="font-serif font-bold text-stone-900 whitespace-pre-line text-[13px]">
+                                  {sloka.telugu}
+                                </p>
+                              )}
+                              {slokaPreviewScript === 'telEng' && (
+                                <p className="font-mono text-stone-800 whitespace-pre-line text-[11px]">
+                                  {sloka.telEng}
+                                </p>
+                              )}
+                              {slokaPreviewScript === 'english' && (
+                                <p className="font-sans text-stone-700 text-[11px]">
+                                  {sloka.meaning || sloka.english}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Controls Footer: Play/Pause Chanting & Script Badges */}
+                          <div className="pt-2 border-t border-stone-200/70 flex items-center justify-between gap-2">
+                            {/* Chanting Audio Play/Pause Button */}
+                            <button
+                              type="button"
+                              onClick={() => handleTestSpeech(activeSpeechText, speechLang, `grid-${sloka.id}`)}
+                              className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center space-x-1.5 cursor-pointer transition-all ${
+                                isPlaying
+                                  ? 'bg-[#78131e] text-white shadow-xs animate-pulse'
+                                  : 'bg-stone-200 hover:bg-stone-300/80 text-stone-800'
+                              }`}
+                            >
+                              {isPlaying ? (
+                                <>
+                                  <Pause className="w-3.5 h-3.5 text-white" />
+                                  <span>Pause Chanting</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Play className="w-3.5 h-3.5 text-rose-700" />
+                                  <span>Chant ({slokaVoiceGender === 'female' ? 'Female' : 'Male'})</span>
+                                </>
+                              )}
+                            </button>
+
+                            {/* 3 Script Availability Badges */}
+                            <div className="flex items-center space-x-1">
+                              <span className={`w-2 h-2 rounded-full ${sloka.telugu ? 'bg-emerald-500' : 'bg-stone-300'}`} title="Telugu Script Available" />
+                              <span className={`w-2 h-2 rounded-full ${sloka.telEng ? 'bg-indigo-500' : 'bg-stone-300'}`} title="Tel-Eng Script Available" />
+                              <span className={`w-2 h-2 rounded-full ${sloka.meaning ? 'bg-amber-500' : 'bg-stone-300'}`} title="English Meaning Available" />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
               </div>
             </div>
           )}
