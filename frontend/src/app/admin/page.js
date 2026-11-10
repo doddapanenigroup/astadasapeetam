@@ -166,7 +166,7 @@ export default function UnifiedConsolePage() {
   const [customCategoryInput, setCustomCategoryInput] = useState('');
 
   // 5 Homepage Ads & Sponsored Spaces Manager State (Google Ads, Private Ads, Hide Leaving Reserved Space)
-  const [homeAdsConfig, setHomeAdsConfig] = useState(() => getInitialAdsConfig());
+  const [homeAdsConfig, setHomeAdsConfig] = useState(DEFAULT_ADS_CONFIG);
 
   // Initialize and synchronize Ads Config across tabs
   useEffect(() => {
@@ -1714,47 +1714,67 @@ export default function UnifiedConsolePage() {
                           </div>
                         </div>
                       ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-blue-50/50 p-4 rounded-2xl border border-blue-200 text-xs">
-                          <div>
-                            <label className="block text-[11px] font-bold text-blue-950 mb-1">
-                              Google AdSense Publisher ID *
-                            </label>
-                            <input
-                              type="text"
-                              value={slotConfig.googleClientId || ''}
-                              onChange={(e) => handleUpdateAdSlot(slotDef.id, { googleClientId: e.target.value })}
-                              placeholder="ca-pub-9876543210987654"
-                              className="w-full bg-white border border-blue-200 rounded-xl px-3 py-2 text-xs font-mono text-stone-900 focus:outline-none focus:border-blue-500"
-                            />
+                        <div className="space-y-3 bg-blue-50/50 p-4 rounded-2xl border border-blue-200 text-xs">
+                          <div className="flex items-center justify-between pb-2 border-b border-blue-100 text-[11px] text-blue-900">
+                            <span className="font-bold flex items-center gap-1.5">
+                              <span>🌐</span> Google AdSense Network Integration
+                            </span>
+                            <span className="text-blue-700 font-medium">
+                              (Required only if you wish to serve live ads from your Google AdSense account)
+                            </span>
                           </div>
 
-                          <div>
-                            <label className="block text-[11px] font-bold text-blue-950 mb-1">
-                              Google Ad Unit Slot ID *
-                            </label>
-                            <input
-                              type="text"
-                              value={slotConfig.googleSlotId || ''}
-                              onChange={(e) => handleUpdateAdSlot(slotDef.id, { googleSlotId: e.target.value })}
-                              placeholder="1092837465"
-                              className="w-full bg-white border border-blue-200 rounded-xl px-3 py-2 text-xs font-mono text-stone-900 focus:outline-none focus:border-blue-500"
-                            />
-                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div>
+                              <label className="block text-[11px] font-bold text-blue-950 mb-0.5">
+                                Google AdSense Publisher ID
+                              </label>
+                              <p className="text-[10px] text-blue-700/80 mb-1">
+                                Your account ID from Google AdSense (e.g. ca-pub-xxx)
+                              </p>
+                              <input
+                                type="text"
+                                value={slotConfig.googleClientId || ''}
+                                onChange={(e) => handleUpdateAdSlot(slotDef.id, { googleClientId: e.target.value })}
+                                placeholder="ca-pub-9876543210987654"
+                                className="w-full bg-white border border-blue-200 rounded-xl px-3 py-2 text-xs font-mono text-stone-900 focus:outline-none focus:border-blue-500"
+                              />
+                            </div>
 
-                          <div>
-                            <label className="block text-[11px] font-bold text-blue-950 mb-1">
-                              Ad Format
-                            </label>
-                            <select
-                              value={slotConfig.googleFormat || 'auto'}
-                              onChange={(e) => handleUpdateAdSlot(slotDef.id, { googleFormat: e.target.value })}
-                              className="w-full bg-white border border-blue-200 rounded-xl px-3 py-2 text-xs font-semibold text-stone-900 focus:outline-none focus:border-blue-500"
-                            >
-                              <option value="auto">Auto Responsive</option>
-                              <option value="horizontal">Horizontal Banner (728x90)</option>
-                              <option value="rectangle">Medium Rectangle (300x250)</option>
-                              <option value="leaderboard">Large Leaderboard (970x250)</option>
-                            </select>
+                            <div>
+                              <label className="block text-[11px] font-bold text-blue-950 mb-0.5">
+                                Google Ad Unit Slot ID
+                              </label>
+                              <p className="text-[10px] text-blue-700/80 mb-1">
+                                The 10-digit ad slot number generated in your AdSense dashboard
+                              </p>
+                              <input
+                                type="text"
+                                value={slotConfig.googleSlotId || ''}
+                                onChange={(e) => handleUpdateAdSlot(slotDef.id, { googleSlotId: e.target.value })}
+                                placeholder="1092837465"
+                                className="w-full bg-white border border-blue-200 rounded-xl px-3 py-2 text-xs font-mono text-stone-900 focus:outline-none focus:border-blue-500"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-[11px] font-bold text-blue-950 mb-0.5">
+                                Ad Format
+                              </label>
+                              <p className="text-[10px] text-blue-700/80 mb-1">
+                                Responsive sizing behavior for mobile and desktop screens
+                              </p>
+                              <select
+                                value={slotConfig.googleFormat || 'auto'}
+                                onChange={(e) => handleUpdateAdSlot(slotDef.id, { googleFormat: e.target.value })}
+                                className="w-full bg-white border border-blue-200 rounded-xl px-3 py-2 text-xs font-semibold text-stone-900 focus:outline-none focus:border-blue-500"
+                              >
+                                <option value="auto">Auto Responsive</option>
+                                <option value="horizontal">Horizontal Banner (728x90)</option>
+                                <option value="rectangle">Medium Rectangle (300x250)</option>
+                                <option value="leaderboard">Large Leaderboard (970x250)</option>
+                              </select>
+                            </div>
                           </div>
                         </div>
                       )}

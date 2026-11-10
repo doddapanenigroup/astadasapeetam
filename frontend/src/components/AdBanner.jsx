@@ -134,10 +134,10 @@ export default function AdBanner({
     'slot-2'
   );
 
-  const [adConfig, setAdConfig] = useState(() => {
-    const all = getInitialAdsConfig();
-    return all[resolvedSlotId] || DEFAULT_ADS_CONFIG[resolvedSlotId] || DEFAULT_ADS_CONFIG['slot-1'];
-  });
+  // Initial state strictly uses DEFAULT_ADS_CONFIG to guarantee zero SSR hydration mismatch
+  const [adConfig, setAdConfig] = useState(
+    DEFAULT_ADS_CONFIG[resolvedSlotId] || DEFAULT_ADS_CONFIG['slot-1']
+  );
 
   useEffect(() => {
     const loadConfig = () => {
