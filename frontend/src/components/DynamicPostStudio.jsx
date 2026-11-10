@@ -1683,24 +1683,7 @@ export default function DynamicPostStudio({
                 </div>
               </div>
 
-              {/* Google SERP Snippet Preview */}
-              <div className="bg-stone-50 border border-stone-200 rounded-2xl p-4 space-y-2">
-                <div className="text-[10px] uppercase font-bold text-stone-400 tracking-wider flex items-center space-x-1">
-                  <span>Google Search Live SERP Snippet Preview</span>
-                </div>
-                <div className="bg-white p-3.5 rounded-xl border border-stone-200 shadow-2xs space-y-1">
-                  <div className="flex items-center space-x-1.5 text-[11px] text-emerald-800 font-sans">
-                    <span className="w-4 h-4 rounded-full bg-amber-500/20 text-[9px] font-bold text-amber-900 flex items-center justify-center">🕉️</span>
-                    <span className="truncate">https://astadasapeetam.org &rsaquo; {newPost.category} &rsaquo; {newPost.slug || 'sacred-article'}</span>
-                  </div>
-                  <div className="text-sm font-semibold text-blue-700 hover:underline cursor-pointer leading-tight">
-                    {newPost.metaTitle || newPost.title || 'Untitled Sacred Post'} | Astadasapeetam Divine Sanctuary
-                  </div>
-                  <div className="text-xs text-stone-600 line-clamp-2 leading-relaxed">
-                    {newPost.metaDescription || newPost.excerpt || 'Sacred devotional guide, history, significance, and daily rituals from Astadasapeetam.'}
-                  </div>
-                </div>
-              </div>
+
             </div>
 
             {/* Bottom Action Submittal Bar */}
