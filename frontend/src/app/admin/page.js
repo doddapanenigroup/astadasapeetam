@@ -134,6 +134,18 @@ export default function UnifiedConsolePage() {
         const storedRole = localStorage.getItem('astada_role');
         const storedUser = localStorage.getItem('astada_user');
 
+        if (typeof window !== 'undefined') {
+          const params = new URLSearchParams(window.location.search);
+          const tabParam = params.get('tab');
+          if (tabParam) {
+            setActiveTab(tabParam);
+          } else if (window.location.pathname.includes('/marketing')) {
+            setActiveTab('marketplace');
+          } else if (window.location.pathname.includes('/astrologer')) {
+            setActiveTab('astrology');
+          }
+        }
+
         let activeToken = storedToken;
 
         if (storedToken && storedRole) {
@@ -403,7 +415,7 @@ export default function UnifiedConsolePage() {
                   Astadasapeetam
                 </span>
                 <span className="text-[10px] text-amber-300 font-semibold uppercase tracking-wider">
-                  Super Admin Console
+                  {user?.role === 'digital_marketing' ? 'Marketing Studio' : user?.role === 'astrologer' ? 'Astrologer Studio' : 'Super Admin Console'}
                 </span>
               </div>
             )}
@@ -459,13 +471,15 @@ export default function UnifiedConsolePage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <div className="w-8 h-8 rounded-full bg-amber-400 text-stone-900 font-black flex items-center justify-center text-xs shadow">
-                    GV
+                    {(user?.name || 'Gowrav Vungarala').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                   </div>
                   <div>
                     <div className="font-bold text-white text-[11px] truncate max-w-[130px]">
                       {user?.name || 'Gowrav Vungarala'}
                     </div>
-                    <div className="text-[10px] text-amber-300 font-semibold uppercase">Super Admin</div>
+                    <div className="text-[10px] text-amber-300 font-semibold uppercase">
+                      {user?.role === 'digital_marketing' ? 'Digital Marketing' : user?.role === 'astrologer' ? 'Astrologer' : 'Super Admin'}
+                    </div>
                   </div>
                 </div>
 
@@ -529,7 +543,7 @@ export default function UnifiedConsolePage() {
             </h1>
 
             <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full">
-              Super Admin
+              {user?.role === 'digital_marketing' ? 'Digital Marketing' : user?.role === 'astrologer' ? 'Astrologer' : 'Super Admin'}
             </span>
 
             <button
