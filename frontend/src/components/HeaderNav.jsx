@@ -49,7 +49,7 @@ export default function HeaderNav() {
         </Link>
 
         {/* Desktop Navigation Links (Cleanly structured & balanced) */}
-        <nav className="hidden xl:flex items-center gap-1.5 2xl:gap-3 text-xs 2xl:text-sm font-medium text-stone-700 whitespace-nowrap min-w-0">
+        <nav className="hidden xl:flex items-center gap-1 2xl:gap-2 text-xs 2xl:text-sm font-medium text-stone-700 whitespace-nowrap min-w-0">
           {[
             { label: 'Home', href: '/', icon: 'Home' },
             { label: 'Sacred Peethas', href: '/sacred-temples', icon: 'Sparkles', badge: '18' },
@@ -69,13 +69,13 @@ export default function HeaderNav() {
               <Link
                 key={idx}
                 href={item.href}
-                className={`flex items-center gap-1.5 transition-colors py-1 px-1.5 rounded-lg ${
+                className={`flex items-center gap-1 transition-colors py-1 px-1.5 rounded-lg ${
                   isActive 
                     ? 'text-[#78131e] font-bold bg-amber-50/80 border-b-2 border-[#78131e]' 
                     : 'hover:text-[#78131e] hover:bg-stone-50'
                 }`}
               >
-                <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[#78131e]' : 'text-amber-700/80'}`} />
+                <Icon className={`hidden 2xl:inline-block w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[#78131e]' : 'text-amber-700/80'}`} />
                 <span>{item.label}</span>
                 {item.badge && (
                   <span className="text-[9px] font-black bg-amber-100 text-[#78131e] px-1 py-0.2 rounded-full">
@@ -87,46 +87,91 @@ export default function HeaderNav() {
           })}
           
           {/* More dropdown with secondary links */}
-          <div className="relative group cursor-pointer flex items-center gap-1 hover:text-[#78131e] px-2 py-1 rounded-lg hover:bg-stone-50">
+          <div className="relative group cursor-pointer flex items-center gap-1 hover:text-[#78131e] px-2 py-1 rounded-lg hover:bg-stone-50 shrink-0">
             <span>More</span>
-            <ChevronDown className="w-3.5 h-3.5" />
+            <ChevronDown className="w-3.5 h-3.5 shrink-0" />
 
             {/* Dropdown Menu */}
             <div className="absolute right-0 top-full pt-1.5 hidden group-hover:block z-50">
-              <div className="bg-white rounded-xl shadow-xl border border-[#ebdcc7] py-2 w-56 text-stone-800 text-xs space-y-0.5">
-                <Link href="/gods" className="flex items-center gap-2 px-3 py-2 hover:bg-amber-50 hover:text-[#78131e] font-medium text-stone-700">
+              <div className="bg-white rounded-2xl shadow-xl border border-[#ebdcc7] py-2 w-64 text-stone-800 text-xs space-y-0.5 max-h-[80vh] overflow-y-auto">
+                <Link href="/gods" className="flex items-center gap-2.5 px-3 py-2 hover:bg-amber-50 hover:text-[#78131e] font-medium text-stone-700">
                   <Sparkles className="w-3.5 h-3.5 text-amber-700" />
                   <span>Gods &amp; Avatars</span>
                 </Link>
 
-                <Link href="/stories" className="flex items-center gap-2 px-3 py-2 hover:bg-amber-50 hover:text-[#78131e] font-medium text-stone-700">
-                  <BookOpen className="w-3.5 h-3.5 text-amber-700" />
-                  <span>Devotional Stories</span>
+                <Link href="/muhurtham" className="flex items-center gap-2.5 px-3 py-2 hover:bg-amber-50 hover:text-[#78131e] font-medium text-stone-700">
+                  <Clock className="w-3.5 h-3.5 text-amber-700" />
+                  <span>Shubh Muhurtham</span>
                 </Link>
 
-                <Link href="/slokas" className="flex items-center gap-2 px-3 py-2 hover:bg-amber-50 hover:text-[#78131e] font-medium text-stone-700">
+                <Link href="/horoscope" className="flex items-center gap-2.5 px-3 py-2 hover:bg-amber-50 hover:text-[#78131e] font-medium text-stone-700">
+                  <Compass className="w-3.5 h-3.5 text-amber-700" />
+                  <span>Daily Horoscope (12 Rasis)</span>
+                </Link>
+
+                <Link href="/vrathalu-poojas" className="flex items-center gap-2.5 px-3 py-2 hover:bg-amber-50 hover:text-[#78131e] font-medium text-stone-700">
+                  <Flame className="w-3.5 h-3.5 text-amber-700" />
+                  <span>Vrathalu &amp; Pooja Vidhi</span>
+                </Link>
+
+                <Link href="/mantras" className="flex items-center gap-2.5 px-3 py-2 hover:bg-amber-50 hover:text-[#78131e] font-medium text-stone-700">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-700" />
+                  <span>Sacred Mantras &amp; 108 Japa</span>
+                </Link>
+
+                <Link href="/stotras" className="flex items-center gap-2.5 px-3 py-2 hover:bg-amber-50 hover:text-[#78131e] font-medium text-stone-700">
+                  <BookOpen className="w-3.5 h-3.5 text-amber-700" />
+                  <span>Divine Stotras &amp; Kavachas</span>
+                </Link>
+
+                <Link href="/yantras" className="flex items-center gap-2.5 px-3 py-2 hover:bg-amber-50 hover:text-[#78131e] font-medium text-stone-700">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-700" />
+                  <span>Sacred Yantras &amp; Meru</span>
+                </Link>
+
+                <Link href="/spirituality" className="flex items-center gap-2.5 px-3 py-2 hover:bg-amber-50 hover:text-[#78131e] font-medium text-stone-700">
+                  <Landmark className="w-3.5 h-3.5 text-amber-700" />
+                  <span>Spirituality &amp; Dharma</span>
+                </Link>
+
+                <Link href="/remedies" className="flex items-center gap-2.5 px-3 py-2 hover:bg-amber-50 hover:text-[#78131e] font-medium text-stone-700">
+                  <Compass className="w-3.5 h-3.5 text-amber-700" />
+                  <span>Remedies &amp; Dosha Nivarana</span>
+                </Link>
+
+                <Link href="/bhajans" className="flex items-center gap-2.5 px-3 py-2 hover:bg-amber-50 hover:text-[#78131e] font-medium text-stone-700">
+                  <Video className="w-3.5 h-3.5 text-amber-700" />
+                  <span>Divine Bhajans &amp; Kirtanas</span>
+                </Link>
+
+                <Link href="/slokas" className="flex items-center gap-2.5 px-3 py-2 hover:bg-amber-50 hover:text-[#78131e] font-medium text-stone-700">
                   <Flame className="w-3.5 h-3.5 text-amber-700" />
                   <span>Daily Slokas &amp; Stotrams</span>
                 </Link>
 
-                <Link href="/videos" className="flex items-center gap-2 px-3 py-2 hover:bg-amber-50 hover:text-[#78131e] font-medium text-stone-700">
+                <Link href="/videos" className="flex items-center gap-2.5 px-3 py-2 hover:bg-amber-50 hover:text-[#78131e] font-medium text-stone-700">
                   <Video className="w-3.5 h-3.5 text-amber-700" />
                   <span>Devotional Videos</span>
                 </Link>
 
+                <Link href="/stories" className="flex items-center gap-2.5 px-3 py-2 hover:bg-amber-50 hover:text-[#78131e] font-medium text-stone-700">
+                  <BookOpen className="w-3.5 h-3.5 text-amber-700" />
+                  <span>Devotional Stories</span>
+                </Link>
+
                 <div className="h-px bg-[#ebdcc7] my-1.5" />
 
-                <a href="#epaper" className="flex items-center gap-2 px-3 py-2 hover:bg-amber-50 hover:text-[#78131e] font-medium text-stone-700">
+                <Link href="/epaper" className="flex items-center gap-2.5 px-3 py-2 hover:bg-amber-50 hover:text-[#78131e] font-medium text-stone-700">
                   <BookOpen className="w-3.5 h-3.5 text-amber-700" />
-                  <span>Devotional E-Paper</span>
-                </a>
+                  <span>Daily Devotional E-Paper</span>
+                </Link>
               </div>
             </div>
           </div>
         </nav>
 
         {/* Action Controls: Search, Cart, Login */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-2">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-auto pl-3 bg-white z-10">
           <button 
             suppressHydrationWarning
             onClick={() => setSearchOpen(!searchOpen)} 
