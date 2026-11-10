@@ -52,12 +52,15 @@ import {
   Play,
   Pause,
   Volume2,
-  VolumeX
+  VolumeX,
+  FolderPlus
 } from 'lucide-react';
 import { FacebookIcon, TwitterXIcon, InstagramIcon, YoutubeIcon, WhatsAppIcon } from '../../components/SocialIcons';
 import { allSlokasData, slokaCategories } from '../../data/slokasData';
 import { DEFAULT_ADS_CONFIG, getInitialAdsConfig } from '../../components/AdBanner';
 import DynamicPostStudio, { DEVOTIONAL_CATEGORIES, DEFAULT_POST_DATA } from '../../components/DynamicPostStudio';
+import { getAllCategories } from '../../data/categoriesData';
+import AddCategoryModal from '../../components/AddCategoryModal';
 
 const API_BASE = 'http://localhost:5000/api';
 
@@ -101,6 +104,17 @@ export default function UnifiedConsolePage() {
   // Filters & Search
   const [postSearch, setPostSearch] = useState('');
   const [postCategoryFilter, setPostCategoryFilter] = useState('all');
+  const [allCategories, setAllCategories] = useState(() => getAllCategories());
+  const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
+
+  useEffect(() => {
+    const handleCategoriesUpdate = () => {
+      setAllCategories(getAllCategories());
+    };
+    window.addEventListener('categoriesUpdated', handleCategoriesUpdate);
+    return () => window.removeEventListener('categoriesUpdated', handleCategoriesUpdate);
+  }, []);
+
   const [copiedSlug, setCopiedSlug] = useState('');
   const [userSearch, setUserSearch] = useState('');
   const [userRoleFilter, setUserRoleFilter] = useState('all');
@@ -639,7 +653,7 @@ export default function UnifiedConsolePage() {
 
   // Filtered lists
   const filteredPosts = posts.filter(p => {
-    const matchCat = postCategoryFilter === 'all' || p.category === postCategoryFilter;
+    const matchCat = postCategoryFilter === 'all' || p.category === postCategoryFilter || p.categorySlug === postCategoryFilter;
     const matchSearch = postSearch === '' ||
       p.title?.toLowerCase().includes(postSearch.toLowerCase()) ||
       p.titleTelugu?.toLowerCase().includes(postSearch.toLowerCase());
@@ -2661,34 +2675,52 @@ export default function UnifiedConsolePage() {
               </div>
 
               {/* Action & Filter Control Bar */}
-              <div className="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
-                {/* Category Pills (Dynamic Filter Across All 17 Categories) */}
-                <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 md:pb-0 max-w-2xl">
-                  {[
-                    { id: 'all', label: 'All Publications', count: posts.length },
-                    ...DEVOTIONAL_CATEGORIES.map(c => ({
-                      id: c.id,
-                      label: `${c.icon} ${c.label}`,
-                      count: posts.filter(p => p.category === c.id).length
-                    }))
-                  ].map((cat) => (
-                    <button
-                      key={cat.id}
-                      onClick={() => setPostCategoryFilter(cat.id)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shrink-0 cursor-pointer ${
-                        postCategoryFilter === cat.id
-                          ? 'bg-[#78131e] text-white shadow-xs'
-                          : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
-                      }`}
-                    >
-                      <span>{cat.label}</span>
-                      <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                        postCategoryFilter === cat.id ? 'bg-amber-300 text-stone-900' : 'bg-white text-stone-600'
-                      }`}>
-                        {cat.count}
-                      </span>
-                    </button>
-                  ))}
+              <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-amber-200/80 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-3.5">
+                {/* Left: Category Selector & Add Category Management */}
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs font-bold text-stone-600 whitespace-nowrap">Category:</span>
+                    <div className="relative min-w-[220px] sm:min-w-[280px]">
+                      <select
+                        value={postCategoryFilter}
+                        onChange={(e) => setPostCategoryFilter(e.target.value)}
+                        className="w-full bg-stone-50 hover:bg-stone-100/90 border border-stone-300 rounded-xl pl-3 pr-8 py-2 text-xs font-bold text-stone-800 focus:outline-none focus:border-amber-600 appearance-none cursor-pointer shadow-2xs transition"
+                      >
+                        <option value="all">
+                          ✨ All Categories ({posts.length} Publications)
+                        </option>
+                        {allCategories.map(c => {
+                          const count = posts.filter(p => p.category === c.id || p.category === c.slug).length;
+                          return (
+                            <option key={c.id} value={c.id}>
+                              {c.icon} {c.label} {c.telugu ? `(${c.telugu})` : ''} — {count} {count === 1 ? 'post' : 'posts'} {c.isCustom ? '★ Custom' : ''}
+                            </option>
+                          );
+                        })}
+                      </select>
+                      <ChevronDown className="w-4 h-4 text-stone-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    </div>
+
+                    {postCategoryFilter !== 'all' && (
+                      <button
+                        onClick={() => setPostCategoryFilter('all')}
+                        className="px-2.5 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-bold cursor-pointer transition shadow-2xs"
+                        title="Clear filter"
+                      >
+                        Show All
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Add New Category with Custom Slug Button */}
+                  <button
+                    onClick={() => setIsAddCategoryModalOpen(true)}
+                    className="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-black bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-300 shadow-2xs transition cursor-pointer"
+                    title="Add a new custom devotional category with custom URL slug"
+                  >
+                    <FolderPlus className="w-4 h-4 text-amber-700" />
+                    <span>+ Add Category</span>
+                  </button>
                 </div>
 
                 {/* Right Controls: Search, Status & Add */}
@@ -2700,13 +2732,13 @@ export default function UnifiedConsolePage() {
                       placeholder="Filter articles..."
                       value={postSearch}
                       onChange={(e) => setPostSearch(e.target.value)}
-                      className="bg-stone-50 border border-stone-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:border-amber-500 w-40 sm:w-48"
+                      className="bg-stone-50 border border-stone-200 rounded-xl pl-8 pr-3 py-2 text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:border-amber-500 w-40 sm:w-48"
                     />
                   </div>
 
                   <button
                     onClick={() => setActiveTab('addPost')}
-                    className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:brightness-110 text-stone-950 px-3.5 py-1.5 rounded-xl text-xs font-black cursor-pointer shadow-xs border border-amber-300/40 flex items-center space-x-1.5 shrink-0 transition"
+                    className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:brightness-110 text-stone-950 px-3.5 py-2 rounded-xl text-xs font-black cursor-pointer shadow-xs border border-amber-300/40 flex items-center space-x-1.5 shrink-0 transition"
                   >
                     <Plus className="w-4 h-4 text-stone-950" />
                     <span>Compose Article</span>
@@ -2738,56 +2770,46 @@ export default function UnifiedConsolePage() {
                           </td>
                         </tr>
                       ) : (
-                        filteredPosts.map((post) => (
-                          <tr key={post._id} className="hover:bg-amber-50/40 transition-colors group">
-                            {/* Article Title & Slug */}
-                            <td className="py-3.5 px-4">
-                              <div className="flex items-start space-x-3">
-                                <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0 shadow-2xs border ${
-                                  post.category === 'temples'
-                                    ? 'bg-amber-50 text-amber-800 border-amber-200'
-                                    : post.category === 'festivals'
-                                    ? 'bg-rose-50 text-rose-800 border-rose-200'
-                                    : 'bg-indigo-50 text-indigo-800 border-indigo-200'
-                                }`}>
-                                  {post.category === 'temples' ? '🛕' : post.category === 'festivals' ? '🌺' : '🔮'}
-                                </div>
-                                <div className="min-w-0">
-                                  <div className="font-black text-stone-900 text-xs sm:text-sm group-hover:text-[#78131e] transition-colors leading-snug">
-                                    {post.title}
+                        filteredPosts.map((post) => {
+                          const catInfo = allCategories.find(c => c.id === post.category || c.slug === post.category);
+                          return (
+                            <tr key={post._id} className="hover:bg-amber-50/40 transition-colors group">
+                              {/* Article Title & Slug */}
+                              <td className="py-3.5 px-4">
+                                <div className="flex items-start space-x-3">
+                                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0 shadow-2xs border bg-amber-50 text-amber-900 border-amber-200">
+                                    {catInfo?.icon || '📜'}
                                   </div>
-                                  <div className="flex items-center space-x-2 mt-1">
-                                    <span className="text-[10px] text-stone-400 font-mono truncate max-w-xs">
-                                      /{post.category}/{post.slug}
-                                    </span>
-                                    <button
-                                      onClick={() => copyToClipboard(`http://localhost:3001/${post.category}/${post.slug}`, post.slug)}
-                                      className="text-stone-400 hover:text-amber-800 transition"
-                                      title="Copy public link"
-                                    >
-                                      {copiedSlug === post.slug ? (
-                                        <CheckCheck className="w-3 h-3 text-emerald-600" />
-                                      ) : (
-                                        <Copy className="w-3 h-3" />
-                                      )}
-                                    </button>
+                                  <div className="min-w-0">
+                                    <div className="font-black text-stone-900 text-xs sm:text-sm group-hover:text-[#78131e] transition-colors leading-snug">
+                                      {post.title}
+                                    </div>
+                                    <div className="flex items-center space-x-2 mt-1">
+                                      <span className="text-[10px] text-stone-400 font-mono truncate max-w-xs">
+                                        /{post.category}/{post.slug}
+                                      </span>
+                                      <button
+                                        onClick={() => copyToClipboard(`http://localhost:3001/${post.category}/${post.slug}`, post.slug)}
+                                        className="text-stone-400 hover:text-amber-800 transition"
+                                        title="Copy public link"
+                                      >
+                                        {copiedSlug === post.slug ? (
+                                          <CheckCheck className="w-3 h-3 text-emerald-600" />
+                                        ) : (
+                                          <Copy className="w-3 h-3" />
+                                        )}
+                                      </button>
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            </td>
+                              </td>
 
-                            {/* Category Badge */}
-                            <td className="py-3.5 px-4">
-                              <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border shadow-2xs ${
-                                post.category === 'temples'
-                                  ? 'bg-amber-50 text-amber-900 border-amber-300'
-                                  : post.category === 'festivals'
-                                  ? 'bg-rose-50 text-rose-900 border-rose-300'
-                                  : 'bg-indigo-50 text-indigo-900 border-indigo-300'
-                              }`}>
-                                {post.category}
-                              </span>
-                            </td>
+                              {/* Category Badge */}
+                              <td className="py-3.5 px-4">
+                                <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border shadow-2xs bg-amber-50 text-amber-900 border-amber-300">
+                                  {catInfo ? `${catInfo.icon} ${catInfo.label}` : post.category}
+                                </span>
+                              </td>
 
                             {/* Deity / Kshetra */}
                             <td className="py-3.5 px-4">
@@ -2865,7 +2887,8 @@ export default function UnifiedConsolePage() {
                               </div>
                             </td>
                           </tr>
-                        ))
+                        );
+                      })
                       )}
                     </tbody>
                   </table>
@@ -3356,6 +3379,16 @@ export default function UnifiedConsolePage() {
           </div>
         </div>
       )}
+
+      {/* Add New Category with Custom Slug Modal */}
+      <AddCategoryModal
+        isOpen={isAddCategoryModalOpen}
+        onClose={() => setIsAddCategoryModalOpen(false)}
+        onCategoryAdded={(newCat) => {
+          setPostCategoryFilter(newCat.id);
+          showToast('success', `✨ Added new category "${newCat.label}" with custom slug /${newCat.slug}!`);
+        }}
+      />
     </div>
   );
 }

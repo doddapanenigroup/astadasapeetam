@@ -27,28 +27,16 @@ import {
   Copy,
   Check,
   Share2,
-  Lock
+  Lock,
+  FolderPlus
 } from 'lucide-react';
+import { 
+  getAllCategories, 
+  BUILTIN_DEVOTIONAL_CATEGORIES 
+} from '../data/categoriesData';
+import AddCategoryModal from './AddCategoryModal';
 
-export const DEVOTIONAL_CATEGORIES = [
-  { id: 'temples', label: 'Sacred Temples & Peethas', icon: '🏛️', telugu: 'క్షేత్రాలు & పీఠాలు', badge: '18 Peethas', needsImage: true, desc: 'Temple history, darshan timings, sthala puranam, architecture & special sevas' },
-  { id: 'slokas', label: 'Daily Slokas & Chants', icon: '📜', telugu: 'నిత్య శ్లోకాలు', badge: '3-Way Chants', needsImage: false, desc: 'Sanskrit, Telugu & English phonetic verses with word-by-word meaning & chanting time (No image needed)' },
-  { id: 'mantras', label: 'Sacred Mantras & Bija Japa', icon: '🔔', telugu: 'బీజాక్షర మంత్రాలు', badge: '108 Japa', needsImage: false, desc: 'Moola mantras, bija aksharas, 108 japa sankhya & siddhi benefits (No image needed)' },
-  { id: 'stotras', label: 'Divine Stotras & Kavachas', icon: '📖', telugu: 'స్తోత్రాలు & కవచాలు', badge: 'Kavachas', needsImage: false, desc: 'Sage/Rishi author, total verses count, full sacred stotra & phala shruti (No image needed)' },
-  { id: 'vrathalu', label: 'Vrathalu & Pooja Vidhi', icon: '🔥', telugu: 'వ్రతాలు & పూజా విధానం', badge: 'Upavasam', needsImage: true, desc: 'Fasting rules, sacred samagri checklist, step-by-step vidhi & prasadam recipe' },
-  { id: 'yantras', label: 'Sacred Yantras & Maha Meru', icon: '💠', telugu: 'యంత్రాలు & మహామేరు', badge: 'Tantra & Meru', needsImage: true, desc: 'Sacred geometry, metal composition, Ishanya placement & prana pratishtha' },
-  { id: 'horoscope', label: 'Daily Horoscope (12 Rasis)', icon: '☀️', telugu: 'రాశి ఫలాలు', badge: '12 Rasis', needsImage: false, desc: 'Moon sign, ruling planet, lucky colors/numbers, predictions & pariharam (No image needed)' },
-  { id: 'muhurtham', label: 'Shubh Muhurtham & Choghadiya', icon: '⏳', telugu: 'శుభ ముహూర్తాలు', badge: 'Tithi & Lagna', needsImage: false, desc: 'Ceremony occasion, auspicious time window, lagna shuddhi, tithi & rahu kalam (No image needed)' },
-  { id: 'remedies', label: 'Remedies & Dosha Nivarana', icon: '✨', telugu: 'దోష నివారణ & ఉపాయాలు', badge: 'Pariharam', needsImage: false, desc: 'Dosha type, symptoms, step-by-step pariharam, fasting days & sacred temples (No image needed)' },
-  { id: 'bhajans', label: 'Divine Bhajans & Kirtanas', icon: '🪕', telugu: 'భజనలు & కీర్తనలు', badge: 'Sangeetam', needsImage: false, desc: 'Composer/Vaggeyakara, raga & tala, full Telugu lyrics, meaning & audio link (No image needed)' },
-  { id: 'spirituality', label: 'Spirituality & Dharma', icon: '🪷', telugu: 'ఆధ్యాత్మికత & ధర్మం', badge: 'Vedanta', needsImage: false, desc: 'Philosophical theme, Sanskrit sutra, commentary & daily devotee sadhana (No image needed)' },
-  { id: 'epaper', label: 'Devotional E-Paper Edition', icon: '📰', telugu: 'ఈ-పేపర్ ఎడిషన్', badge: 'Daily PDF', needsImage: true, desc: 'Issue date, edition region, headline, full editorial & PDF download link' },
-  { id: 'festivals', label: 'Festivals Calendar', icon: '🗓️', telugu: 'పండుగల క్యాలెండర్', badge: 'Vedic Dates', needsImage: true, desc: 'Festival dates, hindu month, fasting rules, significance & celebrations' },
-  { id: 'videos', label: 'Devotional Videos & Pravachanams', icon: '📺', telugu: 'భక్తి వీడియోలు', badge: 'Darshan Live', needsImage: false, desc: 'YouTube stream embed, duration, speaker/swamiji & spiritual highlights (Uses video player)' },
-  { id: 'gods', label: 'Gods & Divine Avatars', icon: '🕉️', telugu: 'దేవతలు & అవతారాలు', badge: 'Iconography', needsImage: true, desc: 'Avatar form, consort, vahana, sacred weapons, iconography & temples' },
-  { id: 'yatralu', label: 'Teertha Yatralu (తీర్థయాత్రలు)', icon: '🚩', telugu: 'పుణ్య తీర్థయాత్రలు', badge: 'Teertha Yatralu', needsImage: true, desc: 'Sacred pilgrimage circuits, confirmed VIP darshans, day-by-day itinerary & travel guidelines' },
-  { id: 'panchangam', label: 'Daily Panchangam', icon: '📅', telugu: 'నిత్య పంచాంగం', badge: 'Panchangam', needsImage: false, desc: 'Tithi, vara, nakshatra, yoga, karana, sunrise/sunset & auspicious timings (No image needed)' }
-];
+export const DEVOTIONAL_CATEGORIES = BUILTIN_DEVOTIONAL_CATEGORIES;
 
 export const CATEGORY_SAMPLE_TEMPLATES = {
   temples: {
@@ -394,10 +382,20 @@ export default function DynamicPostStudio({
   showToast
 }) {
   const [previewMode, setPreviewMode] = useState(true);
+  const [categories, setCategories] = useState(() => getAllCategories());
+  const [isAddCatModalOpen, setIsAddCatModalOpen] = useState(false);
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setCategories(getAllCategories());
+    };
+    window.addEventListener('categoriesUpdated', handleUpdate);
+    return () => window.removeEventListener('categoriesUpdated', handleUpdate);
+  }, []);
 
   const fillCategorySample = (catId) => {
     const targetCat = catId || newPost.category;
-    const targetCatObj = DEVOTIONAL_CATEGORIES.find(c => c.id === targetCat);
+    const targetCatObj = categories.find(c => c.id === targetCat || c.slug === targetCat);
     const template = CATEGORY_SAMPLE_TEMPLATES[targetCat];
     if (template) {
       setNewPost(prev => ({
@@ -415,7 +413,7 @@ export default function DynamicPostStudio({
   };
 
   const handleCategoryChange = (newCat) => {
-    const catObj = DEVOTIONAL_CATEGORIES.find(c => c.id === newCat);
+    const catObj = categories.find(c => c.id === newCat || c.slug === newCat);
     setNewPost(prev => ({
       ...prev,
       category: newCat,
@@ -424,7 +422,14 @@ export default function DynamicPostStudio({
     }));
   };
 
-  const activeCategoryObj = DEVOTIONAL_CATEGORIES.find(c => c.id === newPost.category) || DEVOTIONAL_CATEGORIES[0];
+  const activeCategoryObj = categories.find(c => c.id === newPost.category || c.slug === newPost.category) || categories[0] || {
+    id: 'temples',
+    label: 'Sacred Temples & Peethas',
+    icon: '🏛️',
+    telugu: 'క్షేత్రాలు & పీఠాలు',
+    badge: '18 Peethas',
+    needsImage: true
+  };
 
   return (
     <div className="space-y-6">
@@ -479,15 +484,25 @@ export default function DynamicPostStudio({
           </div>
         </div>
 
-        {/* 17-Category Visual Ribbon Selector */}
+        {/* Category Visual Ribbon Selector */}
         <div className="mt-6 pt-5 border-t border-amber-500/20">
           <div className="text-[11px] font-bold text-amber-300/80 uppercase tracking-wider mb-2.5 flex items-center justify-between">
             <span>Select Devotional Category (Form Changes Dynamically):</span>
-            <span className="text-[10px] text-stone-400">17 Categories Available</span>
+            <div className="flex items-center space-x-2">
+              <span className="text-[10px] text-stone-400">{categories.length} Categories Available</span>
+              <button
+                type="button"
+                onClick={() => setIsAddCatModalOpen(true)}
+                className="bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-400/30 text-[10px] font-bold px-2.5 py-1 rounded-xl flex items-center space-x-1 cursor-pointer transition shadow-2xs"
+              >
+                <FolderPlus className="w-3 h-3 text-amber-300" />
+                <span>+ Add Category</span>
+              </button>
+            </div>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2 max-h-52 overflow-y-auto pr-1">
-            {DEVOTIONAL_CATEGORIES.map((cat) => {
-              const isSelected = newPost.category === cat.id;
+            {categories.map((cat) => {
+              const isSelected = newPost.category === cat.id || newPost.category === cat.slug;
               return (
                 <button
                   key={cat.id}
@@ -618,15 +633,25 @@ export default function DynamicPostStudio({
               {/* Category & Presiding Deity */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="font-bold text-stone-700 block mb-1 text-xs">Selected Category</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="font-bold text-stone-700 text-xs">Selected Category</label>
+                    <button
+                      type="button"
+                      onClick={() => setIsAddCatModalOpen(true)}
+                      className="text-[11px] text-amber-700 hover:text-amber-900 font-bold hover:underline flex items-center space-x-1 cursor-pointer"
+                    >
+                      <FolderPlus className="w-3 h-3 text-amber-700" />
+                      <span>+ Add Category</span>
+                    </button>
+                  </div>
                   <select
                     value={newPost.category}
                     onChange={(e) => handleCategoryChange(e.target.value)}
-                    className="w-full border border-stone-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-amber-600 bg-stone-50 font-semibold"
+                    className="w-full border border-stone-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-amber-600 bg-stone-50 font-semibold cursor-pointer"
                   >
-                    {DEVOTIONAL_CATEGORIES.map(c => (
+                    {categories.map(c => (
                       <option key={c.id} value={c.id}>
-                        {c.icon} {c.label} ({c.telugu})
+                        {c.icon} {c.label} {c.telugu ? `(${c.telugu})` : ''} {c.isCustom ? '★ Custom' : ''}
                       </option>
                     ))}
                   </select>
@@ -1855,6 +1880,18 @@ export default function DynamicPostStudio({
           </div>
         )}
       </div>
+
+      {/* Add New Category Modal with Custom Slug */}
+      <AddCategoryModal
+        isOpen={isAddCatModalOpen}
+        onClose={() => setIsAddCatModalOpen(false)}
+        onCategoryAdded={(newCat) => {
+          handleCategoryChange(newCat.id);
+          if (showToast) {
+            showToast('success', `✨ Added new category "${newCat.label}" with slug /${newCat.slug}!`);
+          }
+        }}
+      />
     </div>
   );
 }
