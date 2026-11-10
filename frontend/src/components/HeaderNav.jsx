@@ -57,7 +57,7 @@ export default function HeaderNav() {
             { label: 'Panchangam', href: '/panchangam', icon: 'Calendar' },
             { label: 'Festivals', href: '/festivals', icon: 'Flame' },
             { label: 'Astrology', href: '/astrology', icon: 'Compass' },
-            { label: 'Yatralu', href: '/yatralu', icon: 'Bus' },
+            { label: 'Teertha Yatralu', href: '/yatralu', icon: 'Bus' },
             { label: 'Marketplace', href: '/marketplace', icon: 'ShoppingBag' },
           ].map((item, idx) => {
             const Icon = iconMap[item.icon] || Flame;

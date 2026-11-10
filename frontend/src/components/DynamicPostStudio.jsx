@@ -46,7 +46,7 @@ export const DEVOTIONAL_CATEGORIES = [
   { id: 'festivals', label: 'Festivals Calendar', icon: '🗓️', telugu: 'పండుగల క్యాలెండర్', badge: 'Vedic Dates', needsImage: true, desc: 'Festival dates, hindu month, fasting rules, significance & celebrations' },
   { id: 'videos', label: 'Devotional Videos & Pravachanams', icon: '📺', telugu: 'భక్తి వీడియోలు', badge: 'Darshan Live', needsImage: false, desc: 'YouTube stream embed, duration, speaker/swamiji & spiritual highlights (Uses video player)' },
   { id: 'gods', label: 'Gods & Divine Avatars', icon: '🕉️', telugu: 'దేవతలు & అవతారాలు', badge: 'Iconography', needsImage: true, desc: 'Avatar form, consort, vahana, sacred weapons, iconography & temples' },
-  { id: 'yatralu', label: 'Sacred Yatralu & Pilgrimage', icon: '🚩', telugu: 'తీర్థయాత్రలు', badge: 'Pilgrimage Circuit', needsImage: true, desc: 'Circuit route, duration, day-by-day itinerary & devotee travel guidelines' },
+  { id: 'yatralu', label: 'Teertha Yatralu (తీర్థయాత్రలు)', icon: '🚩', telugu: 'పుణ్య తీర్థయాత్రలు', badge: 'Teertha Yatralu', needsImage: true, desc: 'Sacred pilgrimage circuits, confirmed VIP darshans, day-by-day itinerary & travel guidelines' },
   { id: 'panchangam', label: 'Daily Panchangam', icon: '📅', telugu: 'నిత్య పంచాంగం', badge: 'Panchangam', needsImage: false, desc: 'Tithi, vara, nakshatra, yoga, karana, sunrise/sunset & auspicious timings (No image needed)' }
 ];
 
@@ -1449,7 +1449,7 @@ export default function DynamicPostStudio({
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <label className="font-bold text-stone-700 block mb-1 text-xs">Pilgrimage Circuit (తీర్థయాత్ర సర్క్యూట్)</label>
+                      <label className="font-bold text-stone-700 block mb-1 text-xs">Teertha Yatra Circuit (పుణ్య తీర్థయాత్ర సర్క్యూట్)</label>
                       <input
                         type="text"
                         placeholder="e.g. 18 Maha Shakti Peetha Darshan Circuit"

@@ -105,10 +105,10 @@ export default function TirthaYatraluPage() {
           <div className="text-center md:text-left max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/30 text-amber-300 text-xs font-semibold mb-3">
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              <span>Sanatana Dharma Sacred Pilgrimages • తీర్థ యాత్రలు</span>
+              <span>పుణ్య తీర్థయాత్రలు • Teertha Yatralu Pilgrimage Circuits</span>
             </div>
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-black font-serif tracking-tight text-white mb-2">
-              Astadasapeetam Tirtha Yatralu & Temple Packages
+              Astadasapeetam Teertha Yatralu & Sacred Temple Packages
             </h1>
             <p className="text-amber-100/90 text-sm sm:text-base leading-relaxed">
               Curated spiritual tours with confirmed VIP Sheegra Darshans, 100% Satvik meals, AC pushback luxury coaches, twin-sharing deluxe stays & experienced Vedic Priests for group Sankalpams.
