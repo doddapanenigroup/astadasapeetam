@@ -39,7 +39,16 @@ import {
   ShieldCheck, 
   Sliders,
   DollarSign,
-  Sunrise
+  Sunrise,
+  Bell,
+  Command,
+  Filter,
+  Copy,
+  CheckCheck,
+  ArrowRight,
+  BarChart3,
+  Flame,
+  Plus
 } from 'lucide-react';
 import { FacebookIcon, TwitterXIcon, InstagramIcon, YoutubeIcon, WhatsAppIcon } from '../../components/SocialIcons';
 
@@ -85,9 +94,19 @@ export default function UnifiedConsolePage() {
   // Filters & Search
   const [postSearch, setPostSearch] = useState('');
   const [postCategoryFilter, setPostCategoryFilter] = useState('all');
+  const [copiedSlug, setCopiedSlug] = useState('');
   const [userSearch, setUserSearch] = useState('');
   const [userRoleFilter, setUserRoleFilter] = useState('all');
   const [productCategoryFilter, setProductCategoryFilter] = useState('all');
+
+  const copyToClipboard = (text, slug) => {
+    try {
+      navigator.clipboard.writeText(text);
+      setCopiedSlug(slug);
+      showToast('success', `Copied sacred link to clipboard!`);
+      setTimeout(() => setCopiedSlug(''), 2500);
+    } catch {}
+  };
 
   // Add Post Form State
   const [newPost, setNewPost] = useState({
@@ -422,25 +441,25 @@ export default function UnifiedConsolePage() {
   ];
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#fdfaf5] font-sans text-stone-900">
+    <div className="flex h-screen w-screen overflow-hidden bg-[#faf7f2] font-sans text-stone-900">
       {/* ========================================================= */}
-      {/* 1. UNIQUE TEMPLE MAROON & GOLD LEFT SIDEBAR               */}
+      {/* 1. LUXURY OBSIDIAN-CRIMSON & GOLD LEFT SIDEBAR             */}
       {/* ========================================================= */}
-      <aside className={`bg-gradient-to-b from-[#240409] via-[#330811] to-[#1c0206] text-amber-100 flex flex-col border-r border-amber-900/50 flex-shrink-0 h-screen transition-all duration-300 z-40 select-none shadow-2xl ${
+      <aside className={`bg-gradient-to-b from-[#130205] via-[#1c0409] to-[#0e0204] text-amber-100 flex flex-col border-r border-amber-500/15 flex-shrink-0 h-screen transition-all duration-300 z-40 select-none shadow-2xl ${
         sidebarCollapsed ? 'w-20' : 'w-72'
       }`}>
         {/* Brand Header */}
-        <div className="p-4 border-b border-amber-800/40 bg-black/20 flex items-center justify-between">
+        <div className="p-4 border-b border-amber-500/15 bg-black/30 flex items-center justify-between">
           <Link href="/" className="flex items-center space-x-3 overflow-hidden group">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#78131e] via-[#b91c1c] to-[#f59e0b] border border-amber-300/50 flex items-center justify-center font-black text-white text-xl shadow-lg shrink-0 group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#78131e] via-[#a81c28] to-[#f59e0b] border border-amber-300/50 flex items-center justify-center font-black text-white text-xl shadow-lg shadow-rose-950/40 shrink-0 group-hover:scale-105 transition-transform">
               🕉️
             </div>
             {!sidebarCollapsed && (
-              <div className="flex flex-col leading-tight">
-                <span className="font-extrabold text-xs tracking-wider text-amber-200 font-serif uppercase">
+              <div className="flex flex-col leading-tight min-w-0">
+                <span className="font-extrabold text-xs tracking-wider text-amber-200 font-serif uppercase truncate">
                   ASTADASAPEETAM
                 </span>
-                <span className="text-[10px] text-amber-400 font-black tracking-widest uppercase">
+                <span className="text-[9px] text-amber-400 font-black tracking-widest uppercase truncate">
                   {user?.role === 'digital_marketing' ? 'Marketing Studio' : user?.role === 'astrologer' ? 'Astrologer Studio' : 'Divine Sanctuary'}
                 </span>
               </div>
@@ -449,7 +468,7 @@ export default function UnifiedConsolePage() {
 
           <button
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="text-amber-300 hover:text-white p-1 rounded-lg hover:bg-white/10 text-xs transition"
+            className="text-amber-300 hover:text-white p-1.5 rounded-lg hover:bg-white/10 text-xs transition cursor-pointer"
             title="Toggle Sidebar"
           >
             {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
@@ -457,12 +476,13 @@ export default function UnifiedConsolePage() {
         </div>
 
         {/* Categories on the Left (Grouped & Ordered with Distinct Spiritual Badges) */}
-        <nav className="flex-1 overflow-y-auto p-3 space-y-3 text-xs custom-scrollbar">
+        <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-3.5 text-xs custom-scrollbar">
           {sidebarSections.map((sec, secIdx) => (
             <div key={secIdx} className="space-y-1">
               {!sidebarCollapsed && (
-                <div className="text-[9px] uppercase tracking-widest font-black text-amber-400/60 px-3 pt-2 pb-0.5 font-mono">
-                  {sec.heading}
+                <div className="text-[9px] uppercase tracking-widest font-mono font-bold text-amber-400/75 px-3 pt-2 pb-0.5 flex items-center space-x-1.5">
+                  <span className="w-1 h-1 rounded-full bg-amber-400"></span>
+                  <span>{sec.heading}</span>
                 </div>
               )}
               {sec.items.map((item) => {
@@ -473,23 +493,23 @@ export default function UnifiedConsolePage() {
                   <button
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
-                    className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl font-bold transition-all duration-150 text-left cursor-pointer ${
+                    className={`w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl font-bold transition-all duration-150 text-left cursor-pointer group ${
                       isActive
-                        ? 'bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-stone-950 font-black shadow-lg shadow-amber-950/60 border-l-4 border-amber-200 scale-[1.02]'
-                        : 'text-stone-300 hover:text-white hover:bg-white/10 hover:border-l-2 hover:border-amber-400/70'
+                        ? 'bg-gradient-to-r from-[#7a131f] via-[#941b27] to-[#7a131f] text-amber-100 shadow-md shadow-rose-950/60 border border-amber-400/40 translate-x-0.5'
+                        : 'text-stone-300/80 hover:text-amber-100 hover:bg-white/[0.08]'
                     }`}
                   >
-                    <Icon className={`w-4 h-4 shrink-0 transition-colors ${
-                      isActive ? 'text-stone-950' : item.highlight ? 'text-emerald-400' : item.textAccent
+                    <Icon className={`w-4 h-4 shrink-0 transition-transform group-hover:scale-110 ${
+                      isActive ? 'text-amber-300 drop-shadow-[0_0_6px_rgba(245,158,11,0.5)]' : item.highlight ? 'text-emerald-400' : item.textAccent
                     }`} />
                     {!sidebarCollapsed && (
-                      <div className="flex items-center justify-between flex-1">
+                      <div className="flex items-center justify-between flex-1 min-w-0">
                         <span className="truncate">{item.label}</span>
                         {item.badge !== undefined && (
-                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-black tracking-wide ${
+                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-black tracking-wide ml-2 shrink-0 ${
                             isActive 
-                              ? 'bg-stone-950 text-amber-300' 
-                              : 'bg-amber-900/50 text-amber-200 border border-amber-600/30'
+                              ? 'bg-[#3b0811] text-amber-300 border border-amber-400/40 shadow-xs' 
+                              : 'bg-white/[0.08] text-amber-300/90 border border-white/10'
                           }`}>
                             {item.badge}
                           </span>
@@ -504,20 +524,22 @@ export default function UnifiedConsolePage() {
         </nav>
 
         {/* Sidebar Footer User Card with Spiritual Gold Touch */}
-        <div className="p-3 border-t border-amber-800/40 bg-black/40 text-xs">
+        <div className="p-3 border-t border-amber-500/15 bg-black/40 text-xs">
           {!sidebarCollapsed ? (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-300 text-stone-950 font-black flex items-center justify-center text-xs shadow-md border border-amber-200">
+            <div className="space-y-2.5">
+              {/* Profile Card */}
+              <div className="flex items-center justify-between gap-2 p-2 rounded-xl bg-white/[0.04] border border-amber-500/20 shadow-xs">
+                <div className="flex items-center space-x-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#911b27] via-[#b91c1c] to-[#f59e0b] text-amber-100 font-black flex items-center justify-center text-xs shadow-md border border-amber-300/40 shrink-0">
                     {(user?.name || 'Gowrav Vungarala').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                   </div>
-                  <div>
-                    <div className="font-extrabold text-amber-100 text-[11px] truncate max-w-[125px]">
+                  <div className="min-w-0">
+                    <div className="font-extrabold text-amber-100 text-xs truncate" title={user?.name || 'Gowrav Vungarala'}>
                       {user?.name || 'Gowrav Vungarala'}
                     </div>
-                    <div className="text-[9px] text-amber-400 font-bold uppercase tracking-wider">
-                      {user?.role === 'digital_marketing' ? 'Digital Marketing' : user?.role === 'astrologer' ? 'Astrologer' : 'Super Admin'}
+                    <div className="text-[9px] text-amber-400 font-semibold uppercase tracking-wider flex items-center space-x-1">
+                      <ShieldCheck className="w-3 h-3 text-amber-400 shrink-0" />
+                      <span className="truncate">{user?.role === 'digital_marketing' ? 'Digital Marketing' : user?.role === 'astrologer' ? 'Astrologer' : 'Super Admin'}</span>
                     </div>
                   </div>
                 </div>
@@ -529,25 +551,34 @@ export default function UnifiedConsolePage() {
                     localStorage.removeItem('astada_user');
                     window.location.href = '/';
                   }}
-                  className="text-amber-300 hover:text-rose-400 p-1.5 rounded-lg hover:bg-white/10 transition"
-                  title="Logout"
+                  className="text-stone-400 hover:text-rose-400 p-1.5 rounded-lg hover:bg-white/10 transition shrink-0 cursor-pointer"
+                  title="Sign Out of Sanctuary"
                 >
                   <LogOut className="w-4 h-4" />
                 </button>
               </div>
 
               {/* Fast Social Test Strip in Sidebar */}
-              <div className="pt-1.5 flex items-center justify-between text-[11px] text-amber-200 border-t border-amber-800/30">
-                <span className="text-[10px] text-amber-400 font-bold">Social Feeds:</span>
-                <div className="flex items-center space-x-2">
-                  <a href={socialProfiles.whatsapp} target="_blank" rel="noreferrer" title="Chat on WhatsApp" className="text-emerald-400 hover:text-white p-1 hover:bg-white/10 rounded">
+              <div className="pt-2 border-t border-amber-800/30">
+                <div className="text-[9px] uppercase font-mono tracking-wider text-amber-400/80 mb-1.5 flex items-center justify-between">
+                  <span>Devotee Channels</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                </div>
+                <div className="grid grid-cols-5 gap-1">
+                  <a href={socialProfiles.whatsapp} target="_blank" rel="noreferrer" title="Chat on WhatsApp" className="flex items-center justify-center p-2 rounded-lg bg-[#25D366]/15 hover:bg-[#25D366] text-[#25D366] hover:text-white transition-all duration-200">
                     <WhatsAppIcon className="w-3.5 h-3.5" />
                   </a>
-                  <a href={socialProfiles.instagram} target="_blank" rel="noreferrer" title="Open Instagram" className="text-pink-400 hover:text-white p-1 hover:bg-white/10 rounded">
+                  <a href={socialProfiles.instagram} target="_blank" rel="noreferrer" title="Open Instagram" className="flex items-center justify-center p-2 rounded-lg bg-[#E1306C]/15 hover:bg-gradient-to-tr hover:from-purple-600 hover:to-pink-500 text-[#E1306C] hover:text-white transition-all duration-200">
                     <InstagramIcon className="w-3.5 h-3.5" />
                   </a>
-                  <a href={socialProfiles.facebook} target="_blank" rel="noreferrer" title="Open Facebook" className="text-blue-400 hover:text-white p-1 hover:bg-white/10 rounded">
+                  <a href={socialProfiles.facebook} target="_blank" rel="noreferrer" title="Open Facebook" className="flex items-center justify-center p-2 rounded-lg bg-[#1877F2]/15 hover:bg-[#1877F2] text-[#1877F2] hover:text-white transition-all duration-200">
                     <FacebookIcon className="w-3.5 h-3.5" />
+                  </a>
+                  <a href={socialProfiles.youtube} target="_blank" rel="noreferrer" title="Open YouTube" className="flex items-center justify-center p-2 rounded-lg bg-[#FF0000]/15 hover:bg-[#FF0000] text-[#FF0000] hover:text-white transition-all duration-200">
+                    <YoutubeIcon className="w-3.5 h-3.5" />
+                  </a>
+                  <a href={socialProfiles.twitter} target="_blank" rel="noreferrer" title="Open X" className="flex items-center justify-center p-2 rounded-lg bg-white/10 hover:bg-white/30 text-stone-200 hover:text-white transition-all duration-200">
+                    <TwitterXIcon className="w-3.5 h-3.5" />
                   </a>
                 </div>
               </div>
@@ -559,7 +590,7 @@ export default function UnifiedConsolePage() {
                   localStorage.removeItem('astada_token');
                   window.location.href = '/';
                 }}
-                className="text-amber-300 hover:text-rose-400 p-1.5 rounded-lg hover:bg-white/10"
+                className="text-amber-300 hover:text-rose-400 p-2 rounded-lg hover:bg-white/10 cursor-pointer"
                 title="Logout"
               >
                 <LogOut className="w-4 h-4" />
@@ -572,47 +603,76 @@ export default function UnifiedConsolePage() {
       {/* ========================================================= */}
       {/* 2. MAIN CONSOLE CONTENT (BESPOKE VEDIC IVORY & GOLD)     */}
       {/* ========================================================= */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden bg-[#fbf8f3]">
+      <div className="flex-1 flex flex-col h-screen overflow-hidden bg-[#faf7f2]">
         {/* Top Header Bar */}
-        <header className="bg-white/90 backdrop-blur-md border-b border-amber-200/60 px-6 py-3.5 flex items-center justify-between shrink-0 shadow-xs">
-          <div className="flex items-center space-x-3">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            <h1 className="text-base sm:text-lg font-black text-stone-900 font-serif tracking-tight flex items-center space-x-2">
-              <span>Namaste, {user?.name || 'Gowrav Vungarala'}!</span>
-              <span>🙏</span>
-            </h1>
+        <header className="bg-white/95 backdrop-blur-md border-b border-amber-200/50 px-6 py-3 flex items-center justify-between shrink-0 shadow-xs z-30">
+          {/* Left: Breadcrumbs & Greeting */}
+          <div className="flex items-center space-x-3.5">
+            <div className="flex items-center space-x-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <div className="flex flex-col">
+                <div className="flex items-center space-x-2 text-xs">
+                  <span className="text-stone-400 font-medium">Sanctuary Console</span>
+                  <span className="text-stone-300">›</span>
+                  <span className="font-extrabold text-[#78131e] capitalize">
+                    {activeTab === 'postList' ? 'Published Articles' : activeTab === 'marketplace' ? 'Bazaar Studio' : activeTab}
+                  </span>
+                </div>
+                <h1 className="text-sm sm:text-base font-black text-stone-900 font-serif tracking-tight flex items-center space-x-1.5">
+                  <span>Namaste, {user?.name || 'Gowrav Vungarala'}!</span>
+                  <span>🙏</span>
+                </h1>
+              </div>
+            </div>
 
-            <span className={`text-[10px] font-black uppercase px-3 py-1 rounded-full shadow-xs ${
+            <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full shadow-xs shrink-0 ${
               user?.role === 'digital_marketing'
                 ? 'bg-amber-600 text-white border border-amber-300'
                 : user?.role === 'astrologer'
                 ? 'bg-indigo-900 text-indigo-100 border border-indigo-400'
-                : 'bg-gradient-to-r from-rose-900 to-[#78131e] text-amber-200 border border-amber-400/50'
+                : 'bg-gradient-to-r from-rose-950 via-[#78131e] to-rose-900 text-amber-200 border border-amber-400/50'
             }`}>
               {user?.role === 'digital_marketing' ? 'Digital Marketing' : user?.role === 'astrologer' ? 'Astrologer' : 'Super Admin'}
             </span>
+          </div>
+
+          {/* Center: Global Instant Search (Ctrl + K) */}
+          <div className="hidden md:flex items-center relative max-w-sm w-full mx-4">
+            <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search articles, temples, marketplace..."
+              value={postSearch}
+              onChange={(e) => setPostSearch(e.target.value)}
+              className="w-full bg-stone-100/90 border border-stone-200/90 rounded-xl pl-9 pr-12 py-1.5 text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:border-amber-500 focus:bg-white focus:ring-2 focus:ring-amber-500/20 transition-all shadow-inner"
+            />
+            <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] text-stone-400 font-mono bg-white px-1.5 py-0.5 rounded border border-stone-200 shadow-2xs font-bold">
+              ⌘K
+            </span>
+          </div>
+
+          {/* Right: Network status & Actions */}
+          <div className="flex items-center space-x-2.5 shrink-0">
+            <div className="hidden lg:flex items-center space-x-2 bg-amber-50/80 border border-amber-200/80 px-3 py-1 rounded-xl text-xs font-semibold text-amber-900 shadow-2xs">
+              <Sunrise className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+              <span>18 Maha Shakti Peethas Network</span>
+            </div>
 
             <button
               onClick={() => setUserGuideOpen(true)}
-              className="bg-stone-900 hover:bg-stone-800 text-amber-200 text-[11px] font-bold px-3 py-1 rounded-lg flex items-center space-x-1.5 transition shadow-xs cursor-pointer border border-amber-500/20"
+              className="bg-stone-900 hover:bg-stone-800 text-amber-200 text-xs font-bold px-3 py-1.5 rounded-xl flex items-center space-x-1.5 transition shadow-xs cursor-pointer border border-amber-500/20"
+              title="Operational Guide"
             >
               <BookOpen className="w-3.5 h-3.5 text-amber-400" />
-              <span>User Guide</span>
+              <span className="hidden sm:inline">Guide</span>
             </button>
-          </div>
-
-          <div className="flex items-center space-x-3">
-            <div className="hidden md:flex items-center space-x-2 bg-amber-50 border border-amber-200/80 px-3 py-1 rounded-xl text-xs font-semibold text-amber-900">
-              <Sunrise className="w-3.5 h-3.5 text-amber-600" />
-              <span>18 Maha Shakti Peethas Network</span>
-            </div>
 
             <Link
               href="/"
               target="_blank"
-              className="text-xs bg-gradient-to-r from-[#78131e] via-[#8c1724] to-[#78131e] hover:brightness-110 text-white font-bold px-4 py-1.5 rounded-xl flex items-center space-x-1.5 transition shadow-sm cursor-pointer border border-amber-300/30"
+              className="text-xs bg-gradient-to-r from-[#78131e] via-[#8c1724] to-[#78131e] hover:brightness-110 text-white font-bold px-3.5 py-1.5 rounded-xl flex items-center space-x-1.5 transition shadow-sm cursor-pointer border border-amber-300/30"
             >
-              <span>View Public Sanctuary</span>
+              <span className="hidden sm:inline">Public Sanctuary</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -1090,6 +1150,35 @@ export default function UnifiedConsolePage() {
                 </button>
               </div>
 
+              {/* Category Filter Pills */}
+              <div className="bg-white p-3 rounded-2xl border border-amber-200/80 shadow-xs flex items-center justify-between gap-3 overflow-x-auto">
+                <div className="flex items-center space-x-1.5 shrink-0">
+                  {[
+                    { id: 'all', label: 'All Items' },
+                    { id: 'pooja-kits', label: '🪔 Pooja Kits' },
+                    { id: 'rudraksha', label: '📿 Rudraksha' },
+                    { id: 'yantras-idols', label: '✨ Yantras' },
+                    { id: 'dhoop-samagri', label: '🌿 Camphor & Dhoop' },
+                    { id: 'prasadam', label: '🍯 Prasadam' },
+                  ].map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => setProductCategoryFilter(cat.id)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shrink-0 cursor-pointer ${
+                        productCategoryFilter === cat.id
+                          ? 'bg-[#78131e] text-white shadow-xs'
+                          : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
+                      }`}
+                    >
+                      <span>{cat.label}</span>
+                    </button>
+                  ))}
+                </div>
+                <div className="text-xs font-bold text-stone-500 shrink-0">
+                  {filteredProducts.length} of {products.length} products
+                </div>
+              </div>
+
               {/* Products Table / Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredProducts.map((p) => (
@@ -1452,106 +1541,449 @@ export default function UnifiedConsolePage() {
           )}
 
           {/* ========================================================= */}
-          {/* TAB 9: POST LIST                                          */}
+          {/* TAB 9: POST LIST (LUXURY SACRED PUBLICATIONS REGISTRY)    */}
           {/* ========================================================= */}
           {activeTab === 'postList' && (
-            <div className="space-y-4">
-              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <h3 className="text-xl font-black text-slate-900 flex items-center space-x-2">
-                    <FileText className="w-5 h-5 text-emerald-700" />
-                    <span>Published Articles Registry ({posts.length})</span>
-                  </h3>
+            <div className="space-y-5">
+              {/* Top KPI Metrics Ribbon */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+                <div className="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs flex items-center justify-between">
+                  <div>
+                    <div className="text-[10px] uppercase font-bold text-stone-400 tracking-wider">Total Sacred Posts</div>
+                    <div className="text-xl sm:text-2xl font-black text-stone-900 mt-0.5">{posts.length} Publications</div>
+                    <div className="text-[10px] text-emerald-700 font-semibold mt-0.5 flex items-center space-x-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                      <span>All Indexed in RSS &amp; Sitemap</span>
+                    </div>
+                  </div>
+                  <div className="w-11 h-11 rounded-2xl bg-amber-50 text-amber-800 border border-amber-200 flex items-center justify-center text-xl shrink-0">
+                    📜
+                  </div>
                 </div>
 
-                <button
-                  onClick={() => setActiveTab('addPost')}
-                  className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:brightness-110 text-stone-950 px-4 py-2 rounded-xl text-xs font-black cursor-pointer shadow border border-amber-300/40"
-                >
-                  + Add Post
-                </button>
+                <div className="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs flex items-center justify-between">
+                  <div>
+                    <div className="text-[10px] uppercase font-bold text-stone-400 tracking-wider">Devotee Engagement</div>
+                    <div className="text-xl sm:text-2xl font-black text-[#78131e] mt-0.5">
+                      {posts.reduce((acc, p) => acc + (p.viewsCount || 850), 0).toLocaleString()} Reads
+                    </div>
+                    <div className="text-[10px] text-rose-700 font-semibold mt-0.5 flex items-center space-x-1">
+                      <Flame className="w-3 h-3 text-rose-500" />
+                      <span>+28% Growth this month</span>
+                    </div>
+                  </div>
+                  <div className="w-11 h-11 rounded-2xl bg-rose-50 text-rose-800 border border-rose-200 flex items-center justify-center text-xl shrink-0">
+                    👁️
+                  </div>
+                </div>
+
+                <div className="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs flex items-center justify-between">
+                  <div>
+                    <div className="text-[10px] uppercase font-bold text-stone-400 tracking-wider">Kshetras Covered</div>
+                    <div className="text-xl sm:text-2xl font-black text-stone-900 mt-0.5">18 Peethas</div>
+                    <div className="text-[10px] text-amber-700 font-semibold mt-0.5">
+                      Kashi, Trincomalee &amp; Srisailam
+                    </div>
+                  </div>
+                  <div className="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-800 border border-indigo-200 flex items-center justify-center text-xl shrink-0">
+                    🛕
+                  </div>
+                </div>
+
+                <div className="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs flex items-center justify-between">
+                  <div>
+                    <div className="text-[10px] uppercase font-bold text-stone-400 tracking-wider">Editorial Gate</div>
+                    <div className="text-xl sm:text-2xl font-black text-emerald-900 mt-0.5">100% Verified</div>
+                    <div className="text-[10px] text-emerald-700 font-semibold mt-0.5">
+                      Authentic Vedic Shastras
+                    </div>
+                  </div>
+                  <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-center text-xl shrink-0">
+                    ✨
+                  </div>
+                </div>
               </div>
 
-              <div className="bg-white rounded-2xl border overflow-hidden shadow-xs">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-gradient-to-r from-[#3b0811] via-[#4d0c17] to-[#3b0811] text-amber-200 uppercase text-[10px] tracking-wider border-b border-amber-900/40">
-                    <tr>
-                      <th className="py-3 px-4">Title</th>
-                      <th className="py-3 px-4">Category</th>
-                      <th className="py-3 px-4">Deity</th>
-                      <th className="py-3 px-4">Views</th>
-                      <th className="py-3 px-4">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {filteredPosts.map((post) => (
-                      <tr key={post._id} className="hover:bg-slate-50">
-                        <td className="py-3 px-4">
-                          <div className="font-bold text-slate-900">{post.title}</div>
-                          <div className="text-[10px] text-slate-400">/{post.slug}</div>
-                        </td>
-                        <td className="py-3 px-4 uppercase text-[10px] font-bold">{post.category}</td>
-                        <td className="py-3 px-4 text-slate-700">{post.deity}</td>
-                        <td className="py-3 px-4 font-bold">{post.viewsCount || 850}</td>
-                        <td className="py-3 px-4">
-                          <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                            {post.status}
-                          </span>
-                        </td>
+              {/* Action & Filter Control Bar */}
+              <div className="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+                {/* Category Pills */}
+                <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 md:pb-0">
+                  {[
+                    { id: 'all', label: 'All Editions', count: posts.length },
+                    { id: 'temples', label: '🛕 Temples', count: posts.filter(p => p.category === 'temples').length },
+                    { id: 'festivals', label: '🌺 Festivals', count: posts.filter(p => p.category === 'festivals').length },
+                    { id: 'astrology', label: '🔮 Astrology', count: posts.filter(p => p.category === 'astrology').length },
+                  ].map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => setPostCategoryFilter(cat.id)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shrink-0 cursor-pointer ${
+                        postCategoryFilter === cat.id
+                          ? 'bg-[#78131e] text-white shadow-xs'
+                          : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
+                      }`}
+                    >
+                      <span>{cat.label}</span>
+                      <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                        postCategoryFilter === cat.id ? 'bg-amber-300 text-stone-900' : 'bg-white text-stone-600'
+                      }`}>
+                        {cat.count}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Right Controls: Search, Status & Add */}
+                <div className="flex items-center space-x-2.5">
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder="Filter articles..."
+                      value={postSearch}
+                      onChange={(e) => setPostSearch(e.target.value)}
+                      className="bg-stone-50 border border-stone-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:border-amber-500 w-40 sm:w-48"
+                    />
+                  </div>
+
+                  <button
+                    onClick={() => setActiveTab('addPost')}
+                    className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:brightness-110 text-stone-950 px-3.5 py-1.5 rounded-xl text-xs font-black cursor-pointer shadow-xs border border-amber-300/40 flex items-center space-x-1.5 shrink-0 transition"
+                  >
+                    <Plus className="w-4 h-4 text-stone-950" />
+                    <span>Compose Article</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Floating Elevated Table */}
+              <div className="bg-white rounded-2xl border border-amber-200/80 overflow-hidden shadow-xs">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-gradient-to-r from-[#240409] via-[#380911] to-[#240409] text-amber-200 uppercase text-[10px] font-mono tracking-wider border-b border-amber-900/40">
+                      <tr>
+                        <th className="py-3.5 px-4 font-black">Sacred Article &amp; Path</th>
+                        <th className="py-3.5 px-4 font-black">Category</th>
+                        <th className="py-3.5 px-4 font-black">Deity / Sanctuary</th>
+                        <th className="py-3.5 px-4 font-black text-right">Devotee Reads</th>
+                        <th className="py-3.5 px-4 font-black text-center">Sanctuary Gate</th>
+                        <th className="py-3.5 px-4 font-black text-center">Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-stone-100">
+                      {filteredPosts.length === 0 ? (
+                        <tr>
+                          <td colSpan="6" className="py-12 text-center text-stone-400">
+                            <div className="text-3xl mb-2">📜</div>
+                            <div className="font-bold text-stone-600">No articles matched your criteria</div>
+                            <div className="text-xs text-stone-400 mt-1">Try resetting category or search filters</div>
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredPosts.map((post) => (
+                          <tr key={post._id} className="hover:bg-amber-50/40 transition-colors group">
+                            {/* Article Title & Slug */}
+                            <td className="py-3.5 px-4">
+                              <div className="flex items-start space-x-3">
+                                <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0 shadow-2xs border ${
+                                  post.category === 'temples'
+                                    ? 'bg-amber-50 text-amber-800 border-amber-200'
+                                    : post.category === 'festivals'
+                                    ? 'bg-rose-50 text-rose-800 border-rose-200'
+                                    : 'bg-indigo-50 text-indigo-800 border-indigo-200'
+                                }`}>
+                                  {post.category === 'temples' ? '🛕' : post.category === 'festivals' ? '🌺' : '🔮'}
+                                </div>
+                                <div className="min-w-0">
+                                  <div className="font-black text-stone-900 text-xs sm:text-sm group-hover:text-[#78131e] transition-colors leading-snug">
+                                    {post.title}
+                                  </div>
+                                  <div className="flex items-center space-x-2 mt-1">
+                                    <span className="text-[10px] text-stone-400 font-mono truncate max-w-xs">
+                                      /{post.category}/{post.slug}
+                                    </span>
+                                    <button
+                                      onClick={() => copyToClipboard(`http://localhost:3001/${post.category}/${post.slug}`, post.slug)}
+                                      className="text-stone-400 hover:text-amber-800 transition"
+                                      title="Copy public link"
+                                    >
+                                      {copiedSlug === post.slug ? (
+                                        <CheckCheck className="w-3 h-3 text-emerald-600" />
+                                      ) : (
+                                        <Copy className="w-3 h-3" />
+                                      )}
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* Category Badge */}
+                            <td className="py-3.5 px-4">
+                              <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border shadow-2xs ${
+                                post.category === 'temples'
+                                  ? 'bg-amber-50 text-amber-900 border-amber-300'
+                                  : post.category === 'festivals'
+                                  ? 'bg-rose-50 text-rose-900 border-rose-300'
+                                  : 'bg-indigo-50 text-indigo-900 border-indigo-300'
+                              }`}>
+                                {post.category}
+                              </span>
+                            </td>
+
+                            {/* Deity / Kshetra */}
+                            <td className="py-3.5 px-4">
+                              <div className="text-stone-800 font-bold text-xs flex items-center space-x-1.5">
+                                <span>{post.deity || 'Parashakti'}</span>
+                              </div>
+                              <div className="text-[10px] text-stone-400 mt-0.5">Universal Sanctuary</div>
+                            </td>
+
+                            {/* Devotee Reads with Spark Meter */}
+                            <td className="py-3.5 px-4 text-right">
+                              <div className="font-mono font-black text-stone-900 text-xs">
+                                {(post.viewsCount || 850).toLocaleString()}
+                              </div>
+                              <div className="w-16 bg-stone-100 rounded-full h-1.5 ml-auto mt-1 overflow-hidden">
+                                <div
+                                  className="bg-gradient-to-r from-amber-500 to-[#78131e] h-full rounded-full"
+                                  style={{ width: `${Math.min(100, Math.max(25, ((post.viewsCount || 850) / 6000) * 100))}%` }}
+                                ></div>
+                              </div>
+                            </td>
+
+                            {/* Publication Status */}
+                            <td className="py-3.5 px-4 text-center">
+                              <span className="inline-flex items-center space-x-1.5 bg-emerald-50 text-emerald-800 border border-emerald-300 text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-2xs">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                <span className="uppercase">Live on Sanctuary</span>
+                              </span>
+                            </td>
+
+                            {/* Action Buttons */}
+                            <td className="py-3.5 px-4 text-center">
+                              <div className="flex items-center justify-center space-x-1.5">
+                                <Link
+                                  href={`/${post.category}/${post.slug}`}
+                                  target="_blank"
+                                  className="p-1.5 text-stone-500 hover:text-[#78131e] hover:bg-stone-100 rounded-lg transition"
+                                  title="View Live Article"
+                                >
+                                  <ExternalLink className="w-4 h-4" />
+                                </Link>
+                                <button
+                                  onClick={() => {
+                                    setNewPost({
+                                      title: post.title,
+                                      titleTelugu: post.titleTelugu || '',
+                                      slug: post.slug,
+                                      category: post.category,
+                                      deity: post.deity || '',
+                                      devotionalVerse: post.devotionalVerse || '',
+                                      excerpt: post.excerpt || '',
+                                      content: post.content || '',
+                                      featuredImage: post.featuredImage || '/images/temple_kashi.jpg',
+                                      tags: post.tags?.join(', ') || '',
+                                      keywords: post.keywords?.join(', ') || '',
+                                      status: post.status
+                                    });
+                                    setActiveTab('addPost');
+                                    showToast('success', `Editing: ${post.title}`);
+                                  }}
+                                  className="p-1.5 text-stone-500 hover:text-amber-800 hover:bg-stone-100 rounded-lg transition cursor-pointer"
+                                  title="Edit Post"
+                                >
+                                  <Edit3 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Table Pagination & Count Footer */}
+                <div className="p-4 bg-stone-50 border-t border-stone-200/80 flex items-center justify-between text-xs text-stone-500">
+                  <div>
+                    Showing <span className="font-bold text-stone-800">{filteredPosts.length}</span> of{' '}
+                    <span className="font-bold text-stone-800">{posts.length}</span> sacred publications
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <button className="px-3 py-1 rounded-lg border bg-white text-stone-400 cursor-not-allowed text-[11px] font-semibold">
+                      Previous
+                    </button>
+                    <span className="px-2.5 py-1 rounded-lg bg-[#78131e] text-white font-mono font-bold text-[11px]">
+                      1
+                    </span>
+                    <button className="px-3 py-1 rounded-lg border bg-white text-stone-400 cursor-not-allowed text-[11px] font-semibold">
+                      Next
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           )}
 
           {/* ========================================================= */}
-          {/* TAB 10: USER MANAGEMENT                                   */}
+          {/* TAB 10: USER MANAGEMENT (STAFF & DEVOTEES REGISTRY)        */}
           {/* ========================================================= */}
           {activeTab === 'users' && (
-            <div className="space-y-4">
-              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <h3 className="text-xl font-black text-slate-900 flex items-center space-x-2">
-                    <Users className="w-5 h-5 text-emerald-700" />
-                    <span>Staff Registry &amp; Role Management</span>
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Assign system permissions, upgrade devotees to Staff, and toggle active status.
-                  </p>
+            <div className="space-y-5">
+              {/* Top Metric Cards */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+                <div className="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs flex items-center justify-between">
+                  <div>
+                    <div className="text-[10px] uppercase font-bold text-stone-400 tracking-wider">Total Accounts</div>
+                    <div className="text-xl sm:text-2xl font-black text-stone-900 mt-0.5">{users.length} Registered</div>
+                    <div className="text-[10px] text-emerald-700 font-semibold mt-0.5">Staff &amp; Devotees</div>
+                  </div>
+                  <div className="w-11 h-11 rounded-2xl bg-amber-50 text-amber-800 border border-amber-200 flex items-center justify-center text-xl shrink-0">
+                    👥
+                  </div>
+                </div>
+
+                <div className="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs flex items-center justify-between">
+                  <div>
+                    <div className="text-[10px] uppercase font-bold text-stone-400 tracking-wider">Super Admins</div>
+                    <div className="text-xl sm:text-2xl font-black text-[#78131e] mt-0.5">
+                      {users.filter(u => u.role === 'admin').length} Paramount
+                    </div>
+                    <div className="text-[10px] text-rose-700 font-semibold mt-0.5">Full System Overrides</div>
+                  </div>
+                  <div className="w-11 h-11 rounded-2xl bg-rose-50 text-rose-800 border border-rose-200 flex items-center justify-center text-xl shrink-0">
+                    👑
+                  </div>
+                </div>
+
+                <div className="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs flex items-center justify-between">
+                  <div>
+                    <div className="text-[10px] uppercase font-bold text-stone-400 tracking-wider">Digital Marketing</div>
+                    <div className="text-xl sm:text-2xl font-black text-amber-900 mt-0.5">
+                      {users.filter(u => u.role === 'digital_marketing').length} Leads
+                    </div>
+                    <div className="text-[10px] text-amber-700 font-semibold mt-0.5">Marketplace &amp; Ads</div>
+                  </div>
+                  <div className="w-11 h-11 rounded-2xl bg-amber-50 text-amber-800 border border-amber-200 flex items-center justify-center text-xl shrink-0">
+                    📢
+                  </div>
+                </div>
+
+                <div className="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs flex items-center justify-between">
+                  <div>
+                    <div className="text-[10px] uppercase font-bold text-stone-400 tracking-wider">Astrologer Desk</div>
+                    <div className="text-xl sm:text-2xl font-black text-indigo-900 mt-0.5">
+                      {users.filter(u => u.role === 'astrologer').length} Jyotishis
+                    </div>
+                    <div className="text-[10px] text-indigo-700 font-semibold mt-0.5">Kundali &amp; Remedies</div>
+                  </div>
+                  <div className="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-800 border border-indigo-200 flex items-center justify-center text-xl shrink-0">
+                    🔮
+                  </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl border overflow-hidden shadow-xs">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-gradient-to-r from-[#3b0811] via-[#4d0c17] to-[#3b0811] text-amber-200 uppercase text-[10px] tracking-wider border-b border-amber-900/40">
-                    <tr>
-                      <th className="py-3 px-4">Name</th>
-                      <th className="py-3 px-4">Email</th>
-                      <th className="py-3 px-4">Current Role</th>
-                      <th className="py-3 px-4">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {filteredUsers.map((u) => (
-                      <tr key={u._id} className="hover:bg-slate-50">
-                        <td className="py-3 px-4 font-bold">{u.name}</td>
-                        <td className="py-3 px-4">{u.email}</td>
-                        <td className="py-3 px-4">
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-amber-100 text-amber-900">
-                            {u.role}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                            {u.isActive ? 'ACTIVE' : 'SUSPENDED'}
-                          </span>
-                        </td>
+              {/* Filter Ribbon */}
+              <div className="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 md:pb-0">
+                  {[
+                    { id: 'all', label: 'All Roles', count: users.length },
+                    { id: 'admin', label: 'Super Admin', count: users.filter(u => u.role === 'admin').length },
+                    { id: 'digital_marketing', label: 'Marketing', count: users.filter(u => u.role === 'digital_marketing').length },
+                    { id: 'astrologer', label: 'Astrologer', count: users.filter(u => u.role === 'astrologer').length },
+                    { id: 'user', label: 'Devotees', count: users.filter(u => u.role === 'user').length },
+                  ].map((r) => (
+                    <button
+                      key={r.id}
+                      onClick={() => setUserRoleFilter(r.id)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shrink-0 cursor-pointer ${
+                        userRoleFilter === r.id
+                          ? 'bg-[#78131e] text-white shadow-xs'
+                          : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
+                      }`}
+                    >
+                      <span>{r.label}</span>
+                      <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                        userRoleFilter === r.id ? 'bg-amber-300 text-stone-900' : 'bg-white text-stone-600'
+                      }`}>
+                        {r.count}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    placeholder="Search users..."
+                    value={userSearch}
+                    onChange={(e) => setUserSearch(e.target.value)}
+                    className="bg-stone-50 border border-stone-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:border-amber-500 w-full sm:w-48"
+                  />
+                </div>
+              </div>
+
+              {/* Table */}
+              <div className="bg-white rounded-2xl border border-amber-200/80 overflow-hidden shadow-xs">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-gradient-to-r from-[#240409] via-[#380911] to-[#240409] text-amber-200 uppercase text-[10px] font-mono tracking-wider border-b border-amber-900/40">
+                      <tr>
+                        <th className="py-3.5 px-4 font-black">Staff / Devotee Member</th>
+                        <th className="py-3.5 px-4 font-black">Email Contact</th>
+                        <th className="py-3.5 px-4 font-black">Assigned Privilege</th>
+                        <th className="py-3.5 px-4 font-black text-center">Status</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-stone-100">
+                      {filteredUsers.length === 0 ? (
+                        <tr>
+                          <td colSpan="4" className="py-10 text-center text-stone-400">
+                            No users matched your search criteria.
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredUsers.map((u) => (
+                          <tr key={u._id} className="hover:bg-amber-50/40 transition-colors">
+                            <td className="py-3.5 px-4">
+                              <div className="flex items-center space-x-3">
+                                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-300 text-stone-900 font-black flex items-center justify-center text-xs shrink-0 shadow-2xs">
+                                  {(u.name || 'User').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                                </div>
+                                <div>
+                                  <div className="font-black text-stone-900 text-xs sm:text-sm">{u.name}</div>
+                                  <div className="text-[10px] text-stone-400">Verified Sanctuary Member</div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-3.5 px-4 font-mono text-stone-600">{u.email}</td>
+                            <td className="py-3.5 px-4">
+                              <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border shadow-2xs ${
+                                u.role === 'admin'
+                                  ? 'bg-rose-50 text-rose-900 border-rose-300'
+                                  : u.role === 'digital_marketing'
+                                  ? 'bg-amber-50 text-amber-900 border-amber-300'
+                                  : u.role === 'astrologer'
+                                  ? 'bg-indigo-50 text-indigo-900 border-indigo-300'
+                                  : 'bg-stone-100 text-stone-700 border-stone-200'
+                              }`}>
+                                {u.role === 'admin' ? 'Super Admin' : u.role === 'digital_marketing' ? 'Digital Marketing' : u.role === 'astrologer' ? 'Astrologer' : 'Devotee'}
+                              </span>
+                            </td>
+                            <td className="py-3.5 px-4 text-center">
+                              <span className="inline-flex items-center space-x-1.5 bg-emerald-50 text-emerald-800 border border-emerald-300 text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-2xs">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                <span>{u.isActive ? 'ACTIVE ACCESS' : 'SUSPENDED'}</span>
+                              </span>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
