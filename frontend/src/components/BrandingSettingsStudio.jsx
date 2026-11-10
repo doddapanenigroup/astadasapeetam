@@ -80,13 +80,15 @@ export default function BrandingSettingsStudio({ showToast }) {
     const reader = new FileReader();
     reader.onload = (event) => {
       const dataUrl = event.target?.result;
-      setBranding(prev => ({
-        ...prev,
+      const updated = {
+        ...branding,
         faviconType: 'image',
         faviconUrl: dataUrl
-      }));
+      };
+      setBranding(updated);
+      applyFaviconToDocument(updated);
       setIsUploadingFavicon(false);
-      if (showToast) showToast('success', `Uploaded favicon (${Math.round(file.size / 1024)} KB)`);
+      if (showToast) showToast('success', `Uploaded favicon (${Math.round(file.size / 1024)} KB) - applied to browser tab!`);
     };
     reader.readAsDataURL(file);
   };
@@ -95,6 +97,7 @@ export default function BrandingSettingsStudio({ showToast }) {
     if (e) e.preventDefault();
     const saved = saveBranding(branding);
     if (saved) {
+      applyFaviconToDocument(saved);
       setSavedSuccess(true);
       if (showToast) {
         showToast('success', '✨ Logo and Favicon updated successfully across the entire website!');
@@ -468,7 +471,11 @@ export default function BrandingSettingsStudio({ showToast }) {
                   <button
                     key={emoji}
                     type="button"
-                    onClick={() => setBranding({ ...branding, faviconEmoji: emoji })}
+                    onClick={() => {
+                      const updated = { ...branding, faviconEmoji: emoji, faviconType: 'emoji' };
+                      setBranding(updated);
+                      applyFaviconToDocument(updated);
+                    }}
                     className={`w-9 h-9 rounded-xl text-lg flex items-center justify-center cursor-pointer transition shadow-2xs ${
                       branding.faviconEmoji === emoji
                         ? 'bg-blue-600 text-white scale-110 shadow-xs'
@@ -484,7 +491,11 @@ export default function BrandingSettingsStudio({ showToast }) {
                     type="text"
                     maxLength={4}
                     value={branding.faviconEmoji || '🕉️'}
-                    onChange={(e) => setBranding({ ...branding, faviconEmoji: e.target.value })}
+                    onChange={(e) => {
+                      const updated = { ...branding, faviconEmoji: e.target.value, faviconType: 'emoji' };
+                      setBranding(updated);
+                      applyFaviconToDocument(updated);
+                    }}
                     className="w-10 h-9 text-center border border-stone-300 rounded-xl text-base bg-white shadow-2xs"
                   />
                 </div>

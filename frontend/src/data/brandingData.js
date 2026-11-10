@@ -39,26 +39,77 @@ export function getStoredBranding() {
 }
 
 /**
+ * Converts an emoji to a rich crisp PNG Data URI using an offscreen canvas
+ * Guarantees 100% instant rendering in Chrome, Edge, Safari & Firefox tab bars
+ */
+export function getEmojiFaviconPng(emoji = '🕉️') {
+  if (typeof document === 'undefined') return '';
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return '';
+
+    // Draw circular devotional badge
+    const grad = ctx.createLinearGradient(0, 0, 64, 64);
+    grad.addColorStop(0, '#78131e');
+    grad.addColorStop(1, '#9e1c2a');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(32, 32, 29, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Gold sacred border
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = '#f59e0b';
+    ctx.stroke();
+
+    // Centered sacred emoji symbol
+    ctx.font = '34px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(emoji, 32, 34);
+
+    return canvas.toDataURL('image/png');
+  } catch (e) {
+    return '';
+  }
+}
+
+/**
  * Directly updates the <link rel="icon"> in browser document head
+ * Forces Chrome to immediately repaint the tab bar icon
  */
 export function applyFaviconToDocument(branding) {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
   try {
     let iconUrl = '';
-    if (branding.faviconType === 'image' && branding.faviconUrl) {
+    let mimeType = 'image/png';
+
+    if (branding?.faviconType === 'image' && branding?.faviconUrl) {
       iconUrl = branding.faviconUrl;
     } else {
-      iconUrl = getEmojiFaviconUri(branding.faviconEmoji || '🕉️');
+      const emoji = branding?.faviconEmoji || '🕉️';
+      iconUrl = getEmojiFaviconPng(emoji) || getEmojiFaviconUri(emoji);
+      if (iconUrl.startsWith('data:image/svg')) {
+        mimeType = 'image/svg+xml';
+      }
     }
 
-    let link = document.querySelector("link[rel*='icon']");
-    if (!link) {
-      link = document.createElement('link');
-      link.rel = 'shortcut icon';
-      document.getElementsByTagName('head')[0].appendChild(link);
-    }
-    link.type = iconUrl.startsWith('data:image/svg+xml') ? 'image/svg+xml' : 'image/x-icon';
-    link.href = iconUrl;
+    if (!iconUrl) return;
+
+    // Remove existing favicon links to break browser caching in Chrome
+    const existingLinks = document.querySelectorAll("link[rel*='icon']");
+    existingLinks.forEach(el => el.parentNode && el.parentNode.removeChild(el));
+
+    // Append fresh link tag
+    const newLink = document.createElement('link');
+    newLink.id = 'dynamic-sanctuary-favicon';
+    newLink.rel = 'icon';
+    newLink.type = mimeType;
+    newLink.href = iconUrl;
+    document.getElementsByTagName('head')[0].appendChild(newLink);
   } catch (e) {
     console.error('Failed to apply favicon to document:', e);
   }
