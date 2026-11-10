@@ -31,6 +31,9 @@ export function getStoredBranding() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_BRANDING;
     const parsed = JSON.parse(raw);
+    // Enforce official artwork as the favicon across all sessions
+    parsed.faviconType = 'image';
+    parsed.faviconUrl = '/icon.png?v=3';
     return { ...DEFAULT_BRANDING, ...parsed };
   } catch (e) {
     console.error('Failed to parse branding data:', e);
@@ -81,10 +84,10 @@ export function getEmojiFaviconPng(emoji = '🕉️') {
  * Directly updates the <link rel="icon"> in browser document head
  * Forces Chrome to immediately repaint the tab bar icon
  */
-export function applyFaviconToDocument(branding) {
+export function applyFaviconToDocument() {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
   try {
-    const iconUrl = (branding && branding.faviconUrl) ? branding.faviconUrl : '/icon.png?v=1';
+    const iconUrl = '/icon.png?v=3';
 
     // Remove existing favicon links to break browser caching in Chrome
     const existingLinks = document.querySelectorAll("link[rel*='icon']");

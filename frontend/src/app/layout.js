@@ -6,12 +6,12 @@ export const metadata = {
   description: 'Your sacred daily portal for Devotional News, Daily Panchangam, Hindu Festivals, Temple Guides, Astrology Consultations, and Sacred Products.',
   icons: {
     icon: [
-      { url: '/favicon.ico', sizes: 'any' },
-      { url: '/icon.png', type: 'image/png' },
-      { url: '/favicon.svg', type: 'image/svg+xml' }
+      { url: '/icon.png?v=3', type: 'image/png' },
+      { url: '/favicon.ico?v=3', sizes: 'any' },
+      { url: '/favicon.svg?v=3', type: 'image/svg+xml' }
     ],
-    shortcut: '/favicon.ico',
-    apple: '/icon.png'
+    shortcut: '/icon.png?v=3',
+    apple: '/icon.png?v=3'
   }
 };
 
@@ -30,7 +30,7 @@ export default function RootLayout({ children }) {
                   var link = document.createElement('link');
                   link.rel = 'icon';
                   link.type = 'image/png';
-                  link.href = '/icon.png?v=2';
+                  link.href = '/icon.png?v=3';
                   document.getElementsByTagName('head')[0].appendChild(link);
 
                   const cleanExtAttrs = () => {
