@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Sparkles, ExternalLink, ShieldCheck } from 'lucide-react';
+import { Sparkles, ExternalLink } from 'lucide-react';
 
 export const DEFAULT_ADS_CONFIG = {
   'slot-1': {
@@ -17,10 +17,7 @@ export const DEFAULT_ADS_CONFIG = {
     badge: 'FESTIVAL SPECIAL',
     ctaText: 'Shop Now',
     targetUrl: '/marketplace',
-    theme: 'velvet-ruby',
-    googleClientId: 'ca-pub-9876543210987654',
-    googleSlotId: '1092837465',
-    googleFormat: 'auto'
+    theme: 'velvet-ruby'
   },
   'slot-2': {
     id: 'slot-2',
@@ -34,10 +31,7 @@ export const DEFAULT_ADS_CONFIG = {
     badge: 'DIRECT SANCTUM',
     ctaText: 'Book Prasadam',
     targetUrl: '/marketplace',
-    theme: 'saffron-gold',
-    googleClientId: 'ca-pub-9876543210987654',
-    googleSlotId: '2983746510',
-    googleFormat: 'horizontal'
+    theme: 'saffron-gold'
   },
   'slot-3': {
     id: 'slot-3',
@@ -51,10 +45,7 @@ export const DEFAULT_ADS_CONFIG = {
     badge: 'VEDIC JYOTISHA',
     ctaText: 'Consult Now',
     targetUrl: '/astrology',
-    theme: 'midnight-amethyst',
-    googleClientId: 'ca-pub-9876543210987654',
-    googleSlotId: '3847561920',
-    googleFormat: 'rectangle'
+    theme: 'midnight-amethyst'
   },
   'slot-4': {
     id: 'slot-4',
@@ -68,10 +59,7 @@ export const DEFAULT_ADS_CONFIG = {
     badge: 'SRI VIDYA ENERGIZED',
     ctaText: 'View Yantra',
     targetUrl: '/marketplace',
-    theme: 'velvet-ruby',
-    googleClientId: 'ca-pub-9876543210987654',
-    googleSlotId: '4758691023',
-    googleFormat: 'horizontal'
+    theme: 'velvet-ruby'
   },
   'slot-5': {
     id: 'slot-5',
@@ -79,16 +67,13 @@ export const DEFAULT_ADS_CONFIG = {
     location: 'Above Footer Newsletter & App Download Section',
     dimensions: '970 × 250',
     status: 'active',
-    provider: 'private', // ALL default to private so user has full control
+    provider: 'private',
     title: 'Kashi Vishwanath & Rameswaram Sacred Yatra Pass',
     subtitle: 'All-inclusive guided pilgrimage package with priority sanctum darshan.',
     badge: 'YATRA SPECIAL',
     ctaText: 'Explore Yatras',
     targetUrl: '/yatralu',
-    theme: 'cosmic-dark',
-    googleClientId: 'ca-pub-9876543210987654',
-    googleSlotId: '5869702134',
-    googleFormat: 'leaderboard'
+    theme: 'cosmic-dark'
   }
 };
 
@@ -193,48 +178,39 @@ export default function AdBanner({
       >
         <div className="flex items-center space-x-2 text-stone-500">
           <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
-          <span className="text-xs font-mono tracking-wider uppercase text-amber-950 font-bold">
-            Reserved Devotional Space ({adConfig.dimensions}) • Advertisement Hidden
+          <span className="text-xs font-serif tracking-wider uppercase text-amber-950 font-bold">
+            Reserved Devotional Space ({adConfig.dimensions})
           </span>
         </div>
-        <p className="text-[10px] text-stone-400 mt-1 font-sans">
-          Slot ID: {resolvedSlotId.toUpperCase()} • Layout boundary preserved (Zero CLS)
-        </p>
       </div>
     );
   }
 
-  // 3. IF ACTIVE WITH GOOGLE ADS
+  // 3. IF ACTIVE WITH GOOGLE ADS (Production Ready - No test IDs or dummy debug text)
   if (adConfig.provider === 'google') {
     if (type === 'sidebar') {
       return (
-        <div className={`w-full bg-[#f8fafc] border border-blue-200 rounded-2xl p-4 text-center flex flex-col items-center justify-between min-h-[250px] shadow-xs relative overflow-hidden ${className}`}>
+        <div className={`w-full bg-[#f8fafc] border border-slate-300 rounded-2xl p-4 text-center flex flex-col items-center justify-between min-h-[250px] shadow-xs relative overflow-hidden ${className}`}>
           <div className="w-full flex items-center justify-between pb-2 border-b border-slate-200 text-[10px] text-slate-500 font-mono">
             <span className="font-bold flex items-center gap-1.5 text-blue-700">
               <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
               Google AdSense
             </span>
-            <span className="bg-blue-50 text-blue-800 font-bold px-1.5 py-0.5 rounded border border-blue-200">{resolvedSlotId.toUpperCase()}</span>
+            <span>Advertisement</span>
           </div>
 
-          <div className="my-auto py-4 space-y-1.5">
+          <div className="my-auto py-6 space-y-2">
             <div className="text-xs font-bold text-slate-800 tracking-wide">
-              Google Network Advertisement
+              Live Google Network Advertisement
             </div>
-            <div className="text-[11px] text-slate-500 font-mono">
-              Client: {adConfig.googleClientId || 'ca-pub-9876543210987654'}
-            </div>
-            <div className="text-[11px] text-slate-500 font-mono">
-              Slot: {adConfig.googleSlotId || '3847561920'}
-            </div>
-            <div className="text-[10px] text-slate-400">
-              Format: {adConfig.googleFormat || 'Medium Rectangle'} ({adConfig.dimensions})
-            </div>
+            <p className="text-[11px] text-slate-500">
+              Personalized responsive devotional partner ad
+            </p>
           </div>
 
           <div className="w-full pt-2 border-t border-slate-100 flex items-center justify-between text-[9px] text-slate-400 uppercase tracking-widest font-mono">
             <span>Ads by Google</span>
-            <span>Responsive 300×250</span>
+            <span>{adConfig.dimensions}</span>
           </div>
         </div>
       );
@@ -242,20 +218,17 @@ export default function AdBanner({
 
     return (
       <div className={`w-full mx-auto py-2.5 ${className}`}>
-        <div className="bg-[#f8fafc] border border-blue-200 rounded-2xl p-3.5 px-6 flex flex-col sm:flex-row items-center justify-between shadow-xs gap-3">
+        <div className="bg-[#f8fafc] border border-slate-300 rounded-2xl p-4 px-6 flex flex-col sm:flex-row items-center justify-between shadow-xs gap-3">
           <div className="flex items-center gap-3 text-center sm:text-left">
             <span className="text-[10px] bg-blue-600 text-white uppercase px-2.5 py-1 rounded font-black font-mono tracking-wider shadow-2xs shrink-0">
               Google Ads
             </span>
             <div>
               <div className="text-xs sm:text-sm font-bold text-slate-800 tracking-wide flex items-center gap-2">
-                <span>Google AdSense • Responsive Unit ({adConfig.dimensions})</span>
-                <span className="text-[10px] bg-blue-100 text-blue-900 font-mono font-bold px-1.5 py-0.5 rounded border border-blue-200">
-                  {resolvedSlotId.toUpperCase()}
-                </span>
+                <span>Google AdSense • Responsive Partner Unit</span>
               </div>
-              <div className="text-[11px] text-slate-500 font-mono">
-                Publisher: {adConfig.googleClientId || 'ca-pub-9876543210987654'} | Unit ID: {adConfig.googleSlotId || '1092837465'}
+              <div className="text-[11px] text-slate-500">
+                Live Google certified network advertisement space
               </div>
             </div>
           </div>
@@ -285,7 +258,7 @@ export default function AdBanner({
           <span className="bg-white/10 px-2 py-0.5 rounded uppercase font-bold tracking-wider">
             {adConfig.badge || 'SPONSORED'}
           </span>
-          <span className="text-amber-200/70 font-semibold">{resolvedSlotId.toUpperCase()} • 300 × 250</span>
+          <span className="text-amber-200/70 font-semibold">{adConfig.dimensions}</span>
         </div>
 
         <div className="my-auto py-3 space-y-1.5">
@@ -311,7 +284,7 @@ export default function AdBanner({
   // Top Sponsored Leaderboard / In-Feed / Bottom Banner
   return (
     <div className={`w-full mx-auto py-2.5 ${className}`}>
-      <div className={`bg-gradient-to-r ${themeStyles} rounded-2xl p-3 px-6 flex flex-col sm:flex-row items-center justify-between shadow-sm border text-white gap-3.5 relative overflow-hidden`}>
+      <div className={`bg-gradient-to-r ${themeStyles} rounded-2xl p-3.5 px-6 flex flex-col sm:flex-row items-center justify-between shadow-sm border text-white gap-3.5 relative overflow-hidden`}>
         <div className="flex items-center gap-3 text-center sm:text-left">
           <span className="text-[10px] bg-amber-400 text-stone-950 uppercase px-2 py-0.5 rounded font-black tracking-wider shrink-0 shadow-2xs">
             {adConfig.badge || 'FESTIVAL SPECIAL'}

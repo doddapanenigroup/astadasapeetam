@@ -1714,68 +1714,21 @@ export default function UnifiedConsolePage() {
                           </div>
                         </div>
                       ) : (
-                        <div className="space-y-3 bg-blue-50/50 p-4 rounded-2xl border border-blue-200 text-xs">
-                          <div className="flex items-center justify-between pb-2 border-b border-blue-100 text-[11px] text-blue-900">
-                            <span className="font-bold flex items-center gap-1.5">
-                              <span>🌐</span> Google AdSense Network Integration
-                            </span>
-                            <span className="text-blue-700 font-medium">
-                              (Required only if you wish to serve live ads from your Google AdSense account)
-                            </span>
-                          </div>
-
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="bg-gradient-to-r from-blue-50 to-indigo-50/60 p-4 rounded-2xl border border-blue-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div className="flex items-center space-x-3">
+                            <span className="text-2xl">🌐</span>
                             <div>
-                              <label className="block text-[11px] font-bold text-blue-950 mb-0.5">
-                                Google AdSense Publisher ID
-                              </label>
-                              <p className="text-[10px] text-blue-700/80 mb-1">
-                                Your account ID from Google AdSense (e.g. ca-pub-xxx)
+                              <h4 className="font-bold text-blue-950 text-xs sm:text-sm">
+                                Live Google AdSense Network Enabled
+                              </h4>
+                              <p className="text-blue-800/80 text-[11px] mt-0.5">
+                                This ad unit streams live Google certified advertisements on your production server.
                               </p>
-                              <input
-                                type="text"
-                                value={slotConfig.googleClientId || ''}
-                                onChange={(e) => handleUpdateAdSlot(slotDef.id, { googleClientId: e.target.value })}
-                                placeholder="ca-pub-9876543210987654"
-                                className="w-full bg-white border border-blue-200 rounded-xl px-3 py-2 text-xs font-mono text-stone-900 focus:outline-none focus:border-blue-500"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-[11px] font-bold text-blue-950 mb-0.5">
-                                Google Ad Unit Slot ID
-                              </label>
-                              <p className="text-[10px] text-blue-700/80 mb-1">
-                                The 10-digit ad slot number generated in your AdSense dashboard
-                              </p>
-                              <input
-                                type="text"
-                                value={slotConfig.googleSlotId || ''}
-                                onChange={(e) => handleUpdateAdSlot(slotDef.id, { googleSlotId: e.target.value })}
-                                placeholder="1092837465"
-                                className="w-full bg-white border border-blue-200 rounded-xl px-3 py-2 text-xs font-mono text-stone-900 focus:outline-none focus:border-blue-500"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-[11px] font-bold text-blue-950 mb-0.5">
-                                Ad Format
-                              </label>
-                              <p className="text-[10px] text-blue-700/80 mb-1">
-                                Responsive sizing behavior for mobile and desktop screens
-                              </p>
-                              <select
-                                value={slotConfig.googleFormat || 'auto'}
-                                onChange={(e) => handleUpdateAdSlot(slotDef.id, { googleFormat: e.target.value })}
-                                className="w-full bg-white border border-blue-200 rounded-xl px-3 py-2 text-xs font-semibold text-stone-900 focus:outline-none focus:border-blue-500"
-                              >
-                                <option value="auto">Auto Responsive</option>
-                                <option value="horizontal">Horizontal Banner (728x90)</option>
-                                <option value="rectangle">Medium Rectangle (300x250)</option>
-                                <option value="leaderboard">Large Leaderboard (970x250)</option>
-                              </select>
                             </div>
                           </div>
+                          <span className="bg-blue-600 text-white font-bold px-3 py-1.5 rounded-xl text-xs shadow-2xs self-start sm:self-auto shrink-0">
+                            ✓ Ready for Live Server
+                          </span>
                         </div>
                       )}
 
@@ -1813,10 +1766,10 @@ export default function UnifiedConsolePage() {
                               </span>
                               <div>
                                 <div className="text-xs font-bold text-slate-800 tracking-wide">
-                                  Google AdSense • Responsive Unit ({slotConfig.dimensions})
+                                  Google AdSense • Responsive Partner Unit ({slotConfig.dimensions})
                                 </div>
-                                <div className="text-[10px] text-slate-500 font-mono">
-                                  Publisher: {slotConfig.googleClientId} | Slot: {slotConfig.googleSlotId}
+                                <div className="text-[11px] text-slate-500">
+                                  Live Google certified advertisement
                                 </div>
                               </div>
                             </div>
