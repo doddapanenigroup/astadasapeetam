@@ -61,6 +61,8 @@ import { DEFAULT_ADS_CONFIG, getInitialAdsConfig } from '../../components/AdBann
 import DynamicPostStudio, { DEVOTIONAL_CATEGORIES, DEFAULT_POST_DATA } from '../../components/DynamicPostStudio';
 import { getAllCategories } from '../../data/categoriesData';
 import AddCategoryModal from '../../components/AddCategoryModal';
+import BrandingSettingsStudio from '../../components/BrandingSettingsStudio';
+import { getStoredBranding, DEFAULT_BRANDING, applyFaviconToDocument } from '../../data/brandingData';
 
 const API_BASE = 'http://localhost:5000/api';
 
@@ -113,6 +115,24 @@ export default function UnifiedConsolePage() {
     };
     window.addEventListener('categoriesUpdated', handleCategoriesUpdate);
     return () => window.removeEventListener('categoriesUpdated', handleCategoriesUpdate);
+  }, []);
+
+  const [branding, setBranding] = useState(DEFAULT_BRANDING);
+
+  useEffect(() => {
+    try {
+      const current = getStoredBranding();
+      setBranding(current);
+      applyFaviconToDocument(current);
+
+      const handleBrandingUpdate = () => {
+        const updated = getStoredBranding();
+        setBranding(updated);
+        applyFaviconToDocument(updated);
+      };
+      window.addEventListener('brandingUpdated', handleBrandingUpdate);
+      return () => window.removeEventListener('brandingUpdated', handleBrandingUpdate);
+    } catch {}
   }, []);
 
   const [copiedSlug, setCopiedSlug] = useState('');
@@ -727,13 +747,22 @@ export default function UnifiedConsolePage() {
         {/* Brand Header */}
         <div className="p-4 border-b border-[#32174d] bg-black/25 flex items-center justify-between">
           <Link href="/" className="flex items-center space-x-3 overflow-hidden group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#f59e0b] via-[#ec4899] to-[#8b5cf6] flex items-center justify-center font-black text-white text-xl shadow-lg shadow-purple-950/50 shrink-0 group-hover:scale-105 transition-transform">
-              🕉️
-            </div>
+            {branding.logoType === 'image' && branding.logoUrl ? (
+              <img
+                src={branding.logoUrl}
+                alt={branding.siteTitle || 'Astadasapeetam'}
+                style={{ height: '36px' }}
+                className="object-contain shrink-0"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#f59e0b] via-[#ec4899] to-[#8b5cf6] flex items-center justify-center font-black text-white text-xl shadow-lg shadow-purple-950/50 shrink-0 group-hover:scale-105 transition-transform">
+                {branding.logoEmoji || '🕉️'}
+              </div>
+            )}
             {!sidebarCollapsed && (
               <div className="flex flex-col leading-tight min-w-0">
                 <span className="font-extrabold text-sm tracking-wider text-white font-serif uppercase truncate">
-                  ASTADASAPEETAM
+                  {branding.siteTitle || 'ASTADASAPEETAM'}
                 </span>
                 <span className="text-[10px] text-amber-300 font-semibold tracking-wider uppercase truncate">
                   {user?.role === 'digital_marketing' ? 'Marketing Studio' : user?.role === 'astrologer' ? 'Astrologer Studio' : 'Super Admin Console'}
@@ -3146,45 +3175,58 @@ export default function UnifiedConsolePage() {
           )}
 
           {/* ========================================================= */}
-          {/* TAB 13: SOFTWARE SETUP                                    */}
+          {/* TAB 13: SOFTWARE SETUP & BRANDING                         */}
           {/* ========================================================= */}
           {activeTab === 'softwareSetup' && (
-            <div className="bg-white p-6 rounded-3xl border shadow-xs space-y-4">
-              <h3 className="text-xl font-black text-slate-900 flex items-center space-x-2">
-                <Settings className="w-5 h-5 text-slate-700" />
-                <span>Software Setup &amp; Diagnostics</span>
-              </h3>
+            <div className="space-y-6">
+              {/* Primary Website Logo & Favicon Studio */}
+              <BrandingSettingsStudio showToast={showToast} />
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-                <div className="p-4 bg-slate-50 rounded-2xl border space-y-1">
-                  <div className="text-slate-400 font-bold uppercase text-[10px]">Database</div>
-                  <div className="font-bold text-slate-900">MongoDB 127.0.0.1:27017</div>
-                  <div className="text-emerald-700 font-semibold">astadasapeetam (Connected)</div>
+              {/* System Diagnostics & Platform Status */}
+              <div className="bg-white p-6 rounded-3xl border border-stone-200 shadow-xs space-y-4">
+                <div className="flex items-center justify-between border-b border-stone-100 pb-3">
+                  <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center space-x-2">
+                    <Settings className="w-4 h-4 text-slate-700" />
+                    <span>3. Infrastructure Setup &amp; Platform Diagnostics</span>
+                  </h3>
+                  <span className="text-[10px] text-emerald-700 font-mono font-bold bg-emerald-50 px-2.5 py-0.5 rounded-md border border-emerald-200">
+                    All Services Live
+                  </span>
                 </div>
 
-                <div className="p-4 bg-slate-50 rounded-2xl border space-y-1">
-                  <div className="text-slate-400 font-bold uppercase text-[10px]">API Server</div>
-                  <div className="font-bold text-slate-900">Port 5000 (Express.js)</div>
-                  <div className="text-emerald-700 font-semibold">Active &amp; Responding</div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-1">
+                    <div className="text-slate-400 font-bold uppercase text-[10px]">Database</div>
+                    <div className="font-bold text-slate-900">MongoDB 127.0.0.1:27017</div>
+                    <div className="text-emerald-700 font-semibold">astadasapeetam (Connected)</div>
+                  </div>
+
+                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-1">
+                    <div className="text-slate-400 font-bold uppercase text-[10px]">API Server</div>
+                    <div className="font-bold text-slate-900">Port 5000 (Express.js)</div>
+                    <div className="text-emerald-700 font-semibold">Active &amp; Responding</div>
+                  </div>
+
+                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-1">
+                    <div className="text-slate-400 font-bold uppercase text-[10px]">Frontend Server</div>
+                    <div className="font-bold text-slate-900">Port 3001 (Next.js 15)</div>
+                    <div className="text-emerald-700 font-semibold">App Router Ready</div>
+                  </div>
                 </div>
 
-                <div className="p-4 bg-slate-50 rounded-2xl border space-y-1">
-                  <div className="text-slate-400 font-bold uppercase text-[10px]">Frontend Server</div>
-                  <div className="font-bold text-slate-900">Port 3001 (Next.js 15)</div>
-                  <div className="text-emerald-700 font-semibold">App Router Ready</div>
+                <div className="pt-2">
+                  <button
+                    onClick={() => {
+                      fetchAllData(token);
+                      showToast('success', 'Diagnostics refreshed and cache purged!');
+                    }}
+                    className="bg-gradient-to-r from-[#78131e] to-[#911b27] hover:from-[#5c0d16] hover:to-[#78131e] text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center space-x-1.5 shadow-sm cursor-pointer border border-amber-300/30"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>Purge Cache &amp; Refresh Diagnostics</span>
+                  </button>
                 </div>
               </div>
-
-              <button
-                onClick={() => {
-                  fetchAllData(token);
-                  showToast('success', 'Diagnostics refreshed and cache purged!');
-                }}
-                className="bg-gradient-to-r from-[#78131e] to-[#911b27] hover:from-[#5c0d16] hover:to-[#78131e] text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center space-x-1.5 shadow-sm cursor-pointer border border-amber-300/30"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-                <span>Purge Cache &amp; Refresh Diagnostics</span>
-              </button>
             </div>
           )}
 

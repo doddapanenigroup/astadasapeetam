@@ -6,6 +6,11 @@ import { usePathname } from 'next/navigation';
 import { headerData } from '../data/mockData';
 import LoginModal from './LoginModal';
 import { 
+  DEFAULT_BRANDING, 
+  getStoredBranding, 
+  applyFaviconToDocument 
+} from '../data/brandingData';
+import { 
   Home, Flame, Sparkles, Calendar, Compass, Landmark, 
   BookOpen, Clock, Video, ShoppingBag, ChevronDown, Search, 
   ShoppingCart, Menu, X, Bus 
@@ -23,10 +28,24 @@ export default function HeaderNav() {
   const [userRole, setUserRole] = useState(null);
   const pathname = usePathname();
 
+  const [branding, setBranding] = useState(DEFAULT_BRANDING);
+
   React.useEffect(() => {
     try {
       const role = localStorage.getItem('astada_role');
       if (role) setUserRole(role);
+
+      const current = getStoredBranding();
+      setBranding(current);
+      applyFaviconToDocument(current);
+
+      const handleUpdate = () => {
+        const updated = getStoredBranding();
+        setBranding(updated);
+        applyFaviconToDocument(updated);
+      };
+      window.addEventListener('brandingUpdated', handleUpdate);
+      return () => window.removeEventListener('brandingUpdated', handleUpdate);
     } catch {}
   }, []);
 
@@ -35,17 +54,28 @@ export default function HeaderNav() {
       <div className="w-[98.5%] max-w-[1920px] mx-auto py-2.5 px-2 sm:px-3 flex items-center justify-between gap-2 xl:gap-4">
         {/* Brand Logo */}
         <Link href="/" className="flex items-center gap-2.5 sm:gap-3 group shrink-0">
-          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-gradient-to-tr from-[#78131e] to-[#9e1c2a] flex items-center justify-center text-amber-300 font-serif font-black text-xl sm:text-2xl shadow-sm border border-amber-300/40">
-            🕉️
-          </div>
-          <div className="flex flex-col">
-            <span className="font-extrabold text-base sm:text-lg xl:text-xl tracking-tight text-[#78131e] group-hover:text-[#9e1c2a] transition-colors uppercase font-serif whitespace-nowrap">
-              Astadasapeetam.com
-            </span>
-            <span className="text-[9.5px] sm:text-[10px] tracking-widest text-amber-800 font-medium uppercase -mt-0.5 whitespace-nowrap">
-              Devotion • Faith • Dharma
-            </span>
-          </div>
+          {branding.logoType === 'image' && branding.logoUrl ? (
+            <img
+              src={branding.logoUrl}
+              alt={branding.siteTitle || 'Astadasapeetam.com'}
+              style={{ height: `${branding.logoHeight || 44}px` }}
+              className="object-contain max-w-[240px] drop-shadow-xs"
+            />
+          ) : (
+            <>
+              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-gradient-to-tr from-[#78131e] to-[#9e1c2a] flex items-center justify-center text-amber-300 font-serif font-black text-xl sm:text-2xl shadow-sm border border-amber-300/40">
+                {branding.logoEmoji || '🕉️'}
+              </div>
+              <div className="flex flex-col">
+                <span className="font-extrabold text-base sm:text-lg xl:text-xl tracking-tight text-[#78131e] group-hover:text-[#9e1c2a] transition-colors uppercase font-serif whitespace-nowrap">
+                  {branding.siteTitle || 'Astadasapeetam.com'}
+                </span>
+                <span className="text-[9.5px] sm:text-[10px] tracking-widest text-amber-800 font-medium uppercase -mt-0.5 whitespace-nowrap">
+                  {branding.siteTagline || 'Devotion • Faith • Dharma'}
+                </span>
+              </div>
+            </>
+          )}
         </Link>
 
         {/* Desktop Navigation Links (Cleanly structured & balanced) */}
