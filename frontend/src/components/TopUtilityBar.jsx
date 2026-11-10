@@ -3,13 +3,21 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { headerData } from '../data/mockData';
-import { Sunrise, Sunset, Sparkles, Megaphone } from 'lucide-react';
-import { FacebookIcon, TwitterXIcon, InstagramIcon, YoutubeIcon } from './SocialIcons';
+import { Sunrise, Sunset } from 'lucide-react';
+import { FacebookIcon, TwitterXIcon, InstagramIcon, YoutubeIcon, WhatsAppIcon } from './SocialIcons';
 
 export default function TopUtilityBar() {
   const [announcement, setAnnouncement] = useState(null);
+  const [socials, setSocials] = useState({
+    facebook: 'https://facebook.com/astadasapeetam',
+    whatsapp: 'https://wa.me/919876500001?text=Namaste%20Astadasapeetam%2C%20I%20seek%20spiritual%20guidance',
+    instagram: 'https://instagram.com/astadasapeetam',
+    youtube: 'https://youtube.com/@astadasapeetam',
+    twitter: 'https://x.com/astadasapeetam'
+  });
 
   useEffect(() => {
+    // Fetch announcement
     fetch('http://localhost:5000/api/public/content?sectionKey=announcement_bar')
       .then(res => res.json())
       .then(data => {
@@ -17,9 +25,17 @@ export default function TopUtilityBar() {
           setAnnouncement(data.data[0]);
         }
       })
-      .catch(() => {
-        // Fallback silently if backend not available
-      });
+      .catch(() => {});
+
+    // Fetch dynamic social connections
+    fetch('http://localhost:5000/api/public/settings/social_profiles')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data) {
+          setSocials(data.data);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   return (
@@ -63,7 +79,7 @@ export default function TopUtilityBar() {
             </span>
           </Link>
 
-          {/* Right: Quick Links & Social */}
+          {/* Right: Quick Links & Dynamic Social Connections */}
           <div className="flex items-center gap-4 text-[11px]">
             <div className="flex items-center gap-3">
               {headerData.topLinks.map((link, idx) => (
@@ -78,17 +94,59 @@ export default function TopUtilityBar() {
             </div>
 
             <div className="flex items-center gap-2.5 pl-3 border-l border-amber-300/30">
-              <a href="#" className="hover:text-amber-300 transition-colors" aria-label="Facebook">
-                <FacebookIcon className="w-3.5 h-3.5" />
+              <a
+                href={socials.whatsapp || 'https://wa.me/919876500001'}
+                target="_blank"
+                rel="noreferrer"
+                className="hover:text-emerald-400 text-emerald-300 transition-colors"
+                aria-label="WhatsApp"
+                title="Chat on WhatsApp"
+              >
+                <WhatsAppIcon className="w-3.5 h-3.5" />
               </a>
-              <a href="#" className="hover:text-amber-300 transition-colors" aria-label="X">
-                <TwitterXIcon className="w-3.5 h-3.5" />
-              </a>
-              <a href="#" className="hover:text-amber-300 transition-colors" aria-label="Instagram">
+
+              <a
+                href={socials.instagram || 'https://instagram.com/astadasapeetam'}
+                target="_blank"
+                rel="noreferrer"
+                className="hover:text-pink-300 transition-colors"
+                aria-label="Instagram"
+                title="Follow on Instagram"
+              >
                 <InstagramIcon className="w-3.5 h-3.5" />
               </a>
-              <a href="#" className="hover:text-amber-300 transition-colors" aria-label="YouTube">
+
+              <a
+                href={socials.facebook || 'https://facebook.com/astadasapeetam'}
+                target="_blank"
+                rel="noreferrer"
+                className="hover:text-blue-300 transition-colors"
+                aria-label="Facebook"
+                title="Visit Facebook Profile"
+              >
+                <FacebookIcon className="w-3.5 h-3.5" />
+              </a>
+
+              <a
+                href={socials.youtube || 'https://youtube.com/@astadasapeetam'}
+                target="_blank"
+                rel="noreferrer"
+                className="hover:text-red-400 transition-colors"
+                aria-label="YouTube"
+                title="Watch on YouTube"
+              >
                 <YoutubeIcon className="w-3.5 h-3.5" />
+              </a>
+
+              <a
+                href={socials.twitter || 'https://x.com/astadasapeetam'}
+                target="_blank"
+                rel="noreferrer"
+                className="hover:text-amber-300 transition-colors"
+                aria-label="X"
+                title="Follow on X / Twitter"
+              >
+                <TwitterXIcon className="w-3.5 h-3.5" />
               </a>
             </div>
           </div>

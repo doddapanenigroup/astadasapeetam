@@ -1,7 +1,5 @@
 import './globals.css';
-import TopUtilityBar from '../components/TopUtilityBar';
-import HeaderNav from '../components/HeaderNav';
-import Footer from '../components/Footer';
+import AppShell from '../components/AppShell';
 
 export const metadata = {
   title: 'Astadasapeetam.com - Devotion • Faith • Dharma | Daily Panchangam, Astrology & Temples',
@@ -45,10 +43,7 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body className="min-h-screen flex flex-col bg-[#fcf9f2] text-stone-900 antialiased selection:bg-amber-200 selection:text-amber-950" suppressHydrationWarning>
-        <TopUtilityBar />
-        <HeaderNav />
-        <main className="flex-1">{children}</main>
-        <Footer />
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

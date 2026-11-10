@@ -16,6 +16,7 @@ const adminRoutes = require('./src/routes/adminRoutes');
 const marketingRoutes = require('./src/routes/marketingRoutes');
 const astrologerRoutes = require('./src/routes/astrologerRoutes');
 const postRoutes = require('./src/routes/postRoutes');
+const settingRoutes = require('./src/routes/settingRoutes');
 const publicRoutes = require('./src/routes/publicRoutes');
 const errorHandler = require('./src/middleware/errorHandler');
 
@@ -25,6 +26,7 @@ const Product = require('./src/models/Product');
 const SiteContent = require('./src/models/SiteContent');
 const Consultation = require('./src/models/Consultation');
 const Post = require('./src/models/Post');
+const Setting = require('./src/models/Setting');
 
 const app = express();
 
@@ -71,6 +73,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/marketing', marketingRoutes);
 app.use('/api/astrologer', astrologerRoutes);
 app.use('/api/posts', postRoutes);
+app.use('/api/settings', settingRoutes);
 
 // Custom Error Handler
 app.use(errorHandler);
@@ -533,6 +536,25 @@ const startServer = async () => {
         ];
         await Post.insertMany(initialPosts);
         console.log(`✅ ${initialPosts.length} Sacred Devotional Posts Seeded Successfully`);
+      }
+
+      // 6. Seed initial Social Profile Connections
+      const socialSetting = await Setting.findOne({ key: 'social_profiles' });
+      if (!socialSetting) {
+        console.log('🌱 Seeding initial Social Profile Connections...');
+        await Setting.create({
+          key: 'social_profiles',
+          description: 'Official verified social media profiles and WhatsApp helpline for Astadasapeetam',
+          value: {
+            facebook: 'https://facebook.com/astadasapeetam',
+            whatsapp: 'https://wa.me/919876500001?text=Namaste%20Astadasapeetam%2C%20I%20would%20like%20spiritual%20guidance',
+            whatsappNumber: '+91 98765 00001',
+            instagram: 'https://instagram.com/astadasapeetam',
+            youtube: 'https://youtube.com/@astadasapeetam',
+            twitter: 'https://x.com/astadasapeetam'
+          }
+        });
+        console.log('✅ Social Profile Connections Seeded Successfully');
       }
 
     } catch (seedErr) {

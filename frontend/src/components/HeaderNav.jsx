@@ -48,9 +48,18 @@ export default function HeaderNav() {
           </div>
         </Link>
 
-        {/* Desktop Navigation Links */}
-        <nav className="hidden xl:flex items-center gap-1.5 2xl:gap-3.5 text-xs 2xl:text-sm font-medium text-stone-700 whitespace-nowrap min-w-0">
-          {headerData.navItems.map((item, idx) => {
+        {/* Desktop Navigation Links (Cleanly structured & balanced) */}
+        <nav className="hidden xl:flex items-center gap-1.5 2xl:gap-3 text-xs 2xl:text-sm font-medium text-stone-700 whitespace-nowrap min-w-0">
+          {[
+            { label: 'Home', href: '/', icon: 'Home' },
+            { label: 'Sacred Peethas', href: '/sacred-temples', icon: 'Sparkles', badge: '18' },
+            { label: 'Temples', href: '/temples', icon: 'Landmark' },
+            { label: 'Panchangam', href: '/panchangam', icon: 'Calendar' },
+            { label: 'Festivals', href: '/festivals', icon: 'Flame' },
+            { label: 'Astrology', href: '/astrology', icon: 'Compass' },
+            { label: 'Yatralu', href: '/yatralu', icon: 'Bus' },
+            { label: 'Marketplace', href: '/marketplace', icon: 'ShoppingBag' },
+          ].map((item, idx) => {
             const Icon = iconMap[item.icon] || Flame;
             const isActive = item.href === '/' 
               ? pathname === '/' 
@@ -60,48 +69,52 @@ export default function HeaderNav() {
               <Link
                 key={idx}
                 href={item.href}
-                className={`flex items-center gap-1.5 transition-colors py-1 px-1 2xl:px-1.5 ${
+                className={`flex items-center gap-1.5 transition-colors py-1 px-1.5 rounded-lg ${
                   isActive 
-                    ? 'text-[#78131e] font-bold border-b-2 border-[#78131e]' 
-                    : 'hover:text-[#78131e]'
+                    ? 'text-[#78131e] font-bold bg-amber-50/80 border-b-2 border-[#78131e]' 
+                    : 'hover:text-[#78131e] hover:bg-stone-50'
                 }`}
               >
                 <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[#78131e]' : 'text-amber-700/80'}`} />
                 <span>{item.label}</span>
+                {item.badge && (
+                  <span className="text-[9px] font-black bg-amber-100 text-[#78131e] px-1 py-0.2 rounded-full">
+                    {item.badge}
+                  </span>
+                )}
               </Link>
             );
           })}
           
-          {/* More dropdown */}
-          <div className="relative group cursor-pointer flex items-center gap-1 hover:text-[#78131e] px-1 py-1">
+          {/* More dropdown with secondary links */}
+          <div className="relative group cursor-pointer flex items-center gap-1 hover:text-[#78131e] px-2 py-1 rounded-lg hover:bg-stone-50">
             <span>More</span>
             <ChevronDown className="w-3.5 h-3.5" />
 
             {/* Dropdown Menu */}
-            <div className="absolute right-0 top-full pt-1 hidden group-hover:block z-50">
-              <div className="bg-white rounded-xl shadow-xl border border-[#ebdcc7] py-2 w-52 text-stone-800 text-xs">
-                {/* Sacred Temples (18 Shakti Peethas) */}
-                <Link href="/sacred-temples" className="flex items-center justify-between px-3 py-2.5 hover:bg-amber-50 text-[#78131e] font-bold group/item">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-[#78131e]" />
-                    <span>Sacred Temples</span>
-                  </div>
-                  <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-100 text-amber-900 font-extrabold uppercase">
-                    18 Peethas
-                  </span>
+            <div className="absolute right-0 top-full pt-1.5 hidden group-hover:block z-50">
+              <div className="bg-white rounded-xl shadow-xl border border-[#ebdcc7] py-2 w-56 text-stone-800 text-xs space-y-0.5">
+                <Link href="/gods" className="flex items-center gap-2 px-3 py-2 hover:bg-amber-50 hover:text-[#78131e] font-medium text-stone-700">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-700" />
+                  <span>Gods &amp; Avatars</span>
                 </Link>
 
-                <div className="h-px bg-[#ebdcc7] my-1.5" />
-
-                <Link href="/panchangam" className="flex items-center gap-2 px-3 py-2 hover:bg-amber-50 hover:text-[#78131e] font-medium text-stone-700">
-                  <Calendar className="w-3.5 h-3.5 text-amber-700" />
-                  <span>Live Panchangam</span>
+                <Link href="/stories" className="flex items-center gap-2 px-3 py-2 hover:bg-amber-50 hover:text-[#78131e] font-medium text-stone-700">
+                  <BookOpen className="w-3.5 h-3.5 text-amber-700" />
+                  <span>Devotional Stories</span>
                 </Link>
 
                 <Link href="/slokas" className="flex items-center gap-2 px-3 py-2 hover:bg-amber-50 hover:text-[#78131e] font-medium text-stone-700">
                   <Flame className="w-3.5 h-3.5 text-amber-700" />
-                  <span>Daily Slokas</span>
+                  <span>Daily Slokas &amp; Stotrams</span>
                 </Link>
+
+                <Link href="/videos" className="flex items-center gap-2 px-3 py-2 hover:bg-amber-50 hover:text-[#78131e] font-medium text-stone-700">
+                  <Video className="w-3.5 h-3.5 text-amber-700" />
+                  <span>Devotional Videos</span>
+                </Link>
+
+                <div className="h-px bg-[#ebdcc7] my-1.5" />
 
                 <a href="#epaper" className="flex items-center gap-2 px-3 py-2 hover:bg-amber-50 hover:text-[#78131e] font-medium text-stone-700">
                   <BookOpen className="w-3.5 h-3.5 text-amber-700" />
@@ -113,7 +126,7 @@ export default function HeaderNav() {
         </nav>
 
         {/* Action Controls: Search, Cart, Login */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-2">
           <button 
             suppressHydrationWarning
             onClick={() => setSearchOpen(!searchOpen)} 
@@ -136,7 +149,7 @@ export default function HeaderNav() {
           </Link>
 
           {userRole ? (
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 pl-1 border-l border-stone-200">
               <Link
                 href={
                   userRole === 'admin' 
@@ -147,7 +160,7 @@ export default function HeaderNav() {
                     ? '/marketing' 
                     : '/'
                 }
-                className={`text-white text-xs font-bold px-3 py-1.5 rounded-md shadow-sm transition flex items-center space-x-1 ${
+                className={`text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-xs transition flex items-center space-x-1 ${
                   userRole === 'admin'
                     ? 'bg-rose-800 hover:bg-rose-900'
                     : userRole === 'astrologer'
@@ -156,7 +169,7 @@ export default function HeaderNav() {
                 }`}
               >
                 <span>
-                  {userRole === 'admin' && '👑 Admin Portal'}
+                  {userRole === 'admin' && '👑 Admin Console'}
                   {userRole === 'astrologer' && '🔮 Astrologer Workspace'}
                   {userRole === 'digital_marketing' && '📢 Marketing Studio'}
                   {userRole === 'devotee' && '🙏 My Profile'}
@@ -170,7 +183,7 @@ export default function HeaderNav() {
                   setUserRole(null);
                   window.location.href = '/';
                 }}
-                className="text-[11px] text-stone-500 hover:text-stone-800 underline"
+                className="text-[11px] text-stone-500 hover:text-stone-800 underline cursor-pointer"
                 title="Log out"
               >
                 Logout

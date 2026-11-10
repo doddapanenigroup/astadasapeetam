@@ -1,6 +1,7 @@
 const express = require('express');
 const Product = require('../models/Product');
 const SiteContent = require('../models/SiteContent');
+const Setting = require('../models/Setting');
 const { getRssFeed, getSitemapXml } = require('../controllers/postController');
 
 const router = express.Router();
@@ -10,6 +11,19 @@ router.get('/rss', getRssFeed);
 
 // Public XML Sitemap
 router.get('/sitemap', getSitemapXml);
+
+// Public Setting Reader (e.g. social_profiles)
+router.get('/settings/:key', async (req, res, next) => {
+  try {
+    const setting = await Setting.findOne({ key: req.params.key });
+    res.status(200).json({
+      success: true,
+      data: setting ? setting.value : null
+    });
+  } catch (err) {
+    next(err);
+  }
+});
 
 // Public marketplace products
 router.get('/products', async (req, res, next) => {
