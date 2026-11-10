@@ -31,23 +31,23 @@ import {
 } from 'lucide-react';
 
 export const DEVOTIONAL_CATEGORIES = [
-  { id: 'temples', label: 'Sacred Temples & Peethas', icon: '🏛️', telugu: 'క్షేత్రాలు & పీఠాలు', badge: '18 Peethas', desc: 'Temple history, darshan timings, sthala puranam, architecture & special sevas' },
-  { id: 'slokas', label: 'Daily Slokas & Chants', icon: '📜', telugu: 'నిత్య శ్లోకాలు', badge: '3-Way Chants', desc: 'Sanskrit, Telugu & English phonetic verses with word-by-word meaning & chanting time' },
-  { id: 'mantras', label: 'Sacred Mantras & Bija Japa', icon: '🔔', telugu: 'బీజాక్షర మంత్రాలు', badge: '108 Japa', desc: 'Moola mantras, bija aksharas, 108 japa sankhya, facing direction & siddhi benefits' },
-  { id: 'stotras', label: 'Divine Stotras & Kavachas', icon: '📖', telugu: 'స్తోత్రాలు & కవచాలు', badge: 'Kavachas', desc: 'Sage/Rishi author, total verses count, full sacred stotra & phala shruti' },
-  { id: 'vrathalu', label: 'Vrathalu & Pooja Vidhi', icon: '🔥', telugu: 'వ్రతాలు & పూజా విధానం', badge: 'Upavasam', desc: 'Fasting rules, sacred samagri checklist, step-by-step vidhi & prasadam recipe' },
-  { id: 'yantras', label: 'Sacred Yantras & Maha Meru', icon: '💠', telugu: 'యంత్రాలు & మహామేరు', badge: 'Tantra & Meru', desc: 'Sacred geometry, metal composition, Ishanya placement & prana pratishtha' },
-  { id: 'horoscope', label: 'Daily Horoscope (12 Rasis)', icon: '☀️', telugu: 'రాశి ఫలాలు', badge: '12 Rasis', desc: 'Moon sign, ruling planet, lucky colors/numbers, predictions & pariharam' },
-  { id: 'muhurtham', label: 'Shubh Muhurtham & Choghadiya', icon: '⏳', telugu: 'శుభ ముహూర్తాలు', badge: 'Tithi & Lagna', desc: 'Ceremony occasion, auspicious time window, lagna shuddhi, tithi & rahu kalam' },
-  { id: 'remedies', label: 'Remedies & Dosha Nivarana', icon: '✨', telugu: 'దోష నివారణ & ఉపాయాలు', badge: 'Pariharam', desc: 'Dosha type, symptoms, step-by-step pariharam, fasting days & sacred temples' },
-  { id: 'bhajans', label: 'Divine Bhajans & Kirtanas', icon: '🪕', telugu: 'భజనలు & కీర్తనలు', badge: 'Sangeetam', desc: 'Composer/Vaggeyakara, raga & tala, full Telugu lyrics, meaning & audio link' },
-  { id: 'spirituality', label: 'Spirituality & Dharma', icon: '🪷', telugu: 'ఆధ్యాత్మికత & ధర్మం', badge: 'Vedanta', desc: 'Philosophical theme, Sanskrit sutra, commentary & daily devotee sadhana' },
-  { id: 'epaper', label: 'Devotional E-Paper Edition', icon: '📰', telugu: 'ఈ-పేపర్ ఎడిషన్', badge: 'Daily PDF', desc: 'Issue date, edition region, headline, full editorial & PDF download link' },
-  { id: 'festivals', label: 'Festivals Calendar', icon: '🗓️', telugu: 'పండుగల క్యాలెండర్', badge: 'Vedic Dates', desc: 'Festival dates, hindu month, fasting rules, significance & celebrations' },
-  { id: 'videos', label: 'Devotional Videos & Pravachanams', icon: '📺', telugu: 'భక్తి వీడియోలు', badge: 'Darshan Live', desc: 'YouTube stream embed, duration, speaker/swamiji & spiritual highlights' },
-  { id: 'gods', label: 'Gods & Divine Avatars', icon: '🕉️', telugu: 'దేవతలు & అవతారాలు', badge: 'Iconography', desc: 'Avatar form, consort, vahana, sacred weapons, iconography & temples' },
-  { id: 'yatralu', label: 'Sacred Yatralu & Pilgrimage', icon: '🚩', telugu: 'తీర్థయాత్రలు', badge: 'Pilgrimage Circuit', desc: 'Circuit route, duration, day-by-day itinerary & devotee travel guidelines' },
-  { id: 'panchangam', label: 'Daily Panchangam', icon: '📅', telugu: 'నిత్య పంచాంగం', badge: 'Panchangam', desc: 'Tithi, vara, nakshatra, yoga, karana, sunrise/sunset & auspicious timings' }
+  { id: 'temples', label: 'Sacred Temples & Peethas', icon: '🏛️', telugu: 'క్షేత్రాలు & పీఠాలు', badge: '18 Peethas', needsImage: true, desc: 'Temple history, darshan timings, sthala puranam, architecture & special sevas' },
+  { id: 'slokas', label: 'Daily Slokas & Chants', icon: '📜', telugu: 'నిత్య శ్లోకాలు', badge: '3-Way Chants', needsImage: false, desc: 'Sanskrit, Telugu & English phonetic verses with word-by-word meaning & chanting time (No image needed)' },
+  { id: 'mantras', label: 'Sacred Mantras & Bija Japa', icon: '🔔', telugu: 'బీజాక్షర మంత్రాలు', badge: '108 Japa', needsImage: false, desc: 'Moola mantras, bija aksharas, 108 japa sankhya & siddhi benefits (No image needed)' },
+  { id: 'stotras', label: 'Divine Stotras & Kavachas', icon: '📖', telugu: 'స్తోత్రాలు & కవచాలు', badge: 'Kavachas', needsImage: false, desc: 'Sage/Rishi author, total verses count, full sacred stotra & phala shruti (No image needed)' },
+  { id: 'vrathalu', label: 'Vrathalu & Pooja Vidhi', icon: '🔥', telugu: 'వ్రతాలు & పూజా విధానం', badge: 'Upavasam', needsImage: true, desc: 'Fasting rules, sacred samagri checklist, step-by-step vidhi & prasadam recipe' },
+  { id: 'yantras', label: 'Sacred Yantras & Maha Meru', icon: '💠', telugu: 'యంత్రాలు & మహామేరు', badge: 'Tantra & Meru', needsImage: true, desc: 'Sacred geometry, metal composition, Ishanya placement & prana pratishtha' },
+  { id: 'horoscope', label: 'Daily Horoscope (12 Rasis)', icon: '☀️', telugu: 'రాశి ఫలాలు', badge: '12 Rasis', needsImage: false, desc: 'Moon sign, ruling planet, lucky colors/numbers, predictions & pariharam (No image needed)' },
+  { id: 'muhurtham', label: 'Shubh Muhurtham & Choghadiya', icon: '⏳', telugu: 'శుభ ముహూర్తాలు', badge: 'Tithi & Lagna', needsImage: false, desc: 'Ceremony occasion, auspicious time window, lagna shuddhi, tithi & rahu kalam (No image needed)' },
+  { id: 'remedies', label: 'Remedies & Dosha Nivarana', icon: '✨', telugu: 'దోష నివారణ & ఉపాయాలు', badge: 'Pariharam', needsImage: false, desc: 'Dosha type, symptoms, step-by-step pariharam, fasting days & sacred temples (No image needed)' },
+  { id: 'bhajans', label: 'Divine Bhajans & Kirtanas', icon: '🪕', telugu: 'భజనలు & కీర్తనలు', badge: 'Sangeetam', needsImage: false, desc: 'Composer/Vaggeyakara, raga & tala, full Telugu lyrics, meaning & audio link (No image needed)' },
+  { id: 'spirituality', label: 'Spirituality & Dharma', icon: '🪷', telugu: 'ఆధ్యాత్మికత & ధర్మం', badge: 'Vedanta', needsImage: false, desc: 'Philosophical theme, Sanskrit sutra, commentary & daily devotee sadhana (No image needed)' },
+  { id: 'epaper', label: 'Devotional E-Paper Edition', icon: '📰', telugu: 'ఈ-పేపర్ ఎడిషన్', badge: 'Daily PDF', needsImage: true, desc: 'Issue date, edition region, headline, full editorial & PDF download link' },
+  { id: 'festivals', label: 'Festivals Calendar', icon: '🗓️', telugu: 'పండుగల క్యాలెండర్', badge: 'Vedic Dates', needsImage: true, desc: 'Festival dates, hindu month, fasting rules, significance & celebrations' },
+  { id: 'videos', label: 'Devotional Videos & Pravachanams', icon: '📺', telugu: 'భక్తి వీడియోలు', badge: 'Darshan Live', needsImage: false, desc: 'YouTube stream embed, duration, speaker/swamiji & spiritual highlights (Uses video player)' },
+  { id: 'gods', label: 'Gods & Divine Avatars', icon: '🕉️', telugu: 'దేవతలు & అవతారాలు', badge: 'Iconography', needsImage: true, desc: 'Avatar form, consort, vahana, sacred weapons, iconography & temples' },
+  { id: 'yatralu', label: 'Sacred Yatralu & Pilgrimage', icon: '🚩', telugu: 'తీర్థయాత్రలు', badge: 'Pilgrimage Circuit', needsImage: true, desc: 'Circuit route, duration, day-by-day itinerary & devotee travel guidelines' },
+  { id: 'panchangam', label: 'Daily Panchangam', icon: '📅', telugu: 'నిత్య పంచాంగం', badge: 'Panchangam', needsImage: false, desc: 'Tithi, vara, nakshatra, yoga, karana, sunrise/sunset & auspicious timings (No image needed)' }
 ];
 
 export const CATEGORY_SAMPLE_TEMPLATES = {
@@ -397,12 +397,15 @@ export default function DynamicPostStudio({
 
   const fillCategorySample = (catId) => {
     const targetCat = catId || newPost.category;
+    const targetCatObj = DEVOTIONAL_CATEGORIES.find(c => c.id === targetCat);
     const template = CATEGORY_SAMPLE_TEMPLATES[targetCat];
     if (template) {
       setNewPost(prev => ({
         ...prev,
         ...template,
         category: targetCat,
+        featuredImage: targetCatObj?.needsImage ? (template.featuredImage || '') : '',
+        imageMeta: null,
         slug: template.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
       }));
       if (showToast) {
@@ -412,9 +415,12 @@ export default function DynamicPostStudio({
   };
 
   const handleCategoryChange = (newCat) => {
+    const catObj = DEVOTIONAL_CATEGORIES.find(c => c.id === newCat);
     setNewPost(prev => ({
       ...prev,
-      category: newCat
+      category: newCat,
+      featuredImage: catObj?.needsImage ? prev.featuredImage : '',
+      imageMeta: catObj?.needsImage ? prev.imageMeta : null
     }));
   };
 
@@ -652,18 +658,40 @@ export default function DynamicPostStudio({
               </div>
             </div>
 
-            {/* IMAGE ATTACHMENT, ZOOM/CROP & WEBP/AVIF CONVERTER STUDIO */}
-            <ImageOptimizationStudio
-              featuredImage={newPost.featuredImage}
-              onImageChange={(optimizedDataUrl, meta) => {
-                setNewPost(prev => ({
-                  ...prev,
-                  featuredImage: optimizedDataUrl,
-                  imageMeta: meta
-                }));
-              }}
-              showToast={showToast}
-            />
+            {/* IMAGE ATTACHMENT STUDIO (CONDITIONAL PER CATEGORY) */}
+            {activeCategoryObj.needsImage ? (
+              <ImageOptimizationStudio
+                featuredImage={newPost.featuredImage}
+                onImageChange={(optimizedDataUrl, meta) => {
+                  setNewPost(prev => ({
+                    ...prev,
+                    featuredImage: optimizedDataUrl,
+                    imageMeta: meta
+                  }));
+                }}
+                showToast={showToast}
+              />
+            ) : (
+              /* No Image Opportunity for Text / Data Categories */
+              <div className="bg-amber-50/70 border border-amber-200/90 rounded-3xl p-5 sm:p-6 shadow-xs flex items-start space-x-4">
+                <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center text-2xl shrink-0 border border-amber-300 shadow-inner">
+                  {activeCategoryObj.icon}
+                </div>
+                <div className="space-y-1.5 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-black text-xs text-stone-900 uppercase tracking-wider">
+                      Text &amp; Scriptural Artifact: No Image Attachment Required
+                    </span>
+                    <span className="text-[10px] font-mono font-bold bg-amber-200/90 text-amber-950 px-2 py-0.5 rounded-full border border-amber-300">
+                      🔒 No Image Needed for {activeCategoryObj.badge}
+                    </span>
+                  </div>
+                  <p className="text-xs text-stone-600 leading-relaxed">
+                    Posts under <strong>{activeCategoryObj.label} ({activeCategoryObj.telugu})</strong> are rendered using authentic sacred typography, Devanagari Sanskrit verses, Telugu scriptures, and structured Vedic almanac tables. Image attachment is intentionally disabled for this category to ensure 100% lightweight performance and flawless readability.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* SECTION 2: DYNAMIC CATEGORY-SPECIFIC FORM FIELDS */}
             <div className="bg-amber-50/50 rounded-3xl border border-amber-300/80 p-6 sm:p-7 shadow-xs space-y-4">
@@ -1720,8 +1748,8 @@ export default function DynamicPostStudio({
                   </span>
                 </div>
 
-                {/* Devotional Featured Media Preview */}
-                {newPost.featuredImage && (
+                {/* Devotional Featured Media Preview (Only rendered for image-supported categories) */}
+                {activeCategoryObj.needsImage && newPost.featuredImage && (
                   <div className="relative rounded-2xl overflow-hidden border border-amber-500/30 bg-stone-950 max-h-48 group">
                     <img
                       src={newPost.featuredImage}
