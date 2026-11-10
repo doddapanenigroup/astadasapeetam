@@ -24,50 +24,14 @@ export default function RootLayout({ children }) {
             __html: `
               (function() {
                 try {
-                  // Fast favicon injection from stored branding
-                  var raw = localStorage.getItem('astadasapeetam_branding');
-                  if (raw) {
-                    var b = JSON.parse(raw);
-                    var iconUrl = '';
-                    if (b.faviconType === 'image' && b.faviconUrl) {
-                      iconUrl = b.faviconUrl;
-                    } else {
-                      var emoji = b.faviconEmoji || '🕉️';
-                      try {
-                        var canvas = document.createElement('canvas');
-                        canvas.width = 64;
-                        canvas.height = 64;
-                        var ctx = canvas.getContext('2d');
-                        if (ctx) {
-                          var grad = ctx.createLinearGradient(0, 0, 64, 64);
-                          grad.addColorStop(0, '#78131e');
-                          grad.addColorStop(1, '#9e1c2a');
-                          ctx.fillStyle = grad;
-                          ctx.beginPath();
-                          ctx.arc(32, 32, 29, 0, Math.PI * 2);
-                          ctx.fill();
-                          ctx.lineWidth = 3;
-                          ctx.strokeStyle = '#f59e0b';
-                          ctx.stroke();
-                          ctx.font = '34px sans-serif';
-                          ctx.textAlign = 'center';
-                          ctx.textBaseline = 'middle';
-                          ctx.fillText(emoji, 32, 34);
-                          iconUrl = canvas.toDataURL('image/png');
-                        }
-                      } catch(e) {}
-                    }
-                    if (iconUrl) {
-                      var existing = document.querySelectorAll("link[rel*='icon']");
-                      existing.forEach(function(el) { if (el.parentNode) el.parentNode.removeChild(el); });
-                      var link = document.createElement('link');
-                      link.id = 'dynamic-sanctuary-favicon';
-                      link.rel = 'icon';
-                      link.type = 'image/png';
-                      link.href = iconUrl;
-                      document.getElementsByTagName('head')[0].appendChild(link);
-                    }
-                  }
+                  // Permanent official Astadasapeetam favicon injection
+                  var existing = document.querySelectorAll("link[rel*='icon']");
+                  existing.forEach(function(el) { if (el.parentNode) el.parentNode.removeChild(el); });
+                  var link = document.createElement('link');
+                  link.rel = 'icon';
+                  link.type = 'image/png';
+                  link.href = '/icon.png?v=2';
+                  document.getElementsByTagName('head')[0].appendChild(link);
 
                   const cleanExtAttrs = () => {
                     document.querySelectorAll('[fdprocessedid]').forEach(function(el) {

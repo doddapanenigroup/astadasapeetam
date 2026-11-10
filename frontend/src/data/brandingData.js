@@ -1,15 +1,15 @@
 // Astadasapeetam Central Branding Store (Logo & Favicon Manager)
 
 export const DEFAULT_BRANDING = {
-  logoType: 'text_icon', // 'image' | 'text_icon'
-  logoUrl: '',
-  logoEmoji: '🕉️',
+  logoType: 'image', // Uses official Astadasapeetam Lotus & Diya emblem
+  logoUrl: '/images/astadasapeetam_logo.jpg',
+  logoEmoji: '🪔',
   siteTitle: 'Astadasapeetam.com',
   siteTagline: 'Devotion • Faith • Dharma',
-  logoHeight: 44,
-  faviconType: 'emoji', // 'image' | 'emoji'
-  faviconUrl: '',
-  faviconEmoji: '🕉️'
+  logoHeight: 46,
+  faviconType: 'image',
+  faviconUrl: '/icon.png',
+  faviconEmoji: '🪔'
 };
 
 const STORAGE_KEY = 'astadasapeetam_branding';
@@ -84,30 +84,17 @@ export function getEmojiFaviconPng(emoji = '🕉️') {
 export function applyFaviconToDocument(branding) {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
   try {
-    let iconUrl = '';
-    let mimeType = 'image/png';
-
-    if (branding?.faviconType === 'image' && branding?.faviconUrl) {
-      iconUrl = branding.faviconUrl;
-    } else {
-      const emoji = branding?.faviconEmoji || '🕉️';
-      iconUrl = getEmojiFaviconPng(emoji) || getEmojiFaviconUri(emoji);
-      if (iconUrl.startsWith('data:image/svg')) {
-        mimeType = 'image/svg+xml';
-      }
-    }
-
-    if (!iconUrl) return;
+    const iconUrl = (branding && branding.faviconUrl) ? branding.faviconUrl : '/icon.png?v=1';
 
     // Remove existing favicon links to break browser caching in Chrome
     const existingLinks = document.querySelectorAll("link[rel*='icon']");
     existingLinks.forEach(el => el.parentNode && el.parentNode.removeChild(el));
 
-    // Append fresh link tag
+    // Append fresh link tag with permanent official icon
     const newLink = document.createElement('link');
     newLink.id = 'dynamic-sanctuary-favicon';
     newLink.rel = 'icon';
-    newLink.type = mimeType;
+    newLink.type = 'image/png';
     newLink.href = iconUrl;
     document.getElementsByTagName('head')[0].appendChild(newLink);
   } catch (e) {
