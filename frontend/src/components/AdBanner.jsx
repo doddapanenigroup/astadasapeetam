@@ -2,13 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Sparkles, ExternalLink } from 'lucide-react';
+import { Sparkles, ExternalLink, ShieldCheck } from 'lucide-react';
 
 export const DEFAULT_ADS_CONFIG = {
   'slot-1': {
     id: 'slot-1',
     name: 'Top Leaderboard Sponsored Banner',
-    location: 'Above Main Homepage Feed',
+    location: 'Above Main Homepage Feed & Carousel',
     dimensions: '728 × 90',
     status: 'active', // 'active' | 'hidden_reserve_space' | 'disabled'
     provider: 'private', // 'private' | 'google'
@@ -59,7 +59,7 @@ export const DEFAULT_ADS_CONFIG = {
   'slot-4': {
     id: 'slot-4',
     name: 'In-Feed Native Ad 2',
-    location: 'Between Astrologers Banner & Sacred Articles',
+    location: 'Between Astrologers Banner & Sacred Articles Row',
     dimensions: '728 × 90',
     status: 'active',
     provider: 'private',
@@ -79,7 +79,7 @@ export const DEFAULT_ADS_CONFIG = {
     location: 'Above Footer Newsletter & App Download Section',
     dimensions: '970 × 250',
     status: 'active',
-    provider: 'google',
+    provider: 'private', // ALL default to private so user has full control
     title: 'Kashi Vishwanath & Rameswaram Sacred Yatra Pass',
     subtitle: 'All-inclusive guided pilgrimage package with priority sanctum darshan.',
     badge: 'YATRA SPECIAL',
@@ -88,8 +88,34 @@ export const DEFAULT_ADS_CONFIG = {
     theme: 'cosmic-dark',
     googleClientId: 'ca-pub-9876543210987654',
     googleSlotId: '5869702134',
-    googleFormat: 'auto'
+    googleFormat: 'leaderboard'
   }
+};
+
+// Safe helper to deep-clone defaults and merge any user-saved overrides per-slot
+export const getInitialAdsConfig = () => {
+  const base = JSON.parse(JSON.stringify(DEFAULT_ADS_CONFIG));
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem('astada_ads_config');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed && typeof parsed === 'object') {
+          Object.keys(base).forEach(key => {
+            if (parsed[key] && typeof parsed[key] === 'object') {
+              base[key] = {
+                ...base[key],
+                ...parsed[key]
+              };
+            }
+          });
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to parse astada_ads_config from localStorage:', err);
+    }
+  }
+  return base;
 };
 
 export default function AdBanner({ 
@@ -108,34 +134,46 @@ export default function AdBanner({
     'slot-2'
   );
 
-  const [adConfig, setAdConfig] = useState(DEFAULT_ADS_CONFIG[resolvedSlotId] || DEFAULT_ADS_CONFIG['slot-1']);
+  const [adConfig, setAdConfig] = useState(() => {
+    const all = getInitialAdsConfig();
+    return all[resolvedSlotId] || DEFAULT_ADS_CONFIG[resolvedSlotId] || DEFAULT_ADS_CONFIG['slot-1'];
+  });
 
   useEffect(() => {
     const loadConfig = () => {
-      try {
-        if (typeof window !== 'undefined') {
-          const stored = localStorage.getItem('astada_ads_config');
-          if (stored) {
-            const parsed = JSON.parse(stored);
-            if (parsed && parsed[resolvedSlotId]) {
-              setAdConfig(parsed[resolvedSlotId]);
-              return;
-            }
-          }
-        }
-      } catch {}
-      setAdConfig(DEFAULT_ADS_CONFIG[resolvedSlotId] || DEFAULT_ADS_CONFIG['slot-1']);
+      const all = getInitialAdsConfig();
+      if (all && all[resolvedSlotId]) {
+        setAdConfig(all[resolvedSlotId]);
+      }
     };
 
     loadConfig();
 
     if (typeof window !== 'undefined') {
-      const handleStorage = () => loadConfig();
+      const handleStorage = (e) => {
+        if (!e.key || e.key === 'astada_ads_config') {
+          loadConfig();
+        }
+      };
+      const handleLocalUpdate = () => loadConfig();
+
       window.addEventListener('storage', handleStorage);
-      window.addEventListener('astada_ads_updated', handleStorage);
+      window.addEventListener('astada_ads_updated', handleLocalUpdate);
+
+      let bc;
+      try {
+        bc = new BroadcastChannel('astada_ads_channel');
+        bc.onmessage = (event) => {
+          if (event.data?.type === 'ADS_CONFIG_UPDATED' && event.data?.config?.[resolvedSlotId]) {
+            setAdConfig(event.data.config[resolvedSlotId]);
+          }
+        };
+      } catch {}
+
       return () => {
         window.removeEventListener('storage', handleStorage);
-        window.removeEventListener('astada_ads_updated', handleStorage);
+        window.removeEventListener('astada_ads_updated', handleLocalUpdate);
+        if (bc) bc.close();
       };
     }
   }, [resolvedSlotId]);
@@ -147,18 +185,21 @@ export default function AdBanner({
 
   // 2. IF HIDDEN LEAVING RESERVED SPACE (Exact feature requested: "hide each add leaving that space there")
   if (adConfig.status === 'hidden_reserve_space') {
-    const minHeightClass = type === 'sidebar' ? 'min-h-[250px]' : (resolvedSlotId === 'slot-5' ? 'min-h-[140px]' : 'min-h-[88px]');
+    const minHeightStyle = type === 'sidebar' ? '250px' : (resolvedSlotId === 'slot-5' ? '120px' : '88px');
     return (
       <div 
-        className={`w-full ${minHeightClass} border border-dashed border-[#d8aa8d]/70 bg-[#fbf5ee]/40 rounded-xl p-3 flex flex-col items-center justify-center text-center select-none transition-all ${className}`}
-        style={{ minHeight: type === 'sidebar' ? '250px' : (resolvedSlotId === 'slot-5' ? '120px' : '88px') }}
+        className={`w-full border-2 border-dashed border-[#c59a72]/60 bg-[#faf6f0]/70 rounded-2xl p-4 flex flex-col items-center justify-center text-center select-none transition-all my-2 shadow-2xs ${className}`}
+        style={{ minHeight: minHeightStyle }}
       >
-        <div className="flex items-center space-x-2 text-stone-400">
-          <span className="w-2 h-2 rounded-full bg-amber-400/50"></span>
-          <span className="text-[11px] font-mono tracking-wider uppercase text-amber-900/50 font-semibold">
+        <div className="flex items-center space-x-2 text-stone-500">
+          <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+          <span className="text-xs font-mono tracking-wider uppercase text-amber-950 font-bold">
             Reserved Devotional Space ({adConfig.dimensions}) • Advertisement Hidden
           </span>
         </div>
+        <p className="text-[10px] text-stone-400 mt-1 font-sans">
+          Slot ID: {resolvedSlotId.toUpperCase()} • Layout boundary preserved (Zero CLS)
+        </p>
       </div>
     );
   }
@@ -167,29 +208,33 @@ export default function AdBanner({
   if (adConfig.provider === 'google') {
     if (type === 'sidebar') {
       return (
-        <div className={`w-full bg-[#f8fafc] border border-slate-300 rounded-xl p-3.5 text-center flex flex-col items-center justify-between min-h-[250px] shadow-2xs ${className}`}>
-          <div className="w-full flex items-center justify-between pb-1.5 border-b border-slate-200 text-[10px] text-slate-500 font-mono">
-            <span className="font-bold flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+        <div className={`w-full bg-[#f8fafc] border border-blue-200 rounded-2xl p-4 text-center flex flex-col items-center justify-between min-h-[250px] shadow-xs relative overflow-hidden ${className}`}>
+          <div className="w-full flex items-center justify-between pb-2 border-b border-slate-200 text-[10px] text-slate-500 font-mono">
+            <span className="font-bold flex items-center gap-1.5 text-blue-700">
+              <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
               Google AdSense
             </span>
-            <span>{adConfig.dimensions}</span>
+            <span className="bg-blue-50 text-blue-800 font-bold px-1.5 py-0.5 rounded border border-blue-200">{resolvedSlotId.toUpperCase()}</span>
           </div>
 
-          <div className="my-auto py-4 space-y-1">
-            <div className="text-xs font-bold text-slate-700 tracking-wide">
+          <div className="my-auto py-4 space-y-1.5">
+            <div className="text-xs font-bold text-slate-800 tracking-wide">
               Google Network Advertisement
             </div>
-            <div className="text-[10px] text-slate-400 font-mono">
-              Client: {adConfig.googleClientId}
+            <div className="text-[11px] text-slate-500 font-mono">
+              Client: {adConfig.googleClientId || 'ca-pub-9876543210987654'}
             </div>
-            <div className="text-[10px] text-slate-400 font-mono">
-              Slot: {adConfig.googleSlotId}
+            <div className="text-[11px] text-slate-500 font-mono">
+              Slot: {adConfig.googleSlotId || '3847561920'}
+            </div>
+            <div className="text-[10px] text-slate-400">
+              Format: {adConfig.googleFormat || 'Medium Rectangle'} ({adConfig.dimensions})
             </div>
           </div>
 
-          <div className="text-[9px] text-slate-400 uppercase tracking-widest">
-            Ads by Google • Responsive
+          <div className="w-full pt-2 border-t border-slate-100 flex items-center justify-between text-[9px] text-slate-400 uppercase tracking-widest font-mono">
+            <span>Ads by Google</span>
+            <span>Responsive 300×250</span>
           </div>
         </div>
       );
@@ -197,17 +242,20 @@ export default function AdBanner({
 
     return (
       <div className={`w-full mx-auto py-2.5 ${className}`}>
-        <div className="bg-[#f8fafc] border border-slate-300 rounded-xl p-3.5 px-6 flex flex-col sm:flex-row items-center justify-between shadow-2xs gap-3">
+        <div className="bg-[#f8fafc] border border-blue-200 rounded-2xl p-3.5 px-6 flex flex-col sm:flex-row items-center justify-between shadow-xs gap-3">
           <div className="flex items-center gap-3 text-center sm:text-left">
-            <span className="text-[10px] bg-blue-600 text-white uppercase px-2 py-0.5 rounded font-bold font-mono tracking-wider">
+            <span className="text-[10px] bg-blue-600 text-white uppercase px-2.5 py-1 rounded font-black font-mono tracking-wider shadow-2xs shrink-0">
               Google Ads
             </span>
             <div>
               <div className="text-xs sm:text-sm font-bold text-slate-800 tracking-wide flex items-center gap-2">
-                <span>Google AdSense • Responsive Leaderboard ({adConfig.dimensions})</span>
+                <span>Google AdSense • Responsive Unit ({adConfig.dimensions})</span>
+                <span className="text-[10px] bg-blue-100 text-blue-900 font-mono font-bold px-1.5 py-0.5 rounded border border-blue-200">
+                  {resolvedSlotId.toUpperCase()}
+                </span>
               </div>
               <div className="text-[11px] text-slate-500 font-mono">
-                Publisher: {adConfig.googleClientId} | Slot: {adConfig.googleSlotId}
+                Publisher: {adConfig.googleClientId || 'ca-pub-9876543210987654'} | Unit ID: {adConfig.googleSlotId || '1092837465'}
               </div>
             </div>
           </div>
@@ -232,12 +280,12 @@ export default function AdBanner({
   // Sidebar Private Ad (300x250)
   if (type === 'sidebar') {
     return (
-      <div className={`w-full bg-gradient-to-b ${themeStyles} border rounded-2xl p-4.5 text-center flex flex-col items-center justify-between min-h-[250px] shadow-sm ${className}`}>
+      <div className={`w-full bg-gradient-to-b ${themeStyles} border rounded-2xl p-4.5 text-center flex flex-col items-center justify-between min-h-[250px] shadow-sm relative overflow-hidden ${className}`}>
         <div className="w-full flex items-center justify-between text-[10px] text-amber-300 font-mono">
           <span className="bg-white/10 px-2 py-0.5 rounded uppercase font-bold tracking-wider">
             {adConfig.badge || 'SPONSORED'}
           </span>
-          <span className="opacity-80">300 × 250</span>
+          <span className="text-amber-200/70 font-semibold">{resolvedSlotId.toUpperCase()} • 300 × 250</span>
         </div>
 
         <div className="my-auto py-3 space-y-1.5">
@@ -263,7 +311,7 @@ export default function AdBanner({
   // Top Sponsored Leaderboard / In-Feed / Bottom Banner
   return (
     <div className={`w-full mx-auto py-2.5 ${className}`}>
-      <div className={`bg-gradient-to-r ${themeStyles} rounded-2xl p-3 px-6 flex flex-col sm:flex-row items-center justify-between shadow-sm border text-white gap-3.5`}>
+      <div className={`bg-gradient-to-r ${themeStyles} rounded-2xl p-3 px-6 flex flex-col sm:flex-row items-center justify-between shadow-sm border text-white gap-3.5 relative overflow-hidden`}>
         <div className="flex items-center gap-3 text-center sm:text-left">
           <span className="text-[10px] bg-amber-400 text-stone-950 uppercase px-2 py-0.5 rounded font-black tracking-wider shrink-0 shadow-2xs">
             {adConfig.badge || 'FESTIVAL SPECIAL'}
@@ -279,13 +327,15 @@ export default function AdBanner({
           </div>
         </div>
 
-        <Link
-          href={adConfig.targetUrl || '/marketplace'}
-          className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-black text-xs px-4 py-2 rounded-xl shadow transition-all whitespace-nowrap shrink-0 flex items-center space-x-1"
-        >
-          <span>{adConfig.ctaText || 'Shop Now'}</span>
-          <ExternalLink className="w-3 h-3 text-stone-950" />
-        </Link>
+        <div className="flex items-center gap-2 shrink-0">
+          <Link
+            href={adConfig.targetUrl || '/marketplace'}
+            className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-black text-xs px-4 py-2 rounded-xl shadow transition-all whitespace-nowrap shrink-0 flex items-center space-x-1"
+          >
+            <span>{adConfig.ctaText || 'Shop Now'}</span>
+            <ExternalLink className="w-3 h-3 text-stone-950" />
+          </Link>
+        </div>
       </div>
     </div>
   );

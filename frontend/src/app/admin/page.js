@@ -56,7 +56,7 @@ import {
 } from 'lucide-react';
 import { FacebookIcon, TwitterXIcon, InstagramIcon, YoutubeIcon, WhatsAppIcon } from '../../components/SocialIcons';
 import { allSlokasData, slokaCategories } from '../../data/slokasData';
-import { DEFAULT_ADS_CONFIG } from '../../components/AdBanner';
+import { DEFAULT_ADS_CONFIG, getInitialAdsConfig } from '../../components/AdBanner';
 
 const API_BASE = 'http://localhost:5000/api';
 
@@ -166,36 +166,52 @@ export default function UnifiedConsolePage() {
   const [customCategoryInput, setCustomCategoryInput] = useState('');
 
   // 5 Homepage Ads & Sponsored Spaces Manager State (Google Ads, Private Ads, Hide Leaving Reserved Space)
-  const [homeAdsConfig, setHomeAdsConfig] = useState(DEFAULT_ADS_CONFIG);
+  const [homeAdsConfig, setHomeAdsConfig] = useState(() => getInitialAdsConfig());
 
-  // Initialize Ads Config from localStorage if available
+  // Initialize and synchronize Ads Config across tabs
   useEffect(() => {
-    try {
-      if (typeof window !== 'undefined') {
-        const stored = localStorage.getItem('astada_ads_config');
-        if (stored) {
-          setHomeAdsConfig(JSON.parse(stored));
+    setHomeAdsConfig(getInitialAdsConfig());
+    if (typeof window !== 'undefined') {
+      const handleStorage = (e) => {
+        if (!e.key || e.key === 'astada_ads_config') {
+          setHomeAdsConfig(getInitialAdsConfig());
         }
-      }
-    } catch {}
+      };
+      const handleLocalEvent = () => {
+        setHomeAdsConfig(getInitialAdsConfig());
+      };
+      window.addEventListener('storage', handleStorage);
+      window.addEventListener('astada_ads_updated', handleLocalEvent);
+      return () => {
+        window.removeEventListener('storage', handleStorage);
+        window.removeEventListener('astada_ads_updated', handleLocalEvent);
+      };
+    }
   }, []);
 
   const handleUpdateAdSlot = (slotId, partialUpdate) => {
     setHomeAdsConfig(prev => {
+      const current = prev ? JSON.parse(JSON.stringify(prev)) : getInitialAdsConfig();
+      const targetSlot = current[slotId] || DEFAULT_ADS_CONFIG[slotId] || {};
       const updated = {
-        ...prev,
+        ...current,
         [slotId]: {
-          ...prev[slotId],
+          ...targetSlot,
           ...partialUpdate
         }
       };
       if (typeof window !== 'undefined') {
         localStorage.setItem('astada_ads_config', JSON.stringify(updated));
         window.dispatchEvent(new Event('astada_ads_updated'));
+        try {
+          const bc = new BroadcastChannel('astada_ads_channel');
+          bc.postMessage({ type: 'ADS_CONFIG_UPDATED', config: updated, slotId });
+          bc.close();
+        } catch {}
       }
       return updated;
     });
-    showToast('success', `Ad Slot (${slotId}) updated & synchronized with homepage!`);
+    showToast('success', `Ad Slot (${slotId.toUpperCase()}) updated & synchronized!`);
   };
 
   // 3-Way Slokas Studio State (Telugu, Tel-Eng Phonetics, English Meaning)
@@ -1448,7 +1464,7 @@ export default function UnifiedConsolePage() {
                 <div className="bg-white p-4 rounded-2xl border border-stone-200 shadow-2xs space-y-1">
                   <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">Active Ads</span>
                   <div className="text-2xl font-black text-emerald-700 font-serif">
-                    {Object.values(homeAdsConfig).filter(s => s.status === 'active').length} Active
+                    {Object.values(homeAdsConfig || {}).filter(s => s?.status === 'active').length} Active
                   </div>
                   <span className="text-[10px] text-emerald-600 font-semibold">Displaying on Homepage</span>
                 </div>
@@ -1456,7 +1472,7 @@ export default function UnifiedConsolePage() {
                 <div className="bg-white p-4 rounded-2xl border border-stone-200 shadow-2xs space-y-1">
                   <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">Hidden (Reserved Space)</span>
                   <div className="text-2xl font-black text-amber-700 font-serif">
-                    {Object.values(homeAdsConfig).filter(s => s.status === 'hidden_reserve_space').length} Paused
+                    {Object.values(homeAdsConfig || {}).filter(s => s?.status === 'hidden_reserve_space').length} Paused
                   </div>
                   <span className="text-[10px] text-amber-600 font-semibold">Space Preserved (Zero CLS)</span>
                 </div>
@@ -1464,7 +1480,7 @@ export default function UnifiedConsolePage() {
                 <div className="bg-white p-4 rounded-2xl border border-stone-200 shadow-2xs space-y-1">
                   <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">Google AdSense</span>
                   <div className="text-2xl font-black text-blue-700 font-serif">
-                    {Object.values(homeAdsConfig).filter(s => s.provider === 'google').length} Units
+                    {Object.values(homeAdsConfig || {}).filter(s => s?.provider === 'google').length} Units
                   </div>
                   <span className="text-[10px] text-blue-600 font-semibold">Network Monetized</span>
                 </div>
@@ -1472,7 +1488,7 @@ export default function UnifiedConsolePage() {
                 <div className="bg-white p-4 rounded-2xl border border-stone-200 shadow-2xs space-y-1">
                   <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">Private Sponsors</span>
                   <div className="text-2xl font-black text-rose-700 font-serif">
-                    {Object.values(homeAdsConfig).filter(s => s.provider === 'private').length} Direct
+                    {Object.values(homeAdsConfig || {}).filter(s => s?.provider === 'private').length} Direct
                   </div>
                   <span className="text-[10px] text-rose-600 font-semibold">Spiritual &amp; Temple Trusts</span>
                 </div>
@@ -1512,7 +1528,7 @@ export default function UnifiedConsolePage() {
                     desc: 'Appears above the Footer Newsletter & App download bar at the bottom of the page.'
                   }
                 ].map((slotDef, index) => {
-                  const slotConfig = homeAdsConfig[slotDef.id] || DEFAULT_ADS_CONFIG[slotDef.id];
+                  const slotConfig = (homeAdsConfig && homeAdsConfig[slotDef.id]) || DEFAULT_ADS_CONFIG[slotDef.id] || {};
 
                   return (
                     <div 

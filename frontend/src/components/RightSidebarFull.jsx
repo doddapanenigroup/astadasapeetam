@@ -182,8 +182,30 @@ export default function RightSidebarFull() {
         </div>
       </div>
 
-      {/* 8. Lower Sidebar Ad Slot (300x250) */}
-      <AdBanner type="sidebar" label="Ad Space" />
+      {/* 8. Sacred Goshala & Annadanam Seva Card */}
+      <div className="bg-gradient-to-br from-[#fff9f0] to-[#fbf2e3] rounded-2xl p-4 border border-[#e8d5bc] shadow-2xs relative overflow-hidden">
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-[10px] font-bold text-amber-900 uppercase tracking-wider flex items-center gap-1">
+            <span>🐄</span> Sacred Seva
+          </span>
+          <span className="bg-amber-200/80 text-amber-950 text-[9px] font-bold uppercase px-2 py-0.5 rounded-full">
+            Dharma
+          </span>
+        </div>
+        <h4 className="text-xs font-serif font-black text-amber-950">
+          Nitya Goshala &amp; Anna Dana Seva
+        </h4>
+        <p className="text-[11px] text-amber-900/80 mt-1 leading-snug">
+          Support indigenous Desi cow protection and sanctum food offerings across 18 Shakti Peethas.
+        </p>
+        <a
+          href="/marketplace"
+          className="mt-2.5 inline-flex items-center gap-1 bg-[#872d11] hover:bg-[#6e1e0a] text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-2xs transition-colors"
+        >
+          <span>Contribute Seva</span>
+          <span>&rarr;</span>
+        </a>
+      </div>
 
       {/* 9. Special Offers Card */}
       <div className="bg-[#fffdfa] rounded-2xl border border-[#ebdcc7] p-3.5 shadow-2xs">
