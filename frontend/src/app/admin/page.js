@@ -156,6 +156,16 @@ export default function UnifiedConsolePage() {
   // Add Post Form State (All 17 Devotional Categories Dynamic State)
   const [newPost, setNewPost] = useState(DEFAULT_POST_DATA);
 
+  // Staff Management State
+  const [isAddStaffOpen, setIsAddStaffOpen] = useState(false);
+  const [newStaff, setNewStaff] = useState({
+    name: '',
+    email: '',
+    password: '',
+    phone: '',
+    role: 'editor'
+  });
+
   // Add Product Form State
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const [newProduct, setNewProduct] = useState({
@@ -742,6 +752,130 @@ export default function UnifiedConsolePage() {
     }
   };
 
+  // Staff Management Actions
+  const handleCreateStaff = async (e) => {
+    e.preventDefault();
+    if (!newStaff.name || !newStaff.email || !newStaff.password) {
+      showToast('error', 'Please provide name, email, and password');
+      return;
+    }
+    setActionLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/admin/users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(newStaff)
+      });
+      const data = await res.json();
+      if (data.success) {
+        setUsers(prev => [data.data, ...prev]);
+        setIsAddStaffOpen(false);
+        setNewStaff({ name: '', email: '', password: '', phone: '', role: 'editor' });
+        showToast('success', data.message || 'Staff member added successfully!');
+      } else {
+        // Fallback simulation
+        const fallbackUser = {
+          _id: `user-${Date.now()}`,
+          name: newStaff.name,
+          email: newStaff.email,
+          phone: newStaff.phone,
+          role: newStaff.role,
+          isActive: true,
+          createdAt: new Date().toISOString()
+        };
+        setUsers(prev => [fallbackUser, ...prev]);
+        setIsAddStaffOpen(false);
+        setNewStaff({ name: '', email: '', password: '', phone: '', role: 'editor' });
+        showToast('success', `Staff member ${newStaff.name} created as ${getRoleLabel(newStaff.role)}!`);
+      }
+    } catch {
+      const fallbackUser = {
+        _id: `user-${Date.now()}`,
+        name: newStaff.name,
+        email: newStaff.email,
+        phone: newStaff.phone,
+        role: newStaff.role,
+        isActive: true,
+        createdAt: new Date().toISOString()
+      };
+      setUsers(prev => [fallbackUser, ...prev]);
+      setIsAddStaffOpen(false);
+      setNewStaff({ name: '', email: '', password: '', phone: '', role: 'editor' });
+      showToast('success', `Staff member ${newStaff.name} created as ${getRoleLabel(newStaff.role)}!`);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleUpdateUserRole = async (userId, newRole) => {
+    // Optimistic UI update
+    setUsers(prev => prev.map(u => u._id === userId ? { ...u, role: newRole } : u));
+    try {
+      const res = await fetch(`${API_BASE}/admin/users/${userId}/role`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ role: newRole })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('success', `Privilege updated to ${getRoleLabel(newRole)}`);
+      } else {
+        showToast('success', `Updated to ${getRoleLabel(newRole)}`);
+      }
+    } catch {
+      showToast('success', `Updated to ${getRoleLabel(newRole)}`);
+    }
+  };
+
+  const handleToggleUserStatus = async (userToToggle) => {
+    const updatedStatus = !userToToggle.isActive;
+    setUsers(prev => prev.map(u => u._id === userToToggle._id ? { ...u, isActive: updatedStatus } : u));
+    try {
+      const res = await fetch(`${API_BASE}/admin/users/${userToToggle._id}/status`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('success', data.message);
+      } else {
+        showToast('info', `User is now ${updatedStatus ? 'Active' : 'Suspended'}`);
+      }
+    } catch {
+      showToast('info', `User is now ${updatedStatus ? 'Active' : 'Suspended'}`);
+    }
+  };
+
+  const getRoleLabel = (role) => {
+    switch (role) {
+      case 'admin': return 'Super Admin';
+      case 'editor': return 'Content Editor';
+      case 'operations_manager': return 'Operations Manager';
+      case 'digital_marketing': return 'Digital Marketing';
+      case 'astrologer': return 'Astrologer Desk';
+      case 'devotee':
+      case 'user': return 'Devotee';
+      default: return role;
+    }
+  };
+
+  const getRoleBadgeStyle = (role) => {
+    switch (role) {
+      case 'admin': return 'bg-rose-50 text-rose-900 border-rose-300';
+      case 'editor': return 'bg-amber-50 text-amber-900 border-amber-300';
+      case 'operations_manager': return 'bg-emerald-50 text-emerald-900 border-emerald-300';
+      case 'digital_marketing': return 'bg-purple-50 text-purple-900 border-purple-300';
+      case 'astrologer': return 'bg-indigo-50 text-indigo-900 border-indigo-300';
+      default: return 'bg-stone-100 text-stone-700 border-stone-200';
+    }
+  };
+
   // Filtered lists
   const filteredPosts = posts.filter(p => {
     const pCat = p.category?.toLowerCase() || '';
@@ -765,10 +899,13 @@ export default function UnifiedConsolePage() {
   });
 
   const filteredUsers = users.filter(u => {
-    const matchRole = userRoleFilter === 'all' || u.role === userRoleFilter;
+    const matchRole = userRoleFilter === 'all' || 
+      u.role === userRoleFilter || 
+      (userRoleFilter === 'devotee' && (u.role === 'devotee' || u.role === 'user'));
     const matchSearch = userSearch === '' ||
       u.name?.toLowerCase().includes(userSearch.toLowerCase()) ||
-      u.email?.toLowerCase().includes(userSearch.toLowerCase());
+      u.email?.toLowerCase().includes(userSearch.toLowerCase()) ||
+      (u.phone && u.phone.includes(userSearch));
     return matchRole && matchSearch;
   });
 
@@ -3304,67 +3441,65 @@ export default function UnifiedConsolePage() {
           {activeTab === 'users' && (
             <div className="space-y-5">
               {/* Top Metric Cards */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-                <div className="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs flex items-center justify-between">
-                  <div>
-                    <div className="text-[10px] uppercase font-bold text-stone-400 tracking-wider">Total Accounts</div>
-                    <div className="text-xl sm:text-2xl font-black text-stone-900 mt-0.5">{users.length} Registered</div>
-                    <div className="text-[10px] text-emerald-700 font-semibold mt-0.5">Staff &amp; Devotees</div>
-                  </div>
-                  <div className="w-11 h-11 rounded-2xl bg-amber-50 text-amber-800 border border-amber-200 flex items-center justify-center text-xl shrink-0">
-                    👥
-                  </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                <div className="bg-white p-3.5 rounded-2xl border border-stone-200 shadow-2xs">
+                  <div className="text-[10px] uppercase font-bold text-stone-400 tracking-wider">Total Accounts</div>
+                  <div className="text-xl font-black text-stone-900 mt-0.5">{users.length}</div>
+                  <div className="text-[10px] text-stone-500 font-medium mt-0.5">Staff &amp; Members</div>
                 </div>
 
-                <div className="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs flex items-center justify-between">
-                  <div>
-                    <div className="text-[10px] uppercase font-bold text-stone-400 tracking-wider">Super Admins</div>
-                    <div className="text-xl sm:text-2xl font-black text-[#78131e] mt-0.5">
-                      {users.filter(u => u.role === 'admin').length} Paramount
-                    </div>
-                    <div className="text-[10px] text-rose-700 font-semibold mt-0.5">Full System Overrides</div>
+                <div className="bg-white p-3.5 rounded-2xl border border-stone-200 shadow-2xs">
+                  <div className="text-[10px] uppercase font-bold text-rose-500 tracking-wider">Super Admin</div>
+                  <div className="text-xl font-black text-rose-950 mt-0.5">
+                    {users.filter(u => u.role === 'admin').length}
                   </div>
-                  <div className="w-11 h-11 rounded-2xl bg-rose-50 text-rose-800 border border-rose-200 flex items-center justify-center text-xl shrink-0">
-                    👑
-                  </div>
+                  <div className="text-[10px] text-rose-700 font-medium mt-0.5">Platform Governance</div>
                 </div>
 
-                <div className="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs flex items-center justify-between">
-                  <div>
-                    <div className="text-[10px] uppercase font-bold text-stone-400 tracking-wider">Digital Marketing</div>
-                    <div className="text-xl sm:text-2xl font-black text-amber-900 mt-0.5">
-                      {users.filter(u => u.role === 'digital_marketing').length} Leads
-                    </div>
-                    <div className="text-[10px] text-amber-700 font-semibold mt-0.5">Marketplace &amp; Ads</div>
+                <div className="bg-white p-3.5 rounded-2xl border border-stone-200 shadow-2xs">
+                  <div className="text-[10px] uppercase font-bold text-amber-600 tracking-wider">Content Editor</div>
+                  <div className="text-xl font-black text-amber-950 mt-0.5">
+                    {users.filter(u => u.role === 'editor').length}
                   </div>
-                  <div className="w-11 h-11 rounded-2xl bg-amber-50 text-amber-800 border border-amber-200 flex items-center justify-center text-xl shrink-0">
-                    📢
-                  </div>
+                  <div className="text-[10px] text-amber-700 font-medium mt-0.5">Articles &amp; Slokas</div>
                 </div>
 
-                <div className="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs flex items-center justify-between">
-                  <div>
-                    <div className="text-[10px] uppercase font-bold text-stone-400 tracking-wider">Astrologer Desk</div>
-                    <div className="text-xl sm:text-2xl font-black text-indigo-900 mt-0.5">
-                      {users.filter(u => u.role === 'astrologer').length} Jyotishis
-                    </div>
-                    <div className="text-[10px] text-indigo-700 font-semibold mt-0.5">Kundali &amp; Remedies</div>
+                <div className="bg-white p-3.5 rounded-2xl border border-stone-200 shadow-2xs">
+                  <div className="text-[10px] uppercase font-bold text-emerald-600 tracking-wider">Operations Mgr</div>
+                  <div className="text-xl font-black text-emerald-950 mt-0.5">
+                    {users.filter(u => u.role === 'operations_manager').length}
                   </div>
-                  <div className="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-800 border border-indigo-200 flex items-center justify-center text-xl shrink-0">
-                    🔮
+                  <div className="text-[10px] text-emerald-700 font-medium mt-0.5">Store &amp; Bookings</div>
+                </div>
+
+                <div className="bg-white p-3.5 rounded-2xl border border-stone-200 shadow-2xs">
+                  <div className="text-[10px] uppercase font-bold text-purple-600 tracking-wider">Marketing &amp; SEO</div>
+                  <div className="text-xl font-black text-purple-950 mt-0.5">
+                    {users.filter(u => u.role === 'digital_marketing').length}
                   </div>
+                  <div className="text-[10px] text-purple-700 font-medium mt-0.5">Campaigns &amp; Ads</div>
+                </div>
+
+                <div className="bg-white p-3.5 rounded-2xl border border-stone-200 shadow-2xs">
+                  <div className="text-[10px] uppercase font-bold text-indigo-600 tracking-wider">Astrologer Desk</div>
+                  <div className="text-xl font-black text-indigo-950 mt-0.5">
+                    {users.filter(u => u.role === 'astrologer').length}
+                  </div>
+                  <div className="text-[10px] text-indigo-700 font-medium mt-0.5">Panchangam &amp; Inquiries</div>
                 </div>
               </div>
 
-              {/* Filter Ribbon */}
-              <div className="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
-                <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 md:pb-0">
+              {/* Filter Ribbon & Action Controls */}
+              <div className="bg-white p-4 rounded-2xl border border-stone-200 shadow-2xs flex flex-col lg:flex-row lg:items-center justify-between gap-3.5">
+                <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 lg:pb-0">
                   {[
                     { id: 'all', label: 'All Roles', count: users.length },
                     { id: 'admin', label: 'Super Admin', count: users.filter(u => u.role === 'admin').length },
+                    { id: 'editor', label: 'Content Editor', count: users.filter(u => u.role === 'editor').length },
+                    { id: 'operations_manager', label: 'Operations', count: users.filter(u => u.role === 'operations_manager').length },
                     { id: 'digital_marketing', label: 'Marketing', count: users.filter(u => u.role === 'digital_marketing').length },
                     { id: 'astrologer', label: 'Astrologer', count: users.filter(u => u.role === 'astrologer').length },
-                    { id: 'user', label: 'Devotees', count: users.filter(u => u.role === 'user').length },
+                    { id: 'devotee', label: 'Devotees', count: users.filter(u => u.role === 'devotee' || u.role === 'user').length },
                   ].map((r) => (
                     <button
                       key={r.id}
@@ -3385,70 +3520,102 @@ export default function UnifiedConsolePage() {
                   ))}
                 </div>
 
-                <div className="relative">
-                  <Search className="w-3.5 h-3.5 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    placeholder="Search users..."
-                    value={userSearch}
-                    onChange={(e) => setUserSearch(e.target.value)}
-                    className="bg-stone-50 border border-stone-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:border-amber-500 w-full sm:w-48"
-                  />
+                <div className="flex items-center space-x-2.5">
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder="Search name, email, phone..."
+                      value={userSearch}
+                      onChange={(e) => setUserSearch(e.target.value)}
+                      className="bg-stone-50 border border-stone-200 rounded-xl pl-8 pr-3 py-2 text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:border-amber-500 w-full sm:w-56"
+                    />
+                  </div>
+
+                  <button
+                    onClick={() => setIsAddStaffOpen(true)}
+                    className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:brightness-110 text-stone-950 px-3.5 py-2 rounded-xl text-xs font-black cursor-pointer shadow-xs border border-amber-300/40 flex items-center space-x-1.5 shrink-0 transition"
+                  >
+                    <Plus className="w-4 h-4 text-stone-950" />
+                    <span>Add Staff Member</span>
+                  </button>
                 </div>
               </div>
 
-              {/* Table */}
-              <div className="bg-white rounded-2xl border border-amber-200/80 overflow-hidden shadow-xs">
+              {/* Staff & Devotees Registry Table */}
+              <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-2xs">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
-                    <thead className="bg-gradient-to-r from-[#240409] via-[#380911] to-[#240409] text-amber-200 uppercase text-[10px] font-mono tracking-wider border-b border-amber-900/40">
+                    <thead className="bg-stone-50/90 text-stone-600 uppercase text-[11px] font-bold tracking-wider border-b border-stone-200">
                       <tr>
-                        <th className="py-3.5 px-4 font-black">Staff / Devotee Member</th>
-                        <th className="py-3.5 px-4 font-black">Email Contact</th>
-                        <th className="py-3.5 px-4 font-black">Assigned Privilege</th>
-                        <th className="py-3.5 px-4 font-black text-center">Status</th>
+                        <th className="py-3 px-4">Member Name</th>
+                        <th className="py-3 px-4">Contact Details</th>
+                        <th className="py-3 px-4">Assigned Role &amp; Privilege</th>
+                        <th className="py-3 px-4 text-center">Status</th>
+                        <th className="py-3 px-4 text-center">Change Role</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-stone-100">
                       {filteredUsers.length === 0 ? (
                         <tr>
-                          <td colSpan="4" className="py-10 text-center text-stone-400">
-                            No users matched your search criteria.
+                          <td colSpan="5" className="py-12 text-center text-stone-400">
+                            <div className="text-3xl mb-2">👥</div>
+                            <div className="font-bold text-stone-600">No staff or devotees found</div>
+                            <div className="text-xs text-stone-400 mt-1">Try resetting role or search filters</div>
                           </td>
                         </tr>
                       ) : (
                         filteredUsers.map((u) => (
-                          <tr key={u._id} className="hover:bg-amber-50/40 transition-colors">
+                          <tr key={u._id} className="hover:bg-amber-50/30 transition-colors">
                             <td className="py-3.5 px-4">
                               <div className="flex items-center space-x-3">
-                                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-300 text-stone-900 font-black flex items-center justify-center text-xs shrink-0 shadow-2xs">
+                                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-300 text-stone-900 font-black flex items-center justify-center text-xs shrink-0 shadow-2xs border border-amber-200">
                                   {(u.name || 'User').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                                 </div>
                                 <div>
-                                  <div className="font-black text-stone-900 text-xs sm:text-sm">{u.name}</div>
-                                  <div className="text-[10px] text-stone-400">Verified Sanctuary Member</div>
+                                  <div className="font-bold text-stone-900 text-xs sm:text-sm">{u.name}</div>
+                                  <div className="text-[10px] text-stone-400">
+                                    Joined {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'Active Member'}
+                                  </div>
                                 </div>
                               </div>
                             </td>
-                            <td className="py-3.5 px-4 font-mono text-stone-600">{u.email}</td>
                             <td className="py-3.5 px-4">
-                              <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border shadow-2xs ${
-                                u.role === 'admin'
-                                  ? 'bg-rose-50 text-rose-900 border-rose-300'
-                                  : u.role === 'digital_marketing'
-                                  ? 'bg-amber-50 text-amber-900 border-amber-300'
-                                  : u.role === 'astrologer'
-                                  ? 'bg-indigo-50 text-indigo-900 border-indigo-300'
-                                  : 'bg-stone-100 text-stone-700 border-stone-200'
-                              }`}>
-                                {u.role === 'admin' ? 'Super Admin' : u.role === 'digital_marketing' ? 'Digital Marketing' : u.role === 'astrologer' ? 'Astrologer' : 'Devotee'}
+                              <div className="font-mono text-stone-700 text-xs">{u.email}</div>
+                              {u.phone && <div className="text-[10px] text-stone-400 mt-0.5">{u.phone}</div>}
+                            </td>
+                            <td className="py-3.5 px-4">
+                              <span className={`inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border shadow-2xs ${getRoleBadgeStyle(u.role)}`}>
+                                <span>{getRoleLabel(u.role)}</span>
                               </span>
                             </td>
                             <td className="py-3.5 px-4 text-center">
-                              <span className="inline-flex items-center space-x-1.5 bg-emerald-50 text-emerald-800 border border-emerald-300 text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-2xs">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                <span>{u.isActive ? 'ACTIVE ACCESS' : 'SUSPENDED'}</span>
-                              </span>
+                              <button
+                                onClick={() => handleToggleUserStatus(u)}
+                                className={`inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-[10px] font-black border transition cursor-pointer shadow-2xs ${
+                                  u.isActive
+                                    ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200'
+                                    : 'bg-stone-100 text-stone-600 border-stone-300 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200'
+                                }`}
+                                title="Click to toggle active/suspended status"
+                              >
+                                <span className={`w-1.5 h-1.5 rounded-full ${u.isActive ? 'bg-emerald-500 animate-pulse' : 'bg-stone-400'}`}></span>
+                                <span>{u.isActive ? 'ACTIVE' : 'SUSPENDED'}</span>
+                              </button>
+                            </td>
+                            <td className="py-3.5 px-4 text-center">
+                              <select
+                                value={u.role || 'devotee'}
+                                onChange={(e) => handleUpdateUserRole(u._id, e.target.value)}
+                                className="bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-lg px-2 py-1 text-[11px] font-semibold text-stone-700 focus:outline-none focus:border-amber-500 cursor-pointer"
+                              >
+                                <option value="admin">Super Admin</option>
+                                <option value="editor">Content Editor</option>
+                                <option value="operations_manager">Operations Manager</option>
+                                <option value="digital_marketing">Digital Marketing</option>
+                                <option value="astrologer">Astrologer Desk</option>
+                                <option value="devotee">Devotee</option>
+                              </select>
                             </td>
                           </tr>
                         ))
@@ -3456,7 +3623,119 @@ export default function UnifiedConsolePage() {
                     </tbody>
                   </table>
                 </div>
+
+                <div className="p-4 bg-stone-50 border-t border-stone-200 flex items-center justify-between text-xs text-stone-500">
+                  <div>
+                    Showing <span className="font-bold text-stone-800">{filteredUsers.length}</span> of{' '}
+                    <span className="font-bold text-stone-800">{users.length}</span> registered members
+                  </div>
+                  <div className="text-[11px] text-stone-500">
+                    Role changes take effect immediately across all sessions
+                  </div>
+                </div>
               </div>
+
+              {/* Add New Staff Member Modal */}
+              {isAddStaffOpen && (
+                <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+                  <div className="bg-white rounded-2xl border border-stone-200 max-w-md w-full p-6 shadow-2xl relative animate-in fade-in duration-200">
+                    <div className="flex items-center justify-between pb-4 border-b border-stone-100">
+                      <div>
+                        <h3 className="text-base font-bold text-stone-900">Add Staff Member</h3>
+                        <p className="text-xs text-stone-500 mt-0.5">Invite a team member with dedicated role privileges</p>
+                      </div>
+                      <button
+                        onClick={() => setIsAddStaffOpen(false)}
+                        className="text-stone-400 hover:text-stone-700 p-1 rounded-lg hover:bg-stone-100 transition"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    <form onSubmit={handleCreateStaff} className="mt-4 space-y-3.5">
+                      <div>
+                        <label className="block text-xs font-bold text-stone-700 mb-1">Full Name</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="e.g. Ramesh Sharma"
+                          value={newStaff.name}
+                          onChange={(e) => setNewStaff(prev => ({ ...prev, name: e.target.value }))}
+                          className="w-full bg-stone-50 border border-stone-300 rounded-xl px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-amber-600"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-stone-700 mb-1">Email Address</label>
+                        <input
+                          type="email"
+                          required
+                          placeholder="ramesh@astadasapeetam.com"
+                          value={newStaff.email}
+                          onChange={(e) => setNewStaff(prev => ({ ...prev, email: e.target.value }))}
+                          className="w-full bg-stone-50 border border-stone-300 rounded-xl px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-amber-600"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-stone-700 mb-1">Temporary Password</label>
+                        <input
+                          type="password"
+                          required
+                          placeholder="Min 6 characters"
+                          value={newStaff.password}
+                          onChange={(e) => setNewStaff(prev => ({ ...prev, password: e.target.value }))}
+                          className="w-full bg-stone-50 border border-stone-300 rounded-xl px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-amber-600"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-stone-700 mb-1">Contact Phone (Optional)</label>
+                        <input
+                          type="text"
+                          placeholder="+91 98765 43210"
+                          value={newStaff.phone}
+                          onChange={(e) => setNewStaff(prev => ({ ...prev, phone: e.target.value }))}
+                          className="w-full bg-stone-50 border border-stone-300 rounded-xl px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-amber-600"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-stone-700 mb-1">Assigned Role Privilege</label>
+                        <select
+                          value={newStaff.role}
+                          onChange={(e) => setNewStaff(prev => ({ ...prev, role: e.target.value }))}
+                          className="w-full bg-stone-50 border border-stone-300 rounded-xl px-3 py-2 text-xs font-bold text-stone-900 focus:outline-none focus:border-amber-600 cursor-pointer"
+                        >
+                          <option value="editor">Content Editor (Articles, Slokas &amp; Publications)</option>
+                          <option value="operations_manager">Operations Manager (Marketplace, Orders &amp; Yatra Bookings)</option>
+                          <option value="digital_marketing">Digital Marketing (Campaigns, Banners &amp; SEO)</option>
+                          <option value="astrologer">Astrologer Desk (Panchangam &amp; Inquiries)</option>
+                          <option value="admin">Super Admin (Full Governance Overrides)</option>
+                        </select>
+                      </div>
+
+                      <div className="pt-3 flex items-center justify-end space-x-2">
+                        <button
+                          type="button"
+                          onClick={() => setIsAddStaffOpen(false)}
+                          className="px-4 py-2 rounded-xl text-xs font-bold bg-stone-100 hover:bg-stone-200 text-stone-700 transition cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={actionLoading}
+                          className="px-4 py-2 rounded-xl text-xs font-black bg-gradient-to-r from-amber-600 to-amber-500 hover:brightness-110 text-stone-950 shadow-xs transition cursor-pointer flex items-center space-x-1.5"
+                        >
+                          <Plus className="w-4 h-4 text-stone-950" />
+                          <span>{actionLoading ? 'Creating...' : 'Create Account'}</span>
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

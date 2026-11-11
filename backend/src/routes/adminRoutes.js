@@ -1,6 +1,7 @@
 const express = require('express');
 const { 
   getAllUsers, 
+  createStaffUser,
   updateUserRole, 
   toggleUserStatus, 
   getAdminDashboardStats 
@@ -16,6 +17,7 @@ router.use(authorize('admin'));
 
 router.get('/stats', getAdminDashboardStats);
 router.get('/users', getAllUsers);
+router.post('/users', createStaffUser);
 router.put('/users/:id/role', updateUserRole);
 router.put('/users/:id/status', toggleUserStatus);
 

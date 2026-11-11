@@ -15,10 +15,10 @@ const router = express.Router();
 router.get('/', getPosts);
 router.get('/:slug', getPostBySlug);
 
-// Protected routes (Admin, Digital Marketing, Astrologer)
+// Protected routes (Admin, Editor, Digital Marketing, Astrologer)
 router.use(protect);
-router.post('/', authorize('admin', 'digital_marketing', 'astrologer'), createPost);
-router.put('/:id', authorize('admin', 'digital_marketing', 'astrologer'), updatePost);
-router.delete('/:id', authorize('admin', 'digital_marketing'), deletePost);
+router.post('/', authorize('admin', 'editor', 'digital_marketing', 'astrologer'), createPost);
+router.put('/:id', authorize('admin', 'editor', 'digital_marketing', 'astrologer'), updatePost);
+router.delete('/:id', authorize('admin', 'editor', 'digital_marketing'), deletePost);
 
 module.exports = router;

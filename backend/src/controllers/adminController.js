@@ -40,7 +40,7 @@ exports.getAllUsers = async (req, res, next) => {
 exports.updateUserRole = async (req, res, next) => {
   try {
     const { role } = req.body;
-    const validRoles = ['admin', 'digital_marketing', 'astrologer', 'devotee'];
+    const validRoles = ['admin', 'editor', 'operations_manager', 'digital_marketing', 'astrologer', 'devotee', 'user'];
 
     if (!role || !validRoles.includes(role)) {
       return res.status(400).json({
@@ -100,6 +100,37 @@ exports.toggleUserStatus = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: `User '${user.name}' is now ${user.isActive ? 'ACTIVE' : 'DEACTIVATED'}`,
+      data: user
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Create/Invite new staff member (Admin only)
+// @route   POST /api/admin/users
+// @access  Private (Admin)
+exports.createStaffUser = async (req, res, next) => {
+  try {
+    const { name, email, password, phone, role } = req.body;
+    if (!name || !email || !password) {
+      return res.status(400).json({ success: false, message: 'Please provide name, email, and password' });
+    }
+    const existing = await User.findOne({ email });
+    if (existing) {
+      return res.status(400).json({ success: false, message: 'A user with this email address already exists' });
+    }
+    const user = await User.create({
+      name,
+      email,
+      password,
+      phone: phone || '',
+      role: role || 'editor',
+      isActive: true
+    });
+    res.status(201).json({
+      success: true,
+      message: `Staff account created for ${user.name} (${user.role})`,
       data: user
     });
   } catch (err) {

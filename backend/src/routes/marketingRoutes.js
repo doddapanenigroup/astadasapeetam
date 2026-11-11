@@ -24,9 +24,9 @@ const { authorize } = require('../middleware/role');
 
 const router = express.Router();
 
-// Digital Marketing & Admin have access
+// Digital Marketing, Operations Manager & Admin have access
 router.use(protect);
-router.use(authorize('digital_marketing', 'admin'));
+router.use(authorize('digital_marketing', 'operations_manager', 'admin'));
 
 // 1. Campaign & Coupon Routes
 router.get('/campaigns', getCampaigns);
