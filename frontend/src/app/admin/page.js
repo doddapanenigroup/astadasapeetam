@@ -53,7 +53,9 @@ import {
   Pause,
   Volume2,
   VolumeX,
-  FolderPlus
+  FolderPlus,
+  Grid,
+  List
 } from 'lucide-react';
 import { FacebookIcon, TwitterXIcon, InstagramIcon, YoutubeIcon, WhatsAppIcon } from '../../components/SocialIcons';
 import { allSlokasData, slokaCategories } from '../../data/slokasData';
@@ -106,6 +108,8 @@ export default function UnifiedConsolePage() {
   // Filters & Search
   const [postSearch, setPostSearch] = useState('');
   const [postCategoryFilter, setPostCategoryFilter] = useState('all');
+  const [postStatusFilter, setPostStatusFilter] = useState('all'); // 'all' | 'published' | 'draft'
+  const [postViewMode, setPostViewMode] = useState('table'); // 'table' | 'grid'
   const [allCategories, setAllCategories] = useState(() => getAllCategories());
   const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
 
@@ -551,15 +555,82 @@ export default function UnifiedConsolePage() {
     setActionLoading(false);
   };
 
-  const handleDeletePost = (postToDelete) => {
-    if (!window.confirm(`Remove sacred post "${postToDelete.title}"?`)) return;
+  const handleTogglePublish = async (postToToggle) => {
+    const currentStatus = postToToggle.status || 'published';
+    const newStatus = currentStatus === 'published' ? 'draft' : 'published';
+    const newLabel = newStatus === 'published' ? 'Live on Sanctuary' : 'Unpublished (Draft)';
+
+    // Optimistically update local state
+    setPosts(prev => prev.map(p => {
+      if ((p._id && p._id === postToToggle._id) || (p.slug && p.slug === postToToggle.slug)) {
+        return { ...p, status: newStatus };
+      }
+      return p;
+    }));
+
+    // Update in localStorage
+    try {
+      const existingLocal = JSON.parse(localStorage.getItem('astada_custom_posts') || '[]');
+      const updatedLocal = existingLocal.map(p => {
+        if ((p._id && p._id === postToToggle._id) || (p.slug && p.slug === postToToggle.slug)) {
+          return { ...p, status: newStatus };
+        }
+        return p;
+      });
+      localStorage.setItem('astada_custom_posts', JSON.stringify(updatedLocal));
+    } catch {}
+
+    // Update in Backend MongoDB
+    try {
+      if (postToToggle._id) {
+        await fetch(`${API_BASE}/posts/${postToToggle._id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ status: newStatus })
+        });
+      }
+      showToast('success', `Post "${postToToggle.title.slice(0, 32)}..." is now ${newLabel}`);
+    } catch (err) {
+      console.error('Failed to update status on server:', err);
+      showToast('info', `Status changed to ${newLabel}`);
+    }
+  };
+
+  const handleDeletePost = async (postToDelete) => {
+    if (!window.confirm(`Permanently remove sacred post "${postToDelete.title}"?`)) return;
     try {
       const existingLocal = JSON.parse(localStorage.getItem('astada_custom_posts') || '[]');
       const updatedLocal = existingLocal.filter(p => p.slug !== postToDelete.slug && p._id !== postToDelete._id);
       localStorage.setItem('astada_custom_posts', JSON.stringify(updatedLocal));
     } catch {}
     setPosts(prev => prev.filter(p => p.slug !== postToDelete.slug && p._id !== postToDelete._id));
+
+    try {
+      if (postToDelete._id) {
+        await fetch(`${API_BASE}/posts/${postToDelete._id}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+    } catch (e) {
+      console.warn('Backend delete error:', e);
+    }
     showToast('success', `Removed sacred post "${postToDelete.title}"`);
+  };
+
+  const getCategoryBadgeStyle = (category) => {
+    const cat = category?.toLowerCase() || '';
+    if (cat === 'temples' || cat === 'temple') return 'bg-rose-50 text-rose-900 border-rose-200';
+    if (cat === 'festivals' || cat === 'festival') return 'bg-amber-50 text-amber-900 border-amber-300';
+    if (cat === 'yatralu' || cat === 'yatra') return 'bg-sky-50 text-sky-900 border-sky-200';
+    if (cat === 'astrology' || cat === 'horoscope' || cat === 'remedies') return 'bg-indigo-50 text-indigo-900 border-indigo-200';
+    if (cat === 'slokas' || cat === 'mantras' || cat === 'stotras') return 'bg-emerald-50 text-emerald-900 border-emerald-200';
+    if (cat === 'marketplace' || cat === 'products') return 'bg-orange-50 text-orange-900 border-orange-200';
+    if (cat === 'spirituality' || cat === 'stories') return 'bg-purple-50 text-purple-900 border-purple-200';
+    return 'bg-amber-50/80 text-amber-900 border-amber-200';
   };
 
   // Create Product Submit (Supports Dynamic & Custom Devotional Categories)
@@ -685,8 +756,12 @@ export default function UnifiedConsolePage() {
       (fCat === 'festivals' && (pCat === 'festivals' || pCat === 'festival'));
     const matchSearch = postSearch === '' ||
       p.title?.toLowerCase().includes(postSearch.toLowerCase()) ||
-      p.titleTelugu?.toLowerCase().includes(postSearch.toLowerCase());
-    return matchCat && matchSearch;
+      p.titleTelugu?.toLowerCase().includes(postSearch.toLowerCase()) ||
+      (p.deity && p.deity.toLowerCase().includes(postSearch.toLowerCase()));
+    const matchStatus = postStatusFilter === 'all' ||
+      (postStatusFilter === 'published' && (p.status === 'published' || !p.status)) ||
+      (postStatusFilter === 'draft' && (p.status === 'draft' || p.status === 'archived'));
+    return matchCat && matchSearch && matchStatus;
   });
 
   const filteredUsers = users.filter(u => {
@@ -2655,13 +2730,13 @@ export default function UnifiedConsolePage() {
             <div className="space-y-5">
               {/* Top KPI Metrics Ribbon */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-                <div className="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs flex items-center justify-between">
+                <div className="bg-white p-4 rounded-2xl border border-stone-200 shadow-2xs flex items-center justify-between">
                   <div>
                     <div className="text-[10px] uppercase font-bold text-stone-400 tracking-wider">Total Sacred Posts</div>
                     <div className="text-xl sm:text-2xl font-black text-stone-900 mt-0.5">{posts.length} Publications</div>
                     <div className="text-[10px] text-emerald-700 font-semibold mt-0.5 flex items-center space-x-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                      <span>All Indexed in RSS &amp; Sitemap</span>
+                      <span>All 17 Categories Synchronized</span>
                     </div>
                   </div>
                   <div className="w-11 h-11 rounded-2xl bg-amber-50 text-amber-800 border border-amber-200 flex items-center justify-center text-xl shrink-0">
@@ -2669,7 +2744,7 @@ export default function UnifiedConsolePage() {
                   </div>
                 </div>
 
-                <div className="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs flex items-center justify-between">
+                <div className="bg-white p-4 rounded-2xl border border-stone-200 shadow-2xs flex items-center justify-between">
                   <div>
                     <div className="text-[10px] uppercase font-bold text-stone-400 tracking-wider">Devotee Engagement</div>
                     <div className="text-xl sm:text-2xl font-black text-[#78131e] mt-0.5">
@@ -2677,7 +2752,7 @@ export default function UnifiedConsolePage() {
                     </div>
                     <div className="text-[10px] text-rose-700 font-semibold mt-0.5 flex items-center space-x-1">
                       <Flame className="w-3 h-3 text-rose-500" />
-                      <span>+28% Growth this month</span>
+                      <span>Live across Sanatan portal</span>
                     </div>
                   </div>
                   <div className="w-11 h-11 rounded-2xl bg-rose-50 text-rose-800 border border-rose-200 flex items-center justify-center text-xl shrink-0">
@@ -2685,40 +2760,45 @@ export default function UnifiedConsolePage() {
                   </div>
                 </div>
 
-                <div className="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs flex items-center justify-between">
+                <div className="bg-white p-4 rounded-2xl border border-stone-200 shadow-2xs flex items-center justify-between">
                   <div>
-                    <div className="text-[10px] uppercase font-bold text-stone-400 tracking-wider">Kshetras Covered</div>
-                    <div className="text-xl sm:text-2xl font-black text-stone-900 mt-0.5">18 Peethas</div>
-                    <div className="text-[10px] text-amber-700 font-semibold mt-0.5">
-                      Kashi, Trincomalee &amp; Srisailam
+                    <div className="text-[10px] uppercase font-bold text-stone-400 tracking-wider">Live on Sanctuary</div>
+                    <div className="text-xl sm:text-2xl font-black text-emerald-900 mt-0.5">
+                      {posts.filter(p => p.status !== 'draft').length} Published
                     </div>
-                  </div>
-                  <div className="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-800 border border-indigo-200 flex items-center justify-center text-xl shrink-0">
-                    🛕
-                  </div>
-                </div>
-
-                <div className="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs flex items-center justify-between">
-                  <div>
-                    <div className="text-[10px] uppercase font-bold text-stone-400 tracking-wider">Editorial Gate</div>
-                    <div className="text-xl sm:text-2xl font-black text-emerald-900 mt-0.5">100% Verified</div>
-                    <div className="text-[10px] text-emerald-700 font-semibold mt-0.5">
-                      Authentic Vedic Shastras
+                    <div className="text-[10px] text-emerald-700 font-semibold mt-0.5 flex items-center space-x-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      <span>Publicly accessible</span>
                     </div>
                   </div>
                   <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-center text-xl shrink-0">
                     ✨
                   </div>
                 </div>
+
+                <div className="bg-white p-4 rounded-2xl border border-stone-200 shadow-2xs flex items-center justify-between">
+                  <div>
+                    <div className="text-[10px] uppercase font-bold text-stone-400 tracking-wider">Unpublished / Drafts</div>
+                    <div className="text-xl sm:text-2xl font-black text-amber-900 mt-0.5">
+                      {posts.filter(p => p.status === 'draft').length} Drafts
+                    </div>
+                    <div className="text-[10px] text-stone-500 font-semibold mt-0.5">
+                      Can be published anytime
+                    </div>
+                  </div>
+                  <div className="w-11 h-11 rounded-2xl bg-amber-50 text-amber-800 border border-amber-200 flex items-center justify-center text-xl shrink-0">
+                    📝
+                  </div>
+                </div>
               </div>
 
               {/* Action & Filter Control Bar */}
-              <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-amber-200/80 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-3.5">
-                {/* Left: Category Selector & Add Category Management */}
+              <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-stone-200 shadow-2xs flex flex-col xl:flex-row xl:items-center justify-between gap-3.5">
+                {/* Left: Category Selector, Status Filter & Add Category */}
                 <div className="flex flex-wrap items-center gap-2.5">
                   <div className="flex items-center space-x-2">
                     <span className="text-xs font-bold text-stone-600 whitespace-nowrap">Category:</span>
-                    <div className="relative min-w-[220px] sm:min-w-[280px]">
+                    <div className="relative min-w-[200px] sm:min-w-[260px]">
                       <select
                         value={postCategoryFilter}
                         onChange={(e) => setPostCategoryFilter(e.target.value)}
@@ -2748,39 +2828,85 @@ export default function UnifiedConsolePage() {
                       </select>
                       <ChevronDown className="w-4 h-4 text-stone-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                     </div>
-
-                    {postCategoryFilter !== 'all' && (
-                      <button
-                        onClick={() => setPostCategoryFilter('all')}
-                        className="px-2.5 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-bold cursor-pointer transition shadow-2xs"
-                        title="Clear filter"
-                      >
-                        Show All
-                      </button>
-                    )}
                   </div>
 
-                  {/* Add New Category with Custom Slug Button */}
+                  {/* Status Filter Dropdown */}
+                  <div className="flex items-center space-x-1.5">
+                    <span className="text-xs font-bold text-stone-600 whitespace-nowrap">Status:</span>
+                    <select
+                      value={postStatusFilter}
+                      onChange={(e) => setPostStatusFilter(e.target.value)}
+                      className="bg-stone-50 hover:bg-stone-100 border border-stone-300 rounded-xl px-3 py-2 text-xs font-bold text-stone-800 focus:outline-none focus:border-amber-600 cursor-pointer shadow-2xs"
+                    >
+                      <option value="all">All Status ({posts.length})</option>
+                      <option value="published">● Live Only ({posts.filter(p => p.status !== 'draft').length})</option>
+                      <option value="draft">○ Drafts Only ({posts.filter(p => p.status === 'draft').length})</option>
+                    </select>
+                  </div>
+
+                  {(postCategoryFilter !== 'all' || postStatusFilter !== 'all' || postSearch) && (
+                    <button
+                      onClick={() => {
+                        setPostCategoryFilter('all');
+                        setPostStatusFilter('all');
+                        setPostSearch('');
+                      }}
+                      className="px-2.5 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-bold cursor-pointer transition shadow-2xs"
+                      title="Reset all filters"
+                    >
+                      Clear Filters
+                    </button>
+                  )}
+
+                  {/* Add New Category Button */}
                   <button
                     onClick={() => setIsAddCategoryModalOpen(true)}
-                    className="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-black bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-300 shadow-2xs transition cursor-pointer"
-                    title="Add a new custom devotional category with custom URL slug"
+                    className="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-black bg-stone-50 hover:bg-amber-50 text-stone-800 hover:text-amber-950 border border-stone-300 hover:border-amber-400 shadow-2xs transition cursor-pointer"
+                    title="Add a new custom devotional category"
                   >
                     <FolderPlus className="w-4 h-4 text-amber-700" />
-                    <span>+ Add Category</span>
+                    <span>+ Category</span>
                   </button>
                 </div>
 
-                {/* Right Controls: Search, Status & Add */}
-                <div className="flex items-center space-x-2.5">
+                {/* Right Controls: View Switcher, Search & Compose */}
+                <div className="flex flex-wrap items-center gap-2.5">
+                  {/* View Mode Switcher: Table vs Visual Grid */}
+                  <div className="flex items-center bg-stone-100 p-1 rounded-xl border border-stone-200 shadow-2xs">
+                    <button
+                      onClick={() => setPostViewMode('table')}
+                      className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                        postViewMode === 'table'
+                          ? 'bg-white text-stone-900 shadow-xs'
+                          : 'text-stone-500 hover:text-stone-800'
+                      }`}
+                      title="Table View"
+                    >
+                      <List className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Table</span>
+                    </button>
+                    <button
+                      onClick={() => setPostViewMode('grid')}
+                      className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                        postViewMode === 'grid'
+                          ? 'bg-white text-stone-900 shadow-xs'
+                          : 'text-stone-500 hover:text-stone-800'
+                      }`}
+                      title="Visual Cards Grid View"
+                    >
+                      <Grid className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Cards</span>
+                    </button>
+                  </div>
+
                   <div className="relative">
                     <Search className="w-3.5 h-3.5 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
-                      placeholder="Filter articles..."
+                      placeholder="Search articles, deity..."
                       value={postSearch}
                       onChange={(e) => setPostSearch(e.target.value)}
-                      className="bg-stone-50 border border-stone-200 rounded-xl pl-8 pr-3 py-2 text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:border-amber-500 w-40 sm:w-48"
+                      className="bg-stone-50 border border-stone-200 rounded-xl pl-8 pr-3 py-2 text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:border-amber-500 w-36 sm:w-48"
                     />
                   </div>
 
@@ -2789,62 +2915,89 @@ export default function UnifiedConsolePage() {
                     className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:brightness-110 text-stone-950 px-3.5 py-2 rounded-xl text-xs font-black cursor-pointer shadow-xs border border-amber-300/40 flex items-center space-x-1.5 shrink-0 transition"
                   >
                     <Plus className="w-4 h-4 text-stone-950" />
-                    <span>Compose Article</span>
+                    <span>Compose</span>
                   </button>
                 </div>
               </div>
 
-              {/* Floating Elevated Table */}
-              <div className="bg-white rounded-2xl border border-amber-200/80 overflow-hidden shadow-xs">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-gradient-to-r from-[#240409] via-[#380911] to-[#240409] text-amber-200 uppercase text-[10px] font-mono tracking-wider border-b border-amber-900/40">
-                      <tr>
-                        <th className="py-3.5 px-4 font-black">Sacred Article &amp; Path</th>
-                        <th className="py-3.5 px-4 font-black">Category</th>
-                        <th className="py-3.5 px-4 font-black">Deity / Sanctuary</th>
-                        <th className="py-3.5 px-4 font-black text-right">Devotee Reads</th>
-                        <th className="py-3.5 px-4 font-black text-center">Sanctuary Gate</th>
-                        <th className="py-3.5 px-4 font-black text-center">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-stone-100">
-                      {filteredPosts.length === 0 ? (
+              {/* Main Content Area: Modern Table OR Visual Grid Cards */}
+              <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-2xs">
+                {filteredPosts.length === 0 ? (
+                  <div className="py-16 text-center text-stone-400">
+                    <div className="text-4xl mb-3">📜</div>
+                    <div className="font-bold text-stone-700 text-base">No articles found</div>
+                    <div className="text-xs text-stone-400 mt-1 max-w-sm mx-auto">
+                      No publications match your selected category, status, or search query.
+                    </div>
+                    <button
+                      onClick={() => {
+                        setPostCategoryFilter('all');
+                        setPostStatusFilter('all');
+                        setPostSearch('');
+                      }}
+                      className="mt-4 px-4 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold transition shadow-2xs cursor-pointer"
+                    >
+                      Reset All Filters
+                    </button>
+                  </div>
+                ) : postViewMode === 'table' ? (
+                  /* ======================================================== */
+                  /* REDESIGNED EXECUTIVE EDITORIAL TABLE                     */
+                  /* ======================================================== */
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-stone-50/90 text-stone-600 uppercase text-[11px] font-bold tracking-wider border-b border-stone-200">
                         <tr>
-                          <td colSpan="6" className="py-12 text-center text-stone-400">
-                            <div className="text-3xl mb-2">📜</div>
-                            <div className="font-bold text-stone-600">No articles matched your criteria</div>
-                            <div className="text-xs text-stone-400 mt-1">Try resetting category or search filters</div>
-                          </td>
+                          <th className="py-3 px-4">Article &amp; Cover</th>
+                          <th className="py-3 px-4">Category</th>
+                          <th className="py-3 px-4">Deity / Kshetra</th>
+                          <th className="py-3 px-4 text-right">Devotee Reads</th>
+                          <th className="py-3 px-4 text-center">Status / Gate</th>
+                          <th className="py-3 px-4 text-center">Quick Actions</th>
                         </tr>
-                      ) : (
-                        filteredPosts.map((post) => {
+                      </thead>
+                      <tbody className="divide-y divide-stone-100">
+                        {filteredPosts.map((post) => {
                           const catInfo = allCategories.find(c => c.id === post.category || c.slug === post.category);
+                          const isDraft = post.status === 'draft';
                           return (
-                            <tr key={post._id} className="hover:bg-amber-50/40 transition-colors group">
-                              {/* Article Title & Slug */}
-                              <td className="py-3.5 px-4">
-                                <div className="flex items-start space-x-3">
-                                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0 shadow-2xs border bg-amber-50 text-amber-900 border-amber-200">
-                                    {catInfo?.icon || '📜'}
+                            <tr key={post._id} className="hover:bg-amber-50/30 transition-colors group">
+                              {/* Article Cover Image, Title & Path */}
+                              <td className="py-3 px-4">
+                                <div className="flex items-center space-x-3.5">
+                                  <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-stone-100 border border-stone-200 shrink-0 shadow-2xs group-hover:shadow-xs transition">
+                                    <img
+                                      src={post.featuredImage || '/images/temple_kashi.jpg'}
+                                      alt={post.title}
+                                      className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                                      onError={(e) => {
+                                        e.target.onerror = null;
+                                        e.target.src = '/images/temple_kashi.jpg';
+                                      }}
+                                    />
                                   </div>
-                                  <div className="min-w-0">
-                                    <div className="font-black text-stone-900 text-xs sm:text-sm group-hover:text-[#78131e] transition-colors leading-snug">
+                                  <div className="min-w-0 max-w-md">
+                                    <div className="font-bold text-stone-900 text-xs sm:text-[13px] group-hover:text-[#78131e] transition-colors leading-snug line-clamp-2">
                                       {post.title}
                                     </div>
+                                    {post.titleTelugu && (
+                                      <div className="text-[11px] text-amber-900/80 font-medium truncate mt-0.5">
+                                        {post.titleTelugu}
+                                      </div>
+                                    )}
                                     <div className="flex items-center space-x-2 mt-1">
-                                      <span className="text-[10px] text-stone-400 font-mono truncate max-w-xs">
+                                      <span className="text-[10px] text-stone-400 font-mono truncate max-w-[200px] bg-stone-50 px-1.5 py-0.5 rounded border border-stone-100">
                                         /{post.category}/{post.slug}
                                       </span>
                                       <button
                                         onClick={() => copyToClipboard(`http://localhost:3001/${post.category}/${post.slug}`, post.slug)}
-                                        className="text-stone-400 hover:text-amber-800 transition"
+                                        className="text-stone-400 hover:text-amber-800 transition cursor-pointer"
                                         title="Copy public link"
                                       >
                                         {copiedSlug === post.slug ? (
-                                          <CheckCheck className="w-3 h-3 text-emerald-600" />
+                                          <CheckCheck className="w-3.5 h-3.5 text-emerald-600" />
                                         ) : (
-                                          <Copy className="w-3 h-3" />
+                                          <Copy className="w-3.5 h-3.5" />
                                         )}
                                       </button>
                                     </div>
@@ -2852,53 +3005,238 @@ export default function UnifiedConsolePage() {
                                 </div>
                               </td>
 
-                              {/* Category Badge */}
-                              <td className="py-3.5 px-4">
-                                <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border shadow-2xs bg-amber-50 text-amber-900 border-amber-300">
-                                  {catInfo ? `${catInfo.icon} ${catInfo.label}` : post.category}
+                              {/* Category Badge with Contextual Palette */}
+                              <td className="py-3 px-4">
+                                <span className={`inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-[11px] font-bold border shadow-2xs ${getCategoryBadgeStyle(post.category)}`}>
+                                  <span>{catInfo?.icon || '📜'}</span>
+                                  <span>{catInfo ? catInfo.label : post.category}</span>
                                 </span>
                               </td>
 
-                            {/* Deity / Kshetra */}
-                            <td className="py-3.5 px-4">
-                              <div className="text-stone-800 font-bold text-xs flex items-center space-x-1.5">
-                                <span>{post.deity || 'Parashakti'}</span>
-                              </div>
-                              <div className="text-[10px] text-stone-400 mt-0.5">Universal Sanctuary</div>
-                            </td>
+                              {/* Deity / Kshetra */}
+                              <td className="py-3 px-4">
+                                <div className="text-stone-800 font-bold text-xs flex items-center space-x-1.5">
+                                  <span className="text-stone-400">🕉️</span>
+                                  <span className="truncate max-w-[180px]">{post.deity || 'Parashakti'}</span>
+                                </div>
+                                <div className="text-[10px] text-stone-400 mt-0.5">Universal Sanctuary</div>
+                              </td>
 
-                            {/* Devotee Reads with Spark Meter */}
-                            <td className="py-3.5 px-4 text-right">
-                              <div className="font-mono font-black text-stone-900 text-xs">
-                                {(post.viewsCount || 850).toLocaleString()}
-                              </div>
-                              <div className="w-16 bg-stone-100 rounded-full h-1.5 ml-auto mt-1 overflow-hidden">
-                                <div
-                                  className="bg-gradient-to-r from-amber-500 to-[#78131e] h-full rounded-full"
-                                  style={{ width: `${Math.min(100, Math.max(25, ((post.viewsCount || 850) / 6000) * 100))}%` }}
-                                ></div>
-                              </div>
-                            </td>
+                              {/* Devotee Reads */}
+                              <td className="py-3 px-4 text-right">
+                                <div className="inline-flex items-center space-x-1.5 text-stone-800 font-bold text-xs bg-stone-50 px-2.5 py-1 rounded-lg border border-stone-200">
+                                  <Eye className="w-3.5 h-3.5 text-stone-400" />
+                                  <span>{(post.viewsCount || 850).toLocaleString()}</span>
+                                </div>
+                              </td>
 
-                            {/* Publication Status */}
-                            <td className="py-3.5 px-4 text-center">
-                              <span className="inline-flex items-center space-x-1.5 bg-emerald-50 text-emerald-800 border border-emerald-300 text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-2xs">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                <span className="uppercase">Live on Sanctuary</span>
+                              {/* Publication Status & Direct UNPUBLISH / PUBLISH Option */}
+                              <td className="py-3 px-4 text-center">
+                                {isDraft ? (
+                                  <div className="inline-flex items-center gap-1.5">
+                                    <span className="inline-flex items-center space-x-1.5 bg-stone-100 text-stone-700 border border-stone-300 text-[10px] font-bold px-2.5 py-1 rounded-full shadow-2xs">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-stone-400"></span>
+                                      <span>Draft</span>
+                                    </span>
+                                    <button
+                                      onClick={() => handleTogglePublish(post)}
+                                      className="px-2 py-1 rounded-lg text-[10px] font-black bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs transition cursor-pointer"
+                                      title="Publish live on website"
+                                    >
+                                      Publish
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div className="inline-flex items-center gap-1.5">
+                                    <span className="inline-flex items-center space-x-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-black px-2.5 py-1 rounded-full shadow-2xs">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                      <span>Live</span>
+                                    </span>
+                                    <button
+                                      onClick={() => handleTogglePublish(post)}
+                                      className="px-2 py-1 rounded-lg text-[10px] font-bold bg-stone-100 hover:bg-rose-50 text-stone-600 hover:text-rose-700 border border-stone-200 hover:border-rose-200 transition cursor-pointer"
+                                      title="Unpublish this article (save as draft)"
+                                    >
+                                      Unpublish
+                                    </button>
+                                  </div>
+                                )}
+                              </td>
+
+                              {/* Quick Action Buttons */}
+                              <td className="py-3 px-4 text-center">
+                                <div className="flex items-center justify-center space-x-1">
+                                  <Link
+                                    href={`/${post.category}/${post.slug}`}
+                                    target="_blank"
+                                    className="p-1.5 text-stone-500 hover:text-stone-900 hover:bg-stone-100 rounded-lg transition"
+                                    title="Preview Live Page in New Tab"
+                                  >
+                                    <ExternalLink className="w-4 h-4" />
+                                  </Link>
+                                  <button
+                                    onClick={() => {
+                                      setNewPost(prev => ({
+                                        ...prev,
+                                        ...post,
+                                        title: post.title,
+                                        titleTelugu: post.titleTelugu || '',
+                                        slug: post.slug,
+                                        category: post.category,
+                                        deity: post.deity || '',
+                                        devotionalVerse: post.devotionalVerse || '',
+                                        excerpt: post.excerpt || '',
+                                        content: post.content || '',
+                                        featuredImage: post.featuredImage || '/images/temple_kashi.jpg',
+                                        tags: Array.isArray(post.tags) ? post.tags.join(', ') : (post.tags || ''),
+                                        keywords: Array.isArray(post.keywords) ? post.keywords.join(', ') : (post.keywords || ''),
+                                        status: post.status || 'published'
+                                      }));
+                                      setActiveTab('addPost');
+                                      showToast('success', `Loaded "${post.title}" into studio`);
+                                    }}
+                                    className="p-1.5 text-stone-500 hover:text-amber-800 hover:bg-amber-50 rounded-lg transition cursor-pointer"
+                                    title="Edit in Studio"
+                                  >
+                                    <Edit3 className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeletePost(post)}
+                                    className="p-1.5 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                                    title="Delete Post"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  /* ======================================================== */
+                  /* VISUAL CARDS GRID VIEW                                    */
+                  /* ======================================================== */
+                  <div className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {filteredPosts.map(post => {
+                      const catInfo = allCategories.find(c => c.id === post.category || c.slug === post.category);
+                      const isDraft = post.status === 'draft';
+                      return (
+                        <div
+                          key={post._id}
+                          className="bg-white rounded-2xl border border-stone-200 hover:border-amber-400 hover:shadow-md transition-all duration-300 flex flex-col overflow-hidden group"
+                        >
+                          {/* Top Cover Image with Floating Overlays */}
+                          <div className="relative h-44 w-full bg-stone-100 overflow-hidden">
+                            <img
+                              src={post.featuredImage || '/images/temple_kashi.jpg'}
+                              alt={post.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = '/images/temple_kashi.jpg';
+                              }}
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent"></div>
+
+                            {/* Top Category Badge */}
+                            <div className="absolute top-3 left-3">
+                              <span className={`inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold shadow-sm ${getCategoryBadgeStyle(post.category)}`}>
+                                <span>{catInfo?.icon || '📜'}</span>
+                                <span>{catInfo ? catInfo.label : post.category}</span>
                               </span>
-                            </td>
+                            </div>
 
-                            {/* Action Buttons */}
-                            <td className="py-3.5 px-4 text-center">
-                              <div className="flex items-center justify-center space-x-1.5">
+                            {/* Top Right Live / Draft with Unpublish / Publish button */}
+                            <div className="absolute top-3 right-3 flex items-center space-x-1.5">
+                              {isDraft ? (
+                                <button
+                                  onClick={() => handleTogglePublish(post)}
+                                  className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-stone-900/90 hover:bg-emerald-700 text-stone-200 hover:text-white backdrop-blur-xs transition shadow-sm cursor-pointer"
+                                  title="Click to publish live"
+                                >
+                                  <span className="w-1.5 h-1.5 rounded-full bg-stone-400"></span>
+                                  <span>Draft • Publish</span>
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => handleTogglePublish(post)}
+                                  className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-950/80 hover:bg-rose-900/90 text-emerald-200 hover:text-rose-100 backdrop-blur-xs transition shadow-sm cursor-pointer"
+                                  title="Click to unpublish"
+                                >
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                  <span>Live • Unpublish</span>
+                                </button>
+                              )}
+                            </div>
+
+                            {/* Bottom Deity & Views on Image */}
+                            <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between text-white/95 text-xs">
+                              <div className="font-semibold truncate flex items-center space-x-1 drop-shadow-sm">
+                                <span>🕉️</span>
+                                <span>{post.deity || 'Universal Sanctuary'}</span>
+                              </div>
+                              <div className="flex items-center space-x-1 text-[11px] text-amber-200 shrink-0 font-medium drop-shadow-sm">
+                                <Eye className="w-3.5 h-3.5" />
+                                <span>{(post.viewsCount || 850).toLocaleString()}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Card Body */}
+                          <div className="p-4 flex-1 flex flex-col justify-between">
+                            <div>
+                              <h3 className="font-serif font-bold text-stone-900 text-sm group-hover:text-[#78131e] transition-colors line-clamp-2 leading-snug">
+                                {post.title}
+                              </h3>
+                              {post.titleTelugu && (
+                                <div className="text-[11px] text-amber-900 font-medium truncate mt-1">
+                                  {post.titleTelugu}
+                                </div>
+                              )}
+                              <p className="text-stone-500 text-xs mt-2 line-clamp-2 leading-relaxed">
+                                {post.excerpt || post.content?.slice(0, 120) || 'Sacred devotional article published on Sri Astadasapeetam platform.'}
+                              </p>
+                            </div>
+
+                            {/* Card Footer Actions */}
+                            <div className="pt-3 mt-3 border-t border-stone-100 flex items-center justify-between">
+                              <div className="flex items-center space-x-1">
+                                <button
+                                  onClick={() => copyToClipboard(`http://localhost:3001/${post.category}/${post.slug}`, post.slug)}
+                                  className="p-1.5 text-stone-400 hover:text-stone-700 rounded-lg hover:bg-stone-100 transition cursor-pointer"
+                                  title="Copy public link"
+                                >
+                                  {copiedSlug === post.slug ? (
+                                    <CheckCheck className="w-3.5 h-3.5 text-emerald-600" />
+                                  ) : (
+                                    <Copy className="w-3.5 h-3.5" />
+                                  )}
+                                </button>
                                 <Link
                                   href={`/${post.category}/${post.slug}`}
                                   target="_blank"
-                                  className="p-1.5 text-stone-500 hover:text-[#78131e] hover:bg-stone-100 rounded-lg transition"
-                                  title="View Live Article"
+                                  className="p-1.5 text-stone-400 hover:text-stone-700 rounded-lg hover:bg-stone-100 transition"
+                                  title="Preview live"
                                 >
-                                  <ExternalLink className="w-4 h-4" />
+                                  <ExternalLink className="w-3.5 h-3.5" />
                                 </Link>
+                              </div>
+
+                              <div className="flex items-center space-x-2">
+                                <button
+                                  onClick={() => handleTogglePublish(post)}
+                                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer ${
+                                    isDraft 
+                                      ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200' 
+                                      : 'bg-stone-100 hover:bg-rose-50 text-stone-600 hover:text-rose-700 border border-stone-200 hover:border-rose-200'
+                                  }`}
+                                >
+                                  {isDraft ? 'Publish' : 'Unpublish'}
+                                </button>
+
                                 <button
                                   onClick={() => {
                                     setNewPost(prev => ({
@@ -2918,46 +3256,42 @@ export default function UnifiedConsolePage() {
                                       status: post.status || 'published'
                                     }));
                                     setActiveTab('addPost');
-                                    showToast('success', `Loaded post "${post.title}" into studio!`);
+                                    showToast('success', `Loaded "${post.title}" into studio`);
                                   }}
-                                  className="p-1.5 text-stone-500 hover:text-amber-800 hover:bg-amber-50 rounded-lg transition cursor-pointer"
-                                  title="Edit Post"
+                                  className="p-1.5 text-amber-800 hover:bg-amber-50 rounded-lg transition cursor-pointer"
+                                  title="Edit in Studio"
                                 >
-                                  <Edit3 className="w-4 h-4" />
+                                  <Edit3 className="w-3.5 h-3.5" />
                                 </button>
+
                                 <button
                                   onClick={() => handleDeletePost(post)}
                                   className="p-1.5 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
-                                  title="Delete Post"
+                                  title="Delete"
                                 >
-                                  <Trash2 className="w-4 h-4" />
+                                  <Trash2 className="w-3.5 h-3.5" />
                                 </button>
                               </div>
-                            </td>
-                          </tr>
-                        );
-                      })
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
 
-                {/* Table Pagination & Count Footer */}
-                <div className="p-4 bg-stone-50 border-t border-stone-200/80 flex items-center justify-between text-xs text-stone-500">
+                {/* Table & Grid Pagination & Count Footer */}
+                <div className="p-4 bg-stone-50 border-t border-stone-200 flex items-center justify-between text-xs text-stone-500">
                   <div>
                     Showing <span className="font-bold text-stone-800">{filteredPosts.length}</span> of{' '}
-                    <span className="font-bold text-stone-800">{posts.length}</span> sacred publications
+                    <span className="font-bold text-stone-800">{posts.length}</span> publications
+                    {postCategoryFilter !== 'all' && <span className="ml-1 text-stone-400">(filtered by category)</span>}
+                    {postStatusFilter !== 'all' && <span className="ml-1 text-stone-400">(filtered by status)</span>}
                   </div>
                   <div className="flex items-center space-x-2">
-                    <button className="px-3 py-1 rounded-lg border bg-white text-stone-400 cursor-not-allowed text-[11px] font-semibold">
-                      Previous
-                    </button>
-                    <span className="px-2.5 py-1 rounded-lg bg-[#78131e] text-white font-mono font-bold text-[11px]">
-                      1
+                    <span className="text-[11px] text-stone-500 font-medium">
+                      {posts.filter(p => p.status !== 'draft').length} Live • {posts.filter(p => p.status === 'draft').length} Drafts
                     </span>
-                    <button className="px-3 py-1 rounded-lg border bg-white text-stone-400 cursor-not-allowed text-[11px] font-semibold">
-                      Next
-                    </button>
                   </div>
                 </div>
               </div>
