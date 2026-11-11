@@ -442,7 +442,7 @@ export default function UnifiedConsolePage() {
     try {
       const [usersRes, postsRes, prodsRes, contentsRes, campsRes, consultsRes] = await Promise.all([
         fetch(`${API_BASE}/admin/users`, { headers }).catch(() => ({ json: () => ({ success: false }) })),
-        fetch(`${API_BASE}/posts`).catch(() => ({ json: () => ({ success: false }) })),
+        fetch(`${API_BASE}/posts?limit=200`).catch(() => ({ json: () => ({ success: false }) })),
         fetch(`${API_BASE}/marketing/products`, { headers }).catch(() => ({ json: () => ({ success: false }) })),
         fetch(`${API_BASE}/marketing/content`, { headers }).catch(() => ({ json: () => ({ success: false }) })),
         fetch(`${API_BASE}/marketing/campaigns`, { headers }).catch(() => ({ json: () => ({ success: false }) })),
@@ -673,7 +673,10 @@ export default function UnifiedConsolePage() {
 
   // Filtered lists
   const filteredPosts = posts.filter(p => {
-    const matchCat = postCategoryFilter === 'all' || p.category === postCategoryFilter || p.categorySlug === postCategoryFilter;
+    const matchCat = postCategoryFilter === 'all' || 
+      p.category === postCategoryFilter || 
+      p.categorySlug === postCategoryFilter ||
+      p.category?.toLowerCase() === postCategoryFilter?.toLowerCase();
     const matchSearch = postSearch === '' ||
       p.title?.toLowerCase().includes(postSearch.toLowerCase()) ||
       p.titleTelugu?.toLowerCase().includes(postSearch.toLowerCase());
@@ -2719,7 +2722,12 @@ export default function UnifiedConsolePage() {
                           ✨ All Categories ({posts.length} Publications)
                         </option>
                         {allCategories.map(c => {
-                          const count = posts.filter(p => p.category === c.id || p.category === c.slug).length;
+                          const count = posts.filter(p => 
+                            p.category === c.id || 
+                            p.category === c.slug ||
+                            p.category?.toLowerCase() === c.id?.toLowerCase() ||
+                            p.category?.toLowerCase() === c.slug?.toLowerCase()
+                          ).length;
                           return (
                             <option key={c.id} value={c.id}>
                               {c.icon} {c.label} {c.telugu ? `(${c.telugu})` : ''} — {count} {count === 1 ? 'post' : 'posts'} {c.isCustom ? '★ Custom' : ''}

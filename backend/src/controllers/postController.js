@@ -21,7 +21,7 @@ exports.getPosts = async (req, res, next) => {
 
     const posts = await Post.find(query)
       .sort({ createdAt: -1 })
-      .limit(limit ? Number(limit) : 50);
+      .limit(limit ? Number(limit) : 200);
 
     res.status(200).json({
       success: true,

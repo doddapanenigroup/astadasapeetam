@@ -21,15 +21,8 @@ const postSchema = new mongoose.Schema(
     category: {
       type: String,
       required: [true, 'Please choose a category'],
-      enum: [
-        'temples',
-        'panchangam',
-        'slokas',
-        'astrology',
-        'festivals',
-        'marketplace',
-        'general'
-      ],
+      trim: true,
+      lowercase: true,
       default: 'temples'
     },
     excerpt: {
