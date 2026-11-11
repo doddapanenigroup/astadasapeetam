@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import Link from 'next/link';
 import AdBanner from '../../components/AdBanner';
 import { festivalCategories, allFestivalsData } from '../../data/festivalsData';
 import { 
@@ -295,14 +296,13 @@ export default function FestivalsPage() {
 
                 {/* Footer Action */}
                 <div className="p-3.5 pt-0">
-                  <button
-                    suppressHydrationWarning
-                    onClick={() => setSelectedFestival(fest)}
+                  <Link
+                    href={`/festivals/${fest.id}`}
                     className="w-full bg-white hover:bg-amber-50 border border-[#c5932a] text-[#78131e] text-xs font-bold py-2 px-3 rounded-xl transition-all shadow-2xs hover:shadow-xs flex items-center justify-center gap-1 group-hover:border-[#78131e] cursor-pointer"
                   >
                     <span>View Puja Vidhi & Timings</span>
                     <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
+                  </Link>
                 </div>
               </div>
             ))}

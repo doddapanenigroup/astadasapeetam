@@ -673,10 +673,16 @@ export default function UnifiedConsolePage() {
 
   // Filtered lists
   const filteredPosts = posts.filter(p => {
+    const pCat = p.category?.toLowerCase() || '';
+    const fCat = postCategoryFilter?.toLowerCase() || '';
     const matchCat = postCategoryFilter === 'all' || 
-      p.category === postCategoryFilter || 
-      p.categorySlug === postCategoryFilter ||
-      p.category?.toLowerCase() === postCategoryFilter?.toLowerCase();
+      pCat === fCat ||
+      p.categorySlug?.toLowerCase() === fCat ||
+      (fCat === 'astrology' && (pCat === 'horoscope' || pCat === 'remedies' || pCat === 'astrology')) ||
+      (fCat === 'yatralu' && (pCat === 'yatralu' || pCat === 'yatra')) ||
+      (fCat === 'marketplace' && (pCat === 'marketplace' || pCat === 'products')) ||
+      (fCat === 'temples' && (pCat === 'temples' || pCat === 'temple')) ||
+      (fCat === 'festivals' && (pCat === 'festivals' || pCat === 'festival'));
     const matchSearch = postSearch === '' ||
       p.title?.toLowerCase().includes(postSearch.toLowerCase()) ||
       p.titleTelugu?.toLowerCase().includes(postSearch.toLowerCase());
@@ -2722,15 +2728,20 @@ export default function UnifiedConsolePage() {
                           ✨ All Categories ({posts.length} Publications)
                         </option>
                         {allCategories.map(c => {
-                          const count = posts.filter(p => 
-                            p.category === c.id || 
-                            p.category === c.slug ||
-                            p.category?.toLowerCase() === c.id?.toLowerCase() ||
-                            p.category?.toLowerCase() === c.slug?.toLowerCase()
-                          ).length;
+                          const cId = c.id?.toLowerCase();
+                          const count = posts.filter(p => {
+                            const pCat = p.category?.toLowerCase() || '';
+                            if (pCat === cId || pCat === c.slug?.toLowerCase()) return true;
+                            if (cId === 'astrology' && (pCat === 'horoscope' || pCat === 'remedies' || pCat === 'astrology')) return true;
+                            if (cId === 'yatralu' && (pCat === 'yatralu' || pCat === 'yatra')) return true;
+                            if (cId === 'marketplace' && (pCat === 'marketplace' || pCat === 'products')) return true;
+                            if (cId === 'temples' && (pCat === 'temples' || pCat === 'temple')) return true;
+                            if (cId === 'festivals' && (pCat === 'festivals' || pCat === 'festival')) return true;
+                            return false;
+                          }).length;
                           return (
                             <option key={c.id} value={c.id}>
-                              {c.icon} {c.label} {c.telugu ? `(${c.telugu})` : ''} — {count} {count === 1 ? 'post' : 'posts'} {c.isCustom ? '★ Custom' : ''}
+                              {c.icon} {c.label} — {count} {count === 1 ? 'post' : 'posts'} {c.isCustom ? '★ Custom' : ''}
                             </option>
                           );
                         })}

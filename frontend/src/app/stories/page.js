@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import Link from 'next/link';
 import AdBanner from '../../components/AdBanner';
 import { storyCategories, allStories } from '../../data/storiesData';
 import { 
@@ -190,12 +191,12 @@ export default function StoriesPage() {
 
                       {/* Content */}
                       <div className="p-5 space-y-3">
-                        <h3 
-                          onClick={() => setSelectedStory(story)}
-                          className="font-serif font-black text-base text-stone-900 group-hover:text-[#78131e] transition-colors line-clamp-2 cursor-pointer leading-snug"
+                        <Link 
+                          href={`/stories/${story.id}`}
+                          className="font-serif font-black text-base text-stone-900 group-hover:text-[#78131e] transition-colors line-clamp-2 cursor-pointer leading-snug block"
                         >
                           {story.title}
-                        </h3>
+                        </Link>
 
                         <p className="text-xs text-stone-600 font-serif line-clamp-3 leading-relaxed">
                           {story.summary}
@@ -235,14 +236,13 @@ export default function StoriesPage() {
                           <Bookmark className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-amber-600' : ''}`} />
                         </button>
 
-                        <button
-                          suppressHydrationWarning
-                          onClick={() => setSelectedStory(story)}
+                        <Link
+                          href={`/stories/${story.id}`}
                           className="px-3 py-1.5 rounded-lg bg-[#78131e] text-white font-bold text-xs hover:bg-[#600e17] transition-colors cursor-pointer flex items-center gap-1"
                         >
                           <span>Read</span>
                           <ChevronRight className="w-3.5 h-3.5" />
-                        </button>
+                        </Link>
                       </div>
                     </div>
                   </div>
@@ -253,145 +253,6 @@ export default function StoriesPage() {
         </div>
 
       </main>
-
-      {/* Full Story Reader Modal Dialog */}
-      {selectedStory && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-          <div className="bg-[#fffdfa] rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border-2 border-amber-300 relative animate-in fade-in zoom-in-95 duration-200">
-            
-            {/* Header Sticky Bar */}
-            <div className="sticky top-0 z-30 bg-[#fffdfa]/95 backdrop-blur-md px-6 py-4 border-b border-[#ebdcc7] flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold border border-amber-300">
-                  {selectedStory.purana}
-                </span>
-                <span className="text-xs text-stone-500 font-serif">
-                  {selectedStory.readTime}
-                </span>
-              </div>
-
-              {/* Reader Options: Font Size, Audio, Share, Close */}
-              <div className="flex items-center gap-2">
-                {/* Font Size Toggle */}
-                <button
-                  suppressHydrationWarning
-                  onClick={() => setFontSize(fontSize === 'base' ? 'lg' : fontSize === 'lg' ? 'sm' : 'base')}
-                  className="p-1.5 rounded-lg border border-stone-200 text-stone-600 hover:bg-amber-50 text-xs font-bold cursor-pointer"
-                  title="Toggle Font Size"
-                >
-                  <Type className="w-3.5 h-3.5" />
-                </button>
-
-                {/* Audio Listen Simulation */}
-                <button
-                  suppressHydrationWarning
-                  onClick={() => setIsPlayingAudio(!isPlayingAudio)}
-                  className={`p-1.5 rounded-lg border text-xs font-bold cursor-pointer transition-colors ${
-                    isPlayingAudio ? 'bg-amber-500 text-white border-amber-500' : 'border-stone-200 text-stone-600 hover:bg-amber-50'
-                  }`}
-                  title="Audio Recitation"
-                >
-                  {isPlayingAudio ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
-                </button>
-
-                <button
-                  suppressHydrationWarning
-                  onClick={handleShare}
-                  className="p-1.5 rounded-lg border border-stone-200 text-stone-600 hover:bg-amber-50 cursor-pointer"
-                  title="Share Story"
-                >
-                  <Share2 className="w-3.5 h-3.5" />
-                </button>
-
-                <button
-                  suppressHydrationWarning
-                  onClick={() => {
-                    setSelectedStory(null);
-                    setIsPlayingAudio(false);
-                  }}
-                  className="p-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 cursor-pointer ml-1"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* Audio Simulation Banner */}
-            {isPlayingAudio && (
-              <div className="bg-amber-100/80 px-6 py-2 border-b border-amber-200 text-xs text-amber-950 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-amber-600 animate-ping" />
-                  <span className="font-serif">Now playing: Sanskrit Katha Narration & Ambient Flute...</span>
-                </div>
-                <span className="text-[10px] font-mono">01:45 / 06:20</span>
-              </div>
-            )}
-
-            {/* Story Banner Image */}
-            <div className="relative h-60 sm:h-72 w-full bg-stone-900 overflow-hidden">
-              <img 
-                src={selectedStory.image} 
-                alt={selectedStory.title} 
-                className="w-full h-full object-cover opacity-80"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#fffdfa] via-transparent to-black/30" />
-            </div>
-
-            {/* Story Body */}
-            <div className="p-6 sm:p-8 space-y-6">
-              <div className="space-y-2">
-                <h1 className="text-2xl sm:text-3xl font-serif font-black text-[#78131e] leading-snug">
-                  {selectedStory.title}
-                </h1>
-                <p className="text-xs text-stone-500 font-serif">
-                  Scriptural Source: <strong>{selectedStory.purana}</strong>
-                </p>
-              </div>
-
-              {/* Moral Callout */}
-              <div className="bg-amber-50 border-l-4 border-[#78131e] p-4 rounded-r-xl">
-                <span className="text-xs font-bold text-[#78131e] uppercase tracking-wider block mb-0.5">
-                  🌟 The Divine Moral & Spiritual Lesson:
-                </span>
-                <p className="text-xs sm:text-sm font-serif italic text-amber-950 leading-relaxed">
-                  "{selectedStory.moral}"
-                </p>
-              </div>
-
-              {/* Full Text Narrative */}
-              <div className={`font-serif text-stone-800 leading-relaxed space-y-4 ${
-                fontSize === 'sm' ? 'text-xs' : fontSize === 'lg' ? 'text-base sm:text-lg' : 'text-sm sm:text-base'
-              }`}>
-                {selectedStory.fullStory.split('\n\n').map((paragraph, idx) => (
-                  <p key={idx} className="first-letter:text-3xl first-letter:font-black first-letter:text-[#78131e] first-letter:mr-1 first-letter:float-left">
-                    {paragraph}
-                  </p>
-                ))}
-              </div>
-
-              {/* Reader Footer with Share and Close */}
-              <div className="pt-6 border-t border-[#ebdcc7] flex items-center justify-between">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  {selectedStory.tags.map((tag, idx) => (
-                    <span key={idx} className="text-xs px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 font-medium">
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
-
-                <button
-                  suppressHydrationWarning
-                  onClick={() => setSelectedStory(null)}
-                  className="px-5 py-2 rounded-xl bg-[#78131e] text-white text-xs font-bold hover:bg-[#600e17] transition-colors cursor-pointer"
-                >
-                  Done Reading
-                </button>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      )}
 
       {/* Devotional Footer Banner */}
       <div className="mt-12 bg-amber-50/70 border-t border-[#ebdcc7] py-6 text-center text-xs text-stone-600 font-serif">
