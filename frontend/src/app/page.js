@@ -3,8 +3,10 @@ import AdBanner from '../components/AdBanner';
 import HeroCarousel from '../components/HeroCarousel';
 import CategoryGrid from '../components/CategoryGrid';
 import MainDevotionalGrid from '../components/MainDevotionalGrid';
+import DynamicFestivalAlert from '../components/DynamicFestivalAlert';
 import AstrologerConsultBanner from '../components/AstrologerConsultBanner';
 import ArticlesAndVideos from '../components/ArticlesAndVideos';
+import DynamicMarketplaceSpotlight from '../components/DynamicMarketplaceSpotlight';
 import ProductsAndFestivalsRow from '../components/ProductsAndFestivalsRow';
 import RightSidebarFull from '../components/RightSidebarFull';
 import FooterNewsletterApp from '../components/FooterNewsletterApp';
@@ -20,7 +22,7 @@ export default function HomePage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
           {/* Main Left Content Area (Col 8.5 / 9 on XL) */}
           <div className="lg:col-span-8 xl:col-span-9 flex flex-col space-y-4">
-            {/* Hero Carousel */}
+            {/* Hero Carousel (Dynamic Hero Banner) */}
             <HeroCarousel />
 
             {/* Explore Categories (16 Quick-Access Cards) */}
@@ -32,6 +34,9 @@ export default function HomePage() {
             {/* 3-Column Content: Devotional News, Festivals & Events, Popular Temples */}
             <MainDevotionalGrid />
 
+            {/* Auspicious Festival Alert (Dynamic from Admin Console) */}
+            <DynamicFestivalAlert />
+
             {/* Verified Astrologers Lead Gen Banner */}
             <AstrologerConsultBanner />
 
@@ -41,13 +46,16 @@ export default function HomePage() {
             {/* Latest Articles + Latest Videos */}
             <ArticlesAndVideos />
 
+            {/* Marketplace Promotional Ribbon (Dynamic from Admin Console) */}
+            <DynamicMarketplaceSpotlight />
+
             {/* Recommended Devotional Products + Upcoming Festivals */}
             <div className="flex-1 flex flex-col min-h-0">
               <ProductsAndFestivalsRow />
             </div>
           </div>
 
-          {/* Continuous Right Sidebar (Col 3.5 / 3 on XL with Slot 3 Ad) */}
+          {/* Continuous Right Sidebar (Col 3.5 / 3 on XL with Slot 3 Ad & Dynamic Sloka of the Day) */}
           <div className="lg:col-span-4 xl:col-span-3">
             <RightSidebarFull />
           </div>

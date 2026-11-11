@@ -1,38 +1,100 @@
-import React from 'react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { dailyPanchangam } from '../data/mockData';
 import AdBanner from './AdBanner';
-import { Calendar, Radio, Quote, PhoneCall, Sunrise, Sunset } from 'lucide-react';
+import { Calendar, Radio, Sparkles, BookOpen, PhoneCall, Sunrise, Sunset } from 'lucide-react';
 
 export default function RightSidebarFull() {
+  const [sloka, setSloka] = useState(null);
+
+  useEffect(() => {
+    fetch('http://localhost:5000/api/public/content?sectionKey=sloka_of_day')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data && data.data.length > 0) {
+          setSloka(data.data[0]);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const isSlokaActive = sloka && sloka.isActive;
+
   return (
     <aside className="space-y-4">
-      {/* 1. Today's Divine Message */}
-      <div className="bg-[#fffdfa] rounded-2xl p-4 border border-[#ebdcc7] shadow-2xs relative overflow-hidden">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1">
-            <span className="text-[11px] font-bold text-[#78131e] uppercase tracking-wider block mb-1">
-              Today's Divine Message
+      {/* 1. Daily Sloka of the Day / Today's Divine Message */}
+      {isSlokaActive ? (
+        <div className="bg-gradient-to-br from-[#fffdf8] via-[#fef7ee] to-[#fbf0de] rounded-2xl p-4 border border-[#ebdcc7] shadow-2xs relative overflow-hidden group">
+          <div className="flex items-center justify-between pb-2 mb-2 border-b border-amber-200/60">
+            <span className="text-[10px] font-black text-[#78131e] uppercase tracking-wider flex items-center gap-1.5 font-serif">
+              <Sparkles className="w-3.5 h-3.5 text-amber-600 animate-spin" style={{ animationDuration: '6s' }} />
+              {sloka.badge || 'SLOKA OF THE DAY'}
             </span>
-            <div className="text-amber-600/40 font-serif text-3xl leading-none -mt-1 select-none">
-              “
-            </div>
-            <blockquote className="text-xs text-stone-800 font-serif italic leading-relaxed -mt-1 mb-1.5">
-              When you surrender to the Divine, life flows with grace.
-            </blockquote>
-            <span className="text-[10px] font-bold text-amber-800 uppercase tracking-wide block">
-              — Bhagavad Gita
+            <span className="text-[9px] bg-amber-200/80 text-amber-950 font-bold px-2 py-0.5 rounded-full">
+              నిత్య శ్లోకం
             </span>
           </div>
 
-          <div className="w-16 h-16 shrink-0 flex items-center justify-center">
-            <img
-              src="/images/diya_message.png"
-              alt="Sacred Diya"
-              className="w-full h-full object-contain"
-            />
+          <div className="mb-2">
+            <h4 className="font-serif font-black text-sm text-stone-900 leading-snug">
+              {sloka.title}
+            </h4>
+            {sloka.subtitle && (
+              <p className="text-[10.5px] font-medium text-amber-800 mt-0.5">
+                {sloka.subtitle}
+              </p>
+            )}
+          </div>
+
+          {sloka.content && (
+            <div className="bg-white/80 rounded-xl p-3 border border-amber-200/70 shadow-xs mb-3">
+              <p className="text-xs font-serif font-bold text-amber-950 leading-relaxed tracking-wide text-center">
+                {sloka.content}
+              </p>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between pt-1">
+            <Link
+              href={sloka.ctaLink || '/sacred-temples'}
+              className="inline-flex items-center gap-1 text-[11px] font-bold text-[#78131e] hover:text-[#941b27] group-hover:underline"
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              <span>{sloka.ctaText || 'Read Full Stotram'} &rarr;</span>
+            </Link>
+            <span className="text-[10px] text-stone-400 font-medium">Daily Chanting</span>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="bg-[#fffdfa] rounded-2xl p-4 border border-[#ebdcc7] shadow-2xs relative overflow-hidden">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1">
+              <span className="text-[11px] font-bold text-[#78131e] uppercase tracking-wider block mb-1">
+                Today's Divine Message
+              </span>
+              <div className="text-amber-600/40 font-serif text-3xl leading-none -mt-1 select-none">
+                “
+              </div>
+              <blockquote className="text-xs text-stone-800 font-serif italic leading-relaxed -mt-1 mb-1.5">
+                When you surrender to the Divine, life flows with grace.
+              </blockquote>
+              <span className="text-[10px] font-bold text-amber-800 uppercase tracking-wide block">
+                — Bhagavad Gita
+              </span>
+            </div>
+
+            <div className="w-16 h-16 shrink-0 flex items-center justify-center">
+              <img
+                src="/images/diya_message.png"
+                alt="Sacred Diya"
+                className="w-full h-full object-contain"
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 2. Talk to Astrologer Promo Card */}
       <div className="bg-gradient-to-br from-[#122238] via-[#1a3152] to-[#0d1a2d] text-white rounded-2xl p-4 border border-sky-900/40 shadow-2xs relative overflow-hidden">
