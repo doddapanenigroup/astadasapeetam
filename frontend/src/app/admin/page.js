@@ -1148,10 +1148,12 @@ export default function UnifiedConsolePage() {
   const getRoleLabel = (role) => {
     switch (role) {
       case 'admin': return 'Super Admin';
+      case 'commercial_ad_manager': return 'Commercial Ad Manager';
+      case 'digital_marketing': return 'Digital Marketing';
       case 'editor': return 'Content Editor';
       case 'operations_manager': return 'Operations Manager';
-      case 'digital_marketing': return 'Digital Marketing';
       case 'astrologer': return 'Astrologer Desk';
+      case 'reporter': return 'Field Reporter';
       case 'devotee':
       case 'user': return 'Devotee';
       default: return role;
@@ -1467,6 +1469,47 @@ export default function UnifiedConsolePage() {
                 <ExternalLink className="w-3.5 h-3.5" />
               </Link>
             </div>
+          </div>
+
+          {/* 1-CLICK ROLE SWITCHER (STAFF & AD MANAGEMENT PREVIEW) */}
+          <div className="mt-2.5 pt-2.5 border-t border-[#EAE3D5]/80 flex flex-wrap items-center gap-1.5 text-xs">
+            <span className="text-[10px] font-mono font-bold uppercase text-stone-500 mr-1 flex items-center gap-1">
+              <span>⚡ 1-Click Role Switcher:</span>
+            </span>
+            {[
+              { id: 'admin', label: 'Super Admin', icon: '👑', color: 'from-amber-600 to-amber-700' },
+              { id: 'commercial_ad_manager', label: 'Commercial Ad Manager', icon: '📢', color: 'from-rose-600 to-red-700' },
+              { id: 'digital_marketing', label: 'Digital Marketing', icon: '📊', color: 'from-purple-600 to-indigo-700' },
+              { id: 'editor', label: 'Content Editor', icon: '✍️', color: 'from-teal-600 to-emerald-700' },
+              { id: 'astrologer', label: 'Astrologer Desk', icon: '🔮', color: 'from-indigo-600 to-blue-700' },
+              { id: 'reporter', label: 'Field Reporter', icon: '🎥', color: 'from-orange-600 to-amber-700' }
+            ].map(r => {
+              const isSelected = user?.role === r.id;
+              return (
+                <button
+                  key={r.id}
+                  type="button"
+                  onClick={() => {
+                    setUser(prev => ({ ...prev, role: r.id }));
+                    if (typeof window !== 'undefined') {
+                      localStorage.setItem('astada_role', r.id);
+                    }
+                    if (r.id === 'commercial_ad_manager' || r.id === 'digital_marketing') {
+                      setActiveTab('banners');
+                    }
+                    showToast('success', `Switched active role preview to: ${r.label}`);
+                  }}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 cursor-pointer border ${
+                    isSelected
+                      ? `bg-gradient-to-r ${r.color} text-white shadow-xs border-transparent`
+                      : 'bg-white text-stone-600 border-stone-200 hover:bg-stone-50 hover:text-stone-900'
+                  }`}
+                >
+                  <span>{r.icon}</span>
+                  <span>{r.label}</span>
+                </button>
+              );
+            })}
           </div>
 
           {/* Sub-Header: Page Title & Beat / Scope */}
@@ -2101,9 +2144,9 @@ export default function UnifiedConsolePage() {
                   },
                   {
                     id: 'slot-6',
-                    badge: 'SLOT 6 • LOWER SIDEBAR (300 × 250)',
-                    name: 'Lower Right Sidebar Devotional Ad',
-                    desc: 'Fills the space below E-Paper in the right sidebar beside Recommended Devotional Products & Upcoming Festivals.'
+                    badge: 'SLOT 6 • LOWER SIDEBAR (300 × 600 - LARGE SKYSCRAPER)',
+                    name: 'Lower Right Sidebar Devotional Ad (Large Skyscraper)',
+                    desc: 'Fills the full vertical space below E-Paper in the right sidebar beside Devotional Products & Upcoming Festivals.'
                   }
                 ].map((slotDef, index) => {
                   const slotConfig = (homeAdsConfig && homeAdsConfig[slotDef.id]) || DEFAULT_ADS_CONFIG[slotDef.id] || {};
@@ -2277,6 +2320,35 @@ export default function UnifiedConsolePage() {
 
                           <div>
                             <label className="block text-[11px] font-bold text-stone-700 mb-1">
+                              Ad Size / Dimensions
+                            </label>
+                            <select
+                              value={slotConfig.dimensions || (slotDef.id === 'slot-6' ? '300 × 600' : '300 × 250')}
+                              onChange={(e) => handleUpdateAdSlot(slotDef.id, { dimensions: e.target.value })}
+                              className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs font-semibold text-stone-900 focus:outline-none focus:border-amber-500 font-mono"
+                            >
+                              {slotDef.id === 'slot-6' || slotDef.id === 'slot-3' ? (
+                                <>
+                                  <option value="300 × 600">300 × 600 (Large Skyscraper • Fills Empty Space)</option>
+                                  <option value="300 × 500">300 × 500 (Tall Devotional Banner)</option>
+                                  <option value="300 × 250">300 × 250 (Compact Medium Rectangle)</option>
+                                </>
+                              ) : slotDef.id === 'slot-5' ? (
+                                <>
+                                  <option value="970 × 250">970 × 250 (Billboard Bottom Anchor)</option>
+                                  <option value="728 × 90">728 × 90 (Standard Leaderboard)</option>
+                                </>
+                              ) : (
+                                <>
+                                  <option value="728 × 90">728 × 90 (Standard Leaderboard)</option>
+                                  <option value="970 × 90">970 × 90 (Super Leaderboard)</option>
+                                </>
+                              )}
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-bold text-stone-700 mb-1">
                               Color Theme
                             </label>
                             <select
@@ -2290,6 +2362,62 @@ export default function UnifiedConsolePage() {
                               <option value="cosmic-dark">Cosmic Slate &amp; Titanium</option>
                             </select>
                           </div>
+
+                          {slotDef.id === 'slot-6' && (
+                            <>
+                              <div className="sm:col-span-2">
+                                <label className="block text-[11px] font-bold text-stone-700 mb-1">
+                                  Sacred Feature 1 (Checklist Bullet)
+                                </label>
+                                <input
+                                  type="text"
+                                  value={slotConfig.feature1 || ''}
+                                  onChange={(e) => handleUpdateAdSlot(slotDef.id, { feature1: e.target.value })}
+                                  placeholder="Sankalpam in Gotra & Family Names"
+                                  className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-amber-500"
+                                />
+                              </div>
+
+                              <div className="sm:col-span-2">
+                                <label className="block text-[11px] font-bold text-stone-700 mb-1">
+                                  Sacred Feature 2 (Checklist Bullet)
+                                </label>
+                                <input
+                                  type="text"
+                                  value={slotConfig.feature2 || ''}
+                                  onChange={(e) => handleUpdateAdSlot(slotDef.id, { feature2: e.target.value })}
+                                  placeholder="Sanctum Prasadam Delivered to Home"
+                                  className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-amber-500"
+                                />
+                              </div>
+
+                              <div className="sm:col-span-2">
+                                <label className="block text-[11px] font-bold text-stone-700 mb-1">
+                                  Sacred Feature 3 (Checklist Bullet)
+                                </label>
+                                <input
+                                  type="text"
+                                  value={slotConfig.feature3 || ''}
+                                  onChange={(e) => handleUpdateAdSlot(slotDef.id, { feature3: e.target.value })}
+                                  placeholder="Live Video Proof & Temple Archana"
+                                  className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-amber-500"
+                                />
+                              </div>
+
+                              <div className="sm:col-span-2">
+                                <label className="block text-[11px] font-bold text-stone-700 mb-1">
+                                  Special Seva Tagline
+                                </label>
+                                <input
+                                  type="text"
+                                  value={slotConfig.tagline || ''}
+                                  onChange={(e) => handleUpdateAdSlot(slotDef.id, { tagline: e.target.value })}
+                                  placeholder="Special Daily Archana • Live at Srisailam & Kashi"
+                                  className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-amber-500"
+                                />
+                              </div>
+                            </>
+                          )}
                         </div>
                       ) : (
                         <div className="bg-gradient-to-r from-blue-50 to-indigo-50/60 p-4 rounded-2xl border border-blue-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">

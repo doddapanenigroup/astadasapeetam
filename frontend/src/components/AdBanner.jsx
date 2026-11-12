@@ -77,17 +77,21 @@ export const DEFAULT_ADS_CONFIG = {
   },
   'slot-6': {
     id: 'slot-6',
-    name: 'Lower Right Sidebar Devotional Ad',
+    name: 'Lower Right Sidebar Devotional Ad (Large Skyscraper)',
     location: 'Right Column below E-Paper (beside Devotional Products & Festivals)',
-    dimensions: '300 × 250',
+    dimensions: '300 × 600',
     status: 'active',
-    provider: 'private', // Can be toggled to 'google' via Admin Console or Ad Studio
+    provider: 'private',
     title: 'Divine Temple Pooja & Archana Seva',
-    subtitle: 'Perform sankalpam in your family name at famous sacred kshetras.',
+    subtitle: 'Perform sankalpam in your family name at famous sacred kshetras across India.',
     badge: 'TEMPLE SEVA',
     ctaText: 'Book Seva Now',
     targetUrl: '/marketplace',
-    theme: 'saffron-gold'
+    theme: 'saffron-gold',
+    feature1: 'Sankalpam in Gotra & Family Names',
+    feature2: 'Sanctum Prasadam Delivered to Home',
+    feature3: 'Live Video Proof & Temple Archana',
+    tagline: 'Special Daily Archana • Live at Srisailam & Kashi'
   }
 };
 
@@ -106,6 +110,9 @@ export const getInitialAdsConfig = () => {
                 ...base[key],
                 ...parsed[key]
               };
+              if (key === 'slot-6' && parsed[key].dimensions === '300 × 250') {
+                base[key].dimensions = '300 × 600';
+              }
             }
           });
         }
@@ -182,9 +189,11 @@ export default function AdBanner({
     return null;
   }
 
-  // 2. IF HIDDEN LEAVING RESERVED SPACE (Exact feature requested: "hide each add leaving that space there")
+  const isLargeSidebar = resolvedSlotId === 'slot-6' || adConfig.dimensions?.includes('600') || adConfig.dimensions?.includes('500');
+
+  // 2. IF HIDDEN LEAVING RESERVED SPACE
   if (adConfig.status === 'hidden_reserve_space') {
-    const minHeightStyle = type === 'sidebar' ? '250px' : (resolvedSlotId === 'slot-5' ? '120px' : '88px');
+    const minHeightStyle = isLargeSidebar ? '540px' : (type === 'sidebar' ? '250px' : (resolvedSlotId === 'slot-5' ? '120px' : '88px'));
     return (
       <div 
         className={`w-full border-2 border-dashed border-[#c59a72]/60 bg-[#faf6f0]/70 rounded-2xl p-4 flex flex-col items-center justify-center text-center select-none transition-all my-2 shadow-2xs ${className}`}
@@ -200,11 +209,12 @@ export default function AdBanner({
     );
   }
 
-  // 3. IF ACTIVE WITH GOOGLE ADS (Production Ready - No test IDs or dummy debug text)
+  // 3. IF ACTIVE WITH GOOGLE ADS (Production Ready)
   if (adConfig.provider === 'google') {
     if (type === 'sidebar') {
+      const minHClass = isLargeSidebar ? 'min-h-[540px]' : 'min-h-[250px]';
       return (
-        <div className={`w-full bg-[#f8fafc] border border-slate-300 rounded-2xl p-4 text-center flex flex-col items-center justify-between min-h-[250px] shadow-xs relative overflow-hidden ${className}`}>
+        <div className={`w-full bg-[#f8fafc] border border-slate-300 rounded-3xl p-5 text-center flex flex-col items-center justify-between ${minHClass} shadow-xs relative overflow-hidden ${className}`}>
           <div className="w-full flex items-center justify-between pb-2 border-b border-slate-200 text-[10px] text-slate-500 font-mono">
             <span className="font-bold flex items-center gap-1.5 text-blue-700">
               <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
@@ -213,13 +223,19 @@ export default function AdBanner({
             <span>Advertisement</span>
           </div>
 
-          <div className="my-auto py-6 space-y-2">
-            <div className="text-xs font-bold text-slate-800 tracking-wide">
-              Live Google Network Advertisement
+          <div className="my-auto py-6 space-y-3">
+            <div className="text-3xl">🌐</div>
+            <div className="text-sm font-bold text-slate-800 tracking-wide">
+              Live Google Network Skyscraper
             </div>
-            <p className="text-[11px] text-slate-500">
-              Personalized responsive devotional partner ad
+            <p className="text-xs text-slate-500 max-w-xs mx-auto">
+              Personalized responsive devotional partner advertisement unit
             </p>
+            {isLargeSidebar && (
+              <div className="p-2.5 bg-slate-100 rounded-xl text-[11px] text-slate-600 font-mono font-bold">
+                Google Skyscraper • {adConfig.dimensions || '300 × 600'}
+              </div>
+            )}
           </div>
 
           <div className="w-full pt-2 border-t border-slate-100 flex items-center justify-between text-[9px] text-slate-400 uppercase tracking-widest font-mono">
@@ -264,8 +280,80 @@ export default function AdBanner({
     'cosmic-dark': 'from-[#0f172a] via-[#1e293b] to-[#0f172a] border-slate-600/50 text-slate-100'
   }[adConfig.theme || 'velvet-ruby'];
 
-  // Sidebar Private Ad (300x250)
+  // Sidebar Private Ad (Compact 300x250 or Large Skyscraper 300x600)
   if (type === 'sidebar') {
+    if (isLargeSidebar) {
+      return (
+        <div className={`w-full bg-gradient-to-b ${themeStyles} border rounded-3xl p-5 text-center flex flex-col items-center justify-between min-h-[540px] shadow-md relative overflow-hidden group transition-all duration-300 ${className}`}>
+          {/* Subtle Ambient Sacred Light Glows */}
+          <div className="absolute -top-10 -right-10 w-44 h-44 bg-amber-400/10 rounded-full blur-2xl pointer-events-none"></div>
+          <div className="absolute -bottom-10 -left-10 w-44 h-44 bg-rose-600/10 rounded-full blur-2xl pointer-events-none"></div>
+
+          {/* Top Bar: Badge, Dimensions & Sacred Icon */}
+          <div className="w-full flex items-center justify-between text-[10px] text-amber-300 font-mono relative z-10">
+            <span className="bg-white/10 border border-amber-400/30 px-3 py-1 rounded-full uppercase font-black tracking-wider flex items-center gap-1.5 shadow-2xs">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+              <span>{adConfig.badge || 'TEMPLE SEVA'}</span>
+            </span>
+            <span className="text-amber-200/80 font-bold bg-black/25 px-2.5 py-1 rounded-md border border-white/5">
+              {adConfig.dimensions || '300 × 600'}
+            </span>
+          </div>
+
+          {/* Center Card Content: Title, Subtitle, Highlights */}
+          <div className="my-auto py-4 space-y-4 relative z-10 w-full text-left">
+            <div className="text-center space-y-1.5">
+              <div className="w-12 h-12 mx-auto rounded-2xl bg-amber-500/20 border border-amber-400/30 flex items-center justify-center text-2xl shadow-inner mb-2">
+                🕉️
+              </div>
+              <h4 className="text-lg sm:text-xl font-black text-white font-serif leading-snug tracking-tight">
+                {adConfig.title || 'Divine Temple Pooja & Archana Seva'}
+              </h4>
+              <p className="text-xs text-amber-100/90 leading-relaxed max-w-xs mx-auto">
+                {adConfig.subtitle || 'Perform sankalpam in your family name and gotra at famous sacred kshetras across India.'}
+              </p>
+            </div>
+
+            {/* Sacred Perks / Service Guarantees */}
+            <div className="bg-black/30 border border-white/10 rounded-2xl p-4 space-y-2.5 text-xs backdrop-blur-xs">
+              <div className="flex items-center gap-2.5 text-amber-100 font-medium">
+                <span className="w-4 h-4 rounded-full bg-amber-400 text-stone-950 font-black text-[10px] flex items-center justify-center shrink-0">✓</span>
+                <span>{adConfig.feature1 || 'Sankalpam in Gotra & Family Names'}</span>
+              </div>
+              <div className="flex items-center gap-2.5 text-amber-100 font-medium">
+                <span className="w-4 h-4 rounded-full bg-amber-400 text-stone-950 font-black text-[10px] flex items-center justify-center shrink-0">✓</span>
+                <span>{adConfig.feature2 || 'Sanctum Prasadam Delivered to Home'}</span>
+              </div>
+              <div className="flex items-center gap-2.5 text-amber-100 font-medium">
+                <span className="w-4 h-4 rounded-full bg-amber-400 text-stone-950 font-black text-[10px] flex items-center justify-center shrink-0">✓</span>
+                <span>{adConfig.feature3 || 'Live Video Proof & Temple Archana'}</span>
+              </div>
+            </div>
+
+            {/* Daily Muhurtham Tagline */}
+            <div className="bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-amber-500/20 border border-amber-400/40 rounded-xl p-2.5 text-center text-[11px] text-amber-200 font-bold">
+              <span>⚡ {adConfig.tagline || 'Special Daily Archana • Live at Srisailam & Kashi'}</span>
+            </div>
+          </div>
+
+          {/* Bottom Area: Large Call to Action & Trust Guarantee */}
+          <div className="w-full space-y-2.5 relative z-10 pt-2">
+            <Link
+              href={adConfig.targetUrl || '/marketplace'}
+              className="w-full bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 hover:brightness-110 text-stone-950 font-black text-sm py-3 px-4 rounded-2xl shadow-lg shadow-amber-950/50 transition-all flex items-center justify-center space-x-2 cursor-pointer transform group-hover:scale-[1.02]"
+            >
+              <span>{adConfig.ctaText || 'Book Seva Now'}</span>
+              <ExternalLink className="w-4 h-4 text-stone-950" />
+            </Link>
+            <div className="text-[10px] text-amber-200/70 font-mono tracking-wider flex items-center justify-center gap-1.5 uppercase font-bold">
+              <span>🛡️</span>
+              <span>100% Temple Certified • Vedic Pundits</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className={`w-full bg-gradient-to-b ${themeStyles} border rounded-2xl p-4.5 text-center flex flex-col items-center justify-between min-h-[250px] shadow-sm relative overflow-hidden ${className}`}>
         <div className="w-full flex items-center justify-between text-[10px] text-amber-300 font-mono">
