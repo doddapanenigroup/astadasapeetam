@@ -67,6 +67,7 @@ import DynamicPostStudio, { DEVOTIONAL_CATEGORIES, DEFAULT_POST_DATA } from '../
 import { getAllCategories } from '../../data/categoriesData';
 import AddCategoryModal from '../../components/AddCategoryModal';
 import VideoStudioModal from '../../components/VideoStudioModal';
+import VideoPublishStudio from '../../components/VideoPublishStudio';
 import { allFestivalsData } from '../../data/festivalsData';
 import BrandingSettingsStudio from '../../components/BrandingSettingsStudio';
 import { getStoredBranding, DEFAULT_BRANDING, applyFaviconToDocument } from '../../data/brandingData';
@@ -1233,7 +1234,7 @@ export default function UnifiedConsolePage() {
         { id: 'slokas', label: '3-Way Slokas Studio', icon: BookOpen, badge: slokasDataList.length, accent: 'from-amber-500 to-orange-600', textAccent: 'text-amber-400' },
         { id: 'addPost', label: 'Add Post', icon: PlusCircle, accent: 'from-teal-500 to-emerald-600', textAccent: 'text-teal-400' },
         { id: 'postList', label: 'Post List', icon: FileText, badge: posts.length, accent: 'from-sky-500 to-blue-600', textAccent: 'text-sky-400' },
-        { id: 'addVideo', label: 'Add Video', icon: Video, isAction: true, onClick: () => setIsVideoModalOpen(true), accent: 'from-rose-500 to-red-600', textAccent: 'text-rose-400' },
+        { id: 'addVideo', label: 'Add Video', icon: Video, accent: 'from-rose-500 to-red-600', textAccent: 'text-rose-400' },
         { id: 'videoDesk', label: 'Video Desk', icon: Play, badge: videos.length, accent: 'from-red-500 to-rose-600', textAccent: 'text-red-400' },
         { id: 'festivalCalendar', label: 'Festival Calendar', icon: Calendar, badge: '2026', accent: 'from-amber-500 to-yellow-600', textAccent: 'text-amber-400' }
       ]
@@ -3478,7 +3479,7 @@ export default function UnifiedConsolePage() {
                   </div>
 
                   <button
-                    onClick={() => setIsVideoModalOpen(true)}
+                    onClick={() => setActiveTab('addVideo')}
                     className="bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer shadow-xs border border-rose-400/40 flex items-center space-x-1.5 shrink-0 transition"
                     title="Publish a Devotional, Puja, or Bhajans Video"
                   >
@@ -4301,6 +4302,20 @@ export default function UnifiedConsolePage() {
           )}
 
 
+                    {/* ========================================================= */}
+          {/* TAB: ADD DEVOTIONAL VIDEO (IN-PAGE STUDIO, NO POPUP)      */}
+          {/* ========================================================= */}
+          {activeTab === 'addVideo' && (
+            <VideoPublishStudio
+              onVideoPublished={(newVid) => {
+                setVideos(prev => [newVid, ...prev]);
+                setActiveTab('videoDesk');
+              }}
+              onBackToDesk={() => setActiveTab('videoDesk')}
+              showToast={showToast}
+            />
+          )}
+
           {/* ========================================================= */}
           {/* TAB: DEVOTIONAL VIDEO DESK                                */}
           {/* ========================================================= */}
@@ -4327,7 +4342,7 @@ export default function UnifiedConsolePage() {
 
                   <div className="flex items-center gap-3 shrink-0">
                     <button
-                      onClick={() => setIsVideoModalOpen(true)}
+                      onClick={() => setActiveTab('addVideo')}
                       className="bg-gradient-to-r from-rose-600 via-rose-500 to-red-600 hover:brightness-110 text-white px-5 py-3 rounded-2xl text-xs font-black shadow-lg shadow-rose-900/30 flex items-center gap-2 cursor-pointer transition transform hover:-translate-y-0.5"
                     >
                       <Video className="w-4 h-4 text-white" />
@@ -4522,7 +4537,7 @@ export default function UnifiedConsolePage() {
                     No devotional videos match your filter. Click &quot;+ Add / Publish Video&quot; above to upload your first devotional video.
                   </p>
                   <button
-                    onClick={() => setIsVideoModalOpen(true)}
+                    onClick={() => setActiveTab('addVideo')}
                     className="mt-4 bg-rose-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-rose-700 cursor-pointer shadow-xs inline-flex items-center gap-1.5"
                   >
                     <Video className="w-4 h-4" />

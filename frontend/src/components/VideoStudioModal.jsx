@@ -22,6 +22,25 @@ export default function VideoStudioModal({ isOpen, onClose, onVideoPublished }) 
   const [category, setCategory] = useState('devotional-videos');
   const [videoUrl, setVideoUrl] = useState('');
   const [thumbnail, setThumbnail] = useState('');
+  const [thumbMode, setThumbMode] = useState('upload'); // 'upload' (Device) vs 'url' (Outside)
+  const [localThumbFile, setLocalThumbFile] = useState(null);
+  const [localThumbPreview, setLocalThumbPreview] = useState('');
+
+  const handleDeviceImageUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setErrorMsg('Please select a valid image file (JPG, PNG, WebP).');
+      return;
+    }
+    setLocalThumbFile(file);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setLocalThumbPreview(event.target.result);
+      setErrorMsg('');
+    };
+    reader.readAsDataURL(file);
+  };
   const [subtitle, setSubtitle] = useState('');
   const [temple, setTemple] = useState('');
   const [duration, setDuration] = useState('10:00');
@@ -276,17 +295,101 @@ export default function VideoStudioModal({ isOpen, onClose, onVideoPublished }) 
               </span>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-stone-800 mb-1">
-                Thumbnail Image URL
-              </label>
-              <input
-                type="text"
-                value={thumbnail}
-                onChange={(e) => setThumbnail(e.target.value)}
-                placeholder="https://img.youtube.com/vi/... or /images/..."
-                className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs font-mono text-stone-900 focus:outline-none focus:border-amber-500"
-              />
+            <div className="space-y-2.5 bg-amber-50/40 p-3.5 rounded-xl border border-amber-200/70">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-stone-900 flex items-center gap-1.5">
+                  <ImageIcon className="w-3.5 h-3.5 text-amber-700" />
+                  <span>Thumbnail Image *</span>
+                </label>
+
+                {/* Dual-Mode Selector: Upload from Device vs Outside URL */}
+                <div className="flex items-center p-0.5 bg-stone-200/80 rounded-xl gap-1 text-[11px] font-bold">
+                  <button
+                    type="button"
+                    onClick={() => setThumbMode('upload')}
+                    className={`px-2.5 py-0.5 rounded-lg transition cursor-pointer flex items-center gap-1 ${
+                      thumbMode === 'upload'
+                        ? 'bg-white text-stone-900 shadow-2xs'
+                        : 'text-stone-600 hover:text-stone-900'
+                    }`}
+                  >
+                    <Upload className="w-3 h-3 text-amber-700" />
+                    <span>Upload from Device</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setThumbMode('url')}
+                    className={`px-2.5 py-0.5 rounded-lg transition cursor-pointer flex items-center gap-1 ${
+                      thumbMode === 'url'
+                        ? 'bg-white text-stone-900 shadow-2xs'
+                        : 'text-stone-600 hover:text-stone-900'
+                    }`}
+                  >
+                    <LinkIcon className="w-3 h-3 text-blue-600" />
+                    <span>Outside URL</span>
+                  </button>
+                </div>
+              </div>
+
+              {thumbMode === 'upload' ? (
+                <div className="space-y-2">
+                  <div className="border-2 border-dashed border-amber-300 hover:border-amber-500 rounded-xl p-3 text-center bg-white transition cursor-pointer relative">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleDeviceImageUpload}
+                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    />
+                    <div className="flex flex-col items-center space-y-0.5">
+                      <Upload className="w-5 h-5 text-amber-600 mb-0.5" />
+                      <span className="text-xs font-bold text-stone-800">
+                        Choose Image from Device or Drag &amp; Drop
+                      </span>
+                      <span className="text-[10px] text-stone-400">
+                        JPG, PNG, WebP supported
+                      </span>
+                    </div>
+                  </div>
+
+                  {localThumbPreview && (
+                    <div className="flex items-center justify-between p-2 bg-white border border-amber-300 rounded-lg">
+                      <div className="flex items-center space-x-2.5">
+                        <img
+                          src={localThumbPreview}
+                          alt="Device Thumbnail"
+                          className="w-14 h-9 object-cover rounded border"
+                        />
+                        <div className="text-[11px] font-bold text-stone-800">
+                          {localThumbFile ? localThumbFile.name : 'Device Image Selected'}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setLocalThumbFile(null);
+                          setLocalThumbPreview('');
+                        }}
+                        className="text-stone-400 hover:text-red-600 text-xs px-2 py-1 rounded cursor-pointer"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  <input
+                    type="text"
+                    value={thumbnail}
+                    onChange={(e) => setThumbnail(e.target.value)}
+                    placeholder="https://img.youtube.com/vi/... or /images/..."
+                    className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs font-mono text-stone-900 focus:outline-none focus:border-amber-500"
+                  />
+                  <span className="text-[10px] text-stone-400 block">
+                    Paste external image link or leave empty to use YouTube auto-thumbnail.
+                  </span>
+                </div>
+              )}
             </div>
 
             {thumbnail && (
