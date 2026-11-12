@@ -1,22 +1,27 @@
 const express = require('express');
 const { 
   getConsultations, 
-  acceptConsultation, 
+  getConsultationById,
+  bookConsultation,
+  sendMessage,
+  updateTimer,
   completeConsultation, 
-  updateAstrologerProfile 
+  getAstrologers,
+  updateCertification
 } = require('../controllers/astrologerController');
-const { protect } = require('../middleware/auth');
-const { authorize } = require('../middleware/role');
 
 const router = express.Router();
 
-// Astrologer & Admin have access
-router.use(protect);
-router.use(authorize('astrologer', 'admin'));
+// Public / Devotee endpoints
+router.post('/book', bookConsultation);
+router.get('/astrologers', getAstrologers);
+router.get('/consultations/:id', getConsultationById);
+router.post('/consultations/:id/message', sendMessage);
+router.put('/consultations/:id/timer', updateTimer);
 
+// Astrologer Desk & Admin endpoints
 router.get('/consultations', getConsultations);
-router.put('/consultations/:id/accept', acceptConsultation);
 router.put('/consultations/:id/complete', completeConsultation);
-router.put('/profile', updateAstrologerProfile);
+router.put('/astrologers/:id/certification', updateCertification);
 
 module.exports = router;

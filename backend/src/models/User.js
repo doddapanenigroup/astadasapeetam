@@ -48,9 +48,23 @@ const UserSchema = new mongoose.Schema({
     title: { type: String, default: 'Vedic Jyotish Acharya' },
     experienceYears: { type: Number, default: 5 },
     specialties: [{ type: String }],
-    consultationFee: { type: Number, default: 499 },
+    consultationFee: { type: Number, default: 399 },
     bio: { type: String, default: '' },
-    isVerified: { type: Boolean, default: false }
+    isVerified: { type: Boolean, default: true },
+    certificationType: { 
+      type: String, 
+      enum: ['certified', 'non_certified'], 
+      default: 'certified' 
+    },
+    isCertified: { type: Boolean, default: true },
+    certificateDetails: { type: String, default: 'Sanskrit University Jyotish Acharya' },
+    pricingPackages: [
+      {
+        durationMinutes: { type: Number, default: 20 },
+        priceInr: { type: Number, default: 399 },
+        title: { type: String, default: '' }
+      }
+    ]
   },
   marketingProfile: {
     department: { type: String, default: 'Growth & Social Campaigns' },

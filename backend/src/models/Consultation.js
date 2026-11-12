@@ -13,7 +13,8 @@ const ConsultationSchema = new mongoose.Schema({
   },
   devoteeEmail: {
     type: String,
-    trim: true
+    trim: true,
+    default: ''
   },
   birthDetails: {
     dateOfBirth: { type: String, required: true },
@@ -28,6 +29,15 @@ const ConsultationSchema = new mongoose.Schema({
     enum: ['kundali_matching', 'jathakam_analysis', 'dosha_upaya', 'gemstone_remedy', 'career_marriage'],
     default: 'jathakam_analysis'
   },
+  durationMinutes: {
+    type: Number,
+    enum: [10, 20, 30, 45],
+    default: 20
+  },
+  timeRemainingSeconds: {
+    type: Number,
+    default: 1200
+  },
   problemDescription: {
     type: String,
     default: ''
@@ -37,20 +47,54 @@ const ConsultationSchema = new mongoose.Schema({
     enum: ['pending', 'confirmed', 'in_progress', 'completed', 'cancelled'],
     default: 'pending'
   },
+  sessionStatus: {
+    type: String,
+    enum: ['waiting', 'live', 'time_expired', 'completed'],
+    default: 'waiting'
+  },
   assignedAstrologer: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
+  },
+  astrologerName: {
+    type: String,
+    default: 'Vedic Jyotish Acharya'
   },
   scheduledSlot: {
     type: Date
   },
   fee: {
     type: Number,
-    default: 499
+    default: 399
   },
   isPaid: {
     type: Boolean,
-    default: false
+    default: true
+  },
+  messages: [{
+    sender: {
+      type: String,
+      enum: ['customer', 'astrologer', 'system'],
+      default: 'customer'
+    },
+    senderName: {
+      type: String,
+      default: ''
+    },
+    text: {
+      type: String,
+      required: true
+    },
+    timestamp: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+  astrologerRemedies: {
+    gemstone: { type: String, default: '' },
+    mantra: { type: String, default: '' },
+    templePariharam: { type: String, default: '' },
+    notes: { type: String, default: '' }
   },
   astrologerRemedyNotes: {
     type: String,
@@ -60,6 +104,8 @@ const ConsultationSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
+}, {
+  timestamps: true
 });
 
 module.exports = mongoose.model('Consultation', ConsultationSchema);

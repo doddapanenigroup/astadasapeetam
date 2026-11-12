@@ -1,28 +1,77 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import AdBanner from '../../components/AdBanner';
 import { rasiList, navagrahas, certifiedAstrologers } from '../../data/astrologyData';
 import { 
   Compass, Sparkles, Sun, Moon, Shield, Award, 
   Calendar, Check, ChevronRight, Phone, Video, 
   MessageSquare, Star, ArrowRight, Heart, AlertCircle, X,
-  Search, SlidersHorizontal, BookOpen
+  Search, SlidersHorizontal, BookOpen, Clock, Lock, Send
 } from 'lucide-react';
+
+const DURATION_PACKAGES = [
+  { duration: 10, price: 199, label: '10 Mins • ₹199', title: 'Quick Query / Prashna', desc: '1 specific question & instant remedy' },
+  { duration: 20, price: 399, label: '20 Mins • ₹399', title: 'Planetary Dasha & Kundali', desc: 'Graha gochara & dasha analysis' },
+  { duration: 30, price: 599, label: '30 Mins • ₹599', title: 'Deep Horoscope & Dosha', desc: 'Full birth chart & dosha parihara' },
+  { duration: 45, price: 899, label: '45 Mins • ₹899', title: 'Comprehensive Life Guidance', desc: 'Complete Janma Kundali & family reading' }
+];
 
 export default function AstrologyPage() {
   const [activeTab, setActiveTab] = useState('rasi'); // 'rasi', 'kundali', 'navagraha', 'astrologers'
   const [selectedRasiId, setSelectedRasiId] = useState('mesha');
   const [bookingAstrologer, setBookingAstrologer] = useState(null);
   const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [selectedDuration, setSelectedDuration] = useState(20);
+  const [liveChatSession, setLiveChatSession] = useState(null);
+  const [chatTimeRemaining, setChatTimeRemaining] = useState(1200);
+  const [devoteeMsg, setDevoteeMsg] = useState('');
+  const chatEndRef = useRef(null);
+
   const [bookingForm, setBookingForm] = useState({
     name: '',
     phone: '',
-    dob: '',
-    time: '10:00 AM',
-    mode: 'phone',
+    dob: '1995-05-15',
+    time: '10:30 AM',
+    place: 'Hyderabad',
+    rasi: 'Mesha (Aries)',
+    gotram: 'Kashyapa',
+    mode: 'chat',
     query: ''
   });
+
+  // Live Timer Countdown for Devotee Room
+  useEffect(() => {
+    if (!liveChatSession || liveChatSession.sessionStatus !== 'live') return;
+
+    const interval = setInterval(() => {
+      setChatTimeRemaining(prev => {
+        if (prev <= 1) {
+          setLiveChatSession(curr => curr ? {
+            ...curr,
+            sessionStatus: 'time_expired',
+            messages: [
+              ...(curr.messages || []),
+              {
+                sender: 'system',
+                senderName: 'Vedic System Clock',
+                text: '⏳ Allotted consultation time has expired (00:00). Chat input locked. Please review your astrologer remedies below.',
+                timestamp: new Date().toISOString()
+              }
+            ]
+          } : null);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [liveChatSession?.sessionStatus]);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [liveChatSession?.messages?.length]);
 
   // Kundali Matching state
   const [boyRasi, setBoyRasi] = useState('mesha');
@@ -57,13 +106,122 @@ export default function AstrologyPage() {
     });
   };
 
-  const handleBookingSubmit = (e) => {
+  const handleBookingSubmit = async (e) => {
     e.preventDefault();
-    setBookingSuccess(true);
-    setTimeout(() => {
-      setBookingSuccess(false);
-      setBookingAstrologer(null);
-    }, 2800);
+    const pkg = DURATION_PACKAGES.find(p => p.duration === selectedDuration) || DURATION_PACKAGES[1];
+    
+    const initialSession = {
+      _id: 'c-live-' + Date.now(),
+      devoteeName: bookingForm.name || 'Devotee',
+      devoteePhone: bookingForm.phone,
+      birthDetails: {
+        dateOfBirth: bookingForm.dob,
+        timeOfBirth: bookingForm.time,
+        placeOfBirth: bookingForm.place,
+        rasi: bookingForm.rasi,
+        gotram: bookingForm.gotram
+      },
+      durationMinutes: pkg.duration,
+      fee: pkg.price,
+      astrologerName: bookingAstrologer?.name || 'Pandit Vidyanath Shastri',
+      astrologerAvatar: bookingAstrologer?.avatar,
+      astrologerTitle: bookingAstrologer?.title || 'Vedic Jyotish Acharya',
+      problemDescription: bookingForm.query,
+      sessionStatus: 'live',
+      messages: [
+        {
+          sender: 'system',
+          senderName: 'Vedic System Clock',
+          text: `Namaste ${bookingForm.name}! Your ${pkg.duration}-Minute consultation with ${bookingAstrologer?.name || 'Vidyanath Shastri'} has commenced. Please ask your questions.`,
+          timestamp: new Date().toISOString()
+        },
+        {
+          sender: 'astrologer',
+          senderName: bookingAstrologer?.name || 'Astrologer Acharya',
+          text: `Hari Om ${bookingForm.name} ji! I am examining your Janma Kundali for ${bookingForm.place}. What guidance do you seek today?`,
+          timestamp: new Date().toISOString()
+        }
+      ],
+      astrologerRemedies: {
+        gemstone: 'Yellow Sapphire / Coral as advised',
+        mantra: 'Maha Mrityunjaya & Gayatri Mantra 108x daily',
+        templePariharam: 'Perform archana at sacred Shakti Peetham or Navagraha Sannidhi',
+        notes: 'Maintain positive sankalpa. Auspicious transit results will manifest soon.'
+      }
+    };
+
+    setChatTimeRemaining(pkg.duration * 60);
+    setLiveChatSession(initialSession);
+    setBookingAstrologer(null);
+
+    // Call backend
+    try {
+      const res = await fetch('http://localhost:5000/api/astrologer/book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          devoteeName: bookingForm.name,
+          devoteePhone: bookingForm.phone,
+          dateOfBirth: bookingForm.dob,
+          timeOfBirth: bookingForm.time,
+          placeOfBirth: bookingForm.place,
+          rasi: bookingForm.rasi,
+          gotram: bookingForm.gotram,
+          problemDescription: bookingForm.query,
+          durationMinutes: pkg.duration,
+          astrologerName: bookingAstrologer?.name
+        })
+      });
+      const data = await res.json();
+      if (data.success && data.data) {
+        setLiveChatSession(prev => ({ ...prev, _id: data.data._id }));
+      }
+    } catch (err) {
+      console.warn('Booking recorded locally:', err);
+    }
+  };
+
+  const handleDevoteeSendMessage = async (e) => {
+    e?.preventDefault();
+    if (!devoteeMsg.trim() || !liveChatSession) return;
+    if (chatTimeRemaining <= 0 || liveChatSession.sessionStatus === 'time_expired') {
+      alert('Consultation duration has expired. Chat is locked.');
+      return;
+    }
+
+    const newMsg = {
+      sender: 'customer',
+      senderName: liveChatSession.devoteeName,
+      text: devoteeMsg.trim(),
+      timestamp: new Date().toISOString()
+    };
+
+    setLiveChatSession(prev => ({
+      ...prev,
+      messages: [...(prev.messages || []), newMsg]
+    }));
+    setDevoteeMsg('');
+
+    try {
+      await fetch(`http://localhost:5000/api/astrologer/consultations/${liveChatSession._id}/message`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sender: 'customer',
+          senderName: liveChatSession.devoteeName,
+          text: newMsg.text
+        })
+      });
+    } catch (err) {
+      console.warn('Message sent locally:', err);
+    }
+  };
+
+  const formatTime = (secs) => {
+    if (typeof secs !== 'number' || secs < 0) return '00:00';
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
   return (
@@ -184,7 +342,7 @@ export default function AstrologyPage() {
             }`}
           >
             <span>👳</span>
-            <span>Consult Certified Astrologers</span>
+            <span>Consult Vedic Astrologers</span>
           </button>
         </div>
 
@@ -580,7 +738,7 @@ export default function AstrologyPage() {
           </div>
         )}
 
-        {/* ================= TAB 4: CERTIFIED ASTROLOGERS ================= */}
+        {/* ================= TAB 4: VEDIC ASTROLOGERS (NO CERTIFIED LABEL) ================= */}
         {activeTab === 'astrologers' && (
           <div className="space-y-6 animate-in fade-in duration-300">
             <div className="text-center max-w-2xl mx-auto space-y-2 mb-8">
@@ -588,7 +746,7 @@ export default function AstrologyPage() {
                 Consult Renowned Vedic Astrologers
               </h2>
               <p className="text-xs sm:text-sm text-stone-600 font-serif">
-                1-on-1 private audio/video consultations for career, marriage matching, health, and personalized pariharas.
+                1-on-1 private live consultation sessions for career, marriage matching, health, and personalized pariharas. Timing-based packages with dedicated astrologer desk.
               </p>
             </div>
 
@@ -606,14 +764,10 @@ export default function AstrologyPage() {
                         className="w-16 h-16 rounded-full object-cover border-2 border-amber-400 shadow-xs" 
                       />
                       <div>
-                        <div className="flex items-center gap-1.5">
-                          <h3 className="font-serif font-black text-lg text-stone-900 leading-snug">
-                            {ast.name}
-                          </h3>
-                          {ast.verified && (
-                            <span className="text-emerald-600 text-xs" title="Verified Astrologer">✓</span>
-                          )}
-                        </div>
+                        {/* NO CERTIFIED OR NON-CERTIFIED BADGE SHOWN */}
+                        <h3 className="font-serif font-black text-lg text-stone-900 leading-snug">
+                          {ast.name}
+                        </h3>
                         <p className="text-xs text-[#78131e] font-bold font-serif">{ast.title}</p>
                         <div className="flex items-center gap-1 text-xs text-amber-600 mt-1">
                           <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
@@ -633,12 +787,26 @@ export default function AstrologyPage() {
                         <span>Languages: <strong>{ast.languages}</strong></span>
                       </div>
                     </div>
+
+                    {/* Timing-based pricing preview */}
+                    <div className="bg-amber-50/70 p-2.5 rounded-xl border border-amber-200/60 text-[11px] font-serif space-y-1">
+                      <div className="font-bold text-amber-900 flex items-center justify-between">
+                        <span>⏱️ Chat Duration Packages:</span>
+                        <span className="text-emerald-700 font-mono font-bold">From ₹199</span>
+                      </div>
+                      <div className="text-[10px] text-stone-600 flex justify-between">
+                        <span>10m: ₹199</span>
+                        <span>20m: ₹399</span>
+                        <span>30m: ₹599</span>
+                        <span>45m: ₹899</span>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="mt-5 pt-4 border-t border-stone-100 flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] text-stone-500 block">Dakshina / Fee</span>
-                      <strong className="text-xl font-serif text-[#78131e]">{ast.dakshina}</strong>
+                      <span className="text-[10px] text-stone-500 block">Dakshina</span>
+                      <strong className="text-lg font-serif text-[#78131e]">From ₹199</strong>
                     </div>
 
                     <button
@@ -646,8 +814,8 @@ export default function AstrologyPage() {
                       onClick={() => setBookingAstrologer(ast)}
                       className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#78131e] to-[#991b1b] hover:from-[#600e17] hover:to-[#7f1313] text-white text-xs font-bold shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
                     >
-                      <Phone className="w-3.5 h-3.5" />
-                      <span>Book Call</span>
+                      <MessageSquare className="w-3.5 h-3.5" />
+                      <span>Start Consultation</span>
                     </button>
                   </div>
                 </div>
@@ -658,10 +826,10 @@ export default function AstrologyPage() {
 
       </main>
 
-      {/* Booking Consultation Modal Dialog */}
+      {/* Booking Consultation Modal Dialog with Duration Selection */}
       {bookingAstrologer && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border-2 border-amber-300 relative animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border-2 border-amber-300 relative animate-in fade-in zoom-in-95 duration-200">
             <button
               suppressHydrationWarning
               onClick={() => setBookingAstrologer(null)}
@@ -670,129 +838,270 @@ export default function AstrologyPage() {
               <X className="w-5 h-5" />
             </button>
 
-            {bookingSuccess ? (
-              <div className="py-8 text-center space-y-3">
-                <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto text-2xl">
-                  ✓
+            <div>
+              <div className="flex items-center gap-3 border-b border-stone-200 pb-3 mb-4">
+                <img 
+                  src={bookingAstrologer.avatar} 
+                  alt={bookingAstrologer.name} 
+                  className="w-12 h-12 rounded-full object-cover border border-amber-400" 
+                />
+                <div>
+                  <h3 className="font-serif font-black text-base text-stone-900">
+                    Book Consultation with {bookingAstrologer.name}
+                  </h3>
+                  <p className="text-xs text-stone-500">{bookingAstrologer.title}</p>
                 </div>
-                <h3 className="text-2xl font-serif font-black text-emerald-800">
-                  Consultation Slot Confirmed!
-                </h3>
-                <p className="text-xs text-stone-600 font-serif max-w-sm mx-auto">
-                  An auspicious consultation link and SMS confirmation have been sent to your phone. 
-                  Acharya will call you at your chosen slot.
-                </p>
               </div>
-            ) : (
-              <div>
-                <div className="flex items-center gap-3 border-b border-stone-200 pb-3 mb-4">
-                  <img 
-                    src={bookingAstrologer.avatar} 
-                    alt={bookingAstrologer.name} 
-                    className="w-12 h-12 rounded-full object-cover border border-amber-400" 
-                  />
-                  <div>
-                    <h3 className="font-serif font-black text-base text-stone-900">
-                      Book with {bookingAstrologer.name}
-                    </h3>
-                    <p className="text-xs text-stone-500">{bookingAstrologer.title} • {bookingAstrologer.dakshina}</p>
+
+              <form onSubmit={handleBookingSubmit} className="space-y-3.5 text-xs font-serif">
+                {/* Duration Packages Selection */}
+                <div>
+                  <label className="block font-bold text-stone-700 mb-1.5">
+                    1. Choose Consultation Duration (Time Limit)
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {DURATION_PACKAGES.map((pkg) => (
+                      <button
+                        key={pkg.duration}
+                        type="button"
+                        onClick={() => setSelectedDuration(pkg.duration)}
+                        className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                          selectedDuration === pkg.duration
+                            ? 'bg-[#78131e] text-white border-[#78131e] shadow-xs'
+                            : 'bg-stone-50 text-stone-800 border-stone-200 hover:bg-stone-100'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between font-bold text-xs">
+                          <span>{pkg.duration} Mins</span>
+                          <span className={selectedDuration === pkg.duration ? 'text-amber-300 font-mono' : 'text-[#78131e] font-mono'}>
+                            ₹{pkg.price}
+                          </span>
+                        </div>
+                        <p className={`text-[10px] truncate ${selectedDuration === pkg.duration ? 'text-amber-100' : 'text-stone-500'}`}>
+                          {pkg.title}
+                        </p>
+                      </button>
+                    ))}
                   </div>
                 </div>
 
-                <form onSubmit={handleBookingSubmit} className="space-y-3.5 text-xs">
+                {/* Devotee Birth Details */}
+                <div>
+                  <label className="block font-bold text-stone-700 mb-1">Your Full Name</label>
+                  <input 
+                    required
+                    type="text" 
+                    value={bookingForm.name}
+                    onChange={(e) => setBookingForm({...bookingForm, name: e.target.value})}
+                    placeholder="e.g. Srikanth Sharma"
+                    className="w-full border border-stone-300 rounded-lg p-2.5 outline-none focus:border-[#78131e]" 
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-bold text-stone-700 mb-1">Your Full Name</label>
+                    <label className="block font-bold text-stone-700 mb-1">WhatsApp Mobile</label>
                     <input 
                       required
+                      type="tel" 
+                      value={bookingForm.phone}
+                      onChange={(e) => setBookingForm({...bookingForm, phone: e.target.value})}
+                      placeholder="+91 98765 43210"
+                      className="w-full border border-stone-300 rounded-lg p-2.5 outline-none focus:border-[#78131e]" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-stone-700 mb-1">Date of Birth</label>
+                    <input 
+                      required
+                      type="date" 
+                      value={bookingForm.dob}
+                      onChange={(e) => setBookingForm({...bookingForm, dob: e.target.value})}
+                      className="w-full border border-stone-300 rounded-lg p-2.5 outline-none focus:border-[#78131e]" 
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <label className="block font-bold text-stone-700 mb-1">Time of Birth</label>
+                    <input 
                       type="text" 
-                      value={bookingForm.name}
-                      onChange={(e) => setBookingForm({...bookingForm, name: e.target.value})}
-                      placeholder="e.g. Srikanth Sharma"
-                      className="w-full border border-stone-300 rounded-lg p-2.5 outline-none focus:border-[#78131e]" 
+                      value={bookingForm.time}
+                      onChange={(e) => setBookingForm({...bookingForm, time: e.target.value})}
+                      placeholder="10:30 AM"
+                      className="w-full border border-stone-300 rounded-lg p-2 outline-none focus:border-[#78131e]" 
                     />
                   </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block font-bold text-stone-700 mb-1">Mobile Number (WhatsApp)</label>
-                      <input 
-                        required
-                        type="tel" 
-                        value={bookingForm.phone}
-                        onChange={(e) => setBookingForm({...bookingForm, phone: e.target.value})}
-                        placeholder="+91 98765 43210"
-                        className="w-full border border-stone-300 rounded-lg p-2.5 outline-none focus:border-[#78131e]" 
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-bold text-stone-700 mb-1">Date of Birth</label>
-                      <input 
-                        required
-                        type="date" 
-                        value={bookingForm.dob}
-                        onChange={(e) => setBookingForm({...bookingForm, dob: e.target.value})}
-                        className="w-full border border-stone-300 rounded-lg p-2.5 outline-none focus:border-[#78131e]" 
-                      />
-                    </div>
-                  </div>
-
                   <div>
-                    <label className="block font-bold text-stone-700 mb-1">Consultation Mode</label>
-                    <div className="grid grid-cols-3 gap-2">
-                      <button
-                        type="button"
-                        suppressHydrationWarning
-                        onClick={() => setBookingForm({...bookingForm, mode: 'phone'})}
-                        className={`p-2 rounded-lg border text-center transition-all cursor-pointer ${
-                          bookingForm.mode === 'phone' ? 'bg-[#78131e] text-white border-[#78131e]' : 'bg-stone-50 text-stone-700'
-                        }`}
-                      >
-                        📞 Audio Call
-                      </button>
-                      <button
-                        type="button"
-                        suppressHydrationWarning
-                        onClick={() => setBookingForm({...bookingForm, mode: 'video'})}
-                        className={`p-2 rounded-lg border text-center transition-all cursor-pointer ${
-                          bookingForm.mode === 'video' ? 'bg-[#78131e] text-white border-[#78131e]' : 'bg-stone-50 text-stone-700'
-                        }`}
-                      >
-                        📹 Video Call
-                      </button>
-                      <button
-                        type="button"
-                        suppressHydrationWarning
-                        onClick={() => setBookingForm({...bookingForm, mode: 'chat'})}
-                        className={`p-2 rounded-lg border text-center transition-all cursor-pointer ${
-                          bookingForm.mode === 'chat' ? 'bg-[#78131e] text-white border-[#78131e]' : 'bg-stone-50 text-stone-700'
-                        }`}
-                      >
-                        💬 WhatsApp
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block font-bold text-stone-700 mb-1">Primary Question / Query</label>
-                    <textarea 
-                      rows={2}
-                      value={bookingForm.query}
-                      onChange={(e) => setBookingForm({...bookingForm, query: e.target.value})}
-                      placeholder="e.g. Marriage matching, career shift timing, or Kuja dosha parihara..."
-                      className="w-full border border-stone-300 rounded-lg p-2.5 outline-none focus:border-[#78131e]" 
+                    <label className="block font-bold text-stone-700 mb-1">Place of Birth</label>
+                    <input 
+                      type="text" 
+                      value={bookingForm.place}
+                      onChange={(e) => setBookingForm({...bookingForm, place: e.target.value})}
+                      placeholder="e.g. Vijayawada"
+                      className="w-full border border-stone-300 rounded-lg p-2 outline-none focus:border-[#78131e]" 
                     />
                   </div>
+                  <div>
+                    <label className="block font-bold text-stone-700 mb-1">Moon Rasi</label>
+                    <input 
+                      type="text" 
+                      value={bookingForm.rasi}
+                      onChange={(e) => setBookingForm({...bookingForm, rasi: e.target.value})}
+                      placeholder="e.g. Mesha"
+                      className="w-full border border-stone-300 rounded-lg p-2 outline-none focus:border-[#78131e]" 
+                    />
+                  </div>
+                </div>
 
-                  <button
-                    type="submit"
-                    suppressHydrationWarning
-                    className="w-full py-3 rounded-xl bg-gradient-to-r from-[#78131e] to-[#991b1b] text-white font-serif font-black text-sm shadow-md hover:from-[#600e17] hover:to-[#7f1313] transition-all cursor-pointer mt-2"
-                  >
-                    Confirm Consultation ({bookingAstrologer.dakshina})
-                  </button>
-                </form>
+                <div>
+                  <label className="block font-bold text-stone-700 mb-1">Primary Question / Prashna</label>
+                  <textarea 
+                    rows={2}
+                    value={bookingForm.query}
+                    onChange={(e) => setBookingForm({...bookingForm, query: e.target.value})}
+                    placeholder="e.g. Career change timing, marriage matching, or Kuja dosha parihara..."
+                    className="w-full border border-stone-300 rounded-lg p-2.5 outline-none focus:border-[#78131e]" 
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  suppressHydrationWarning
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-[#78131e] to-[#991b1b] text-white font-serif font-black text-sm shadow-md hover:from-[#600e17] hover:to-[#7f1313] transition-all cursor-pointer mt-2"
+                >
+                  Enter Live Chat Room ({selectedDuration} Mins • ₹{DURATION_PACKAGES.find(p => p.duration === selectedDuration)?.price})
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Devotee Live Chat Room Modal with Real-Time Countdown Timer */}
+      {liveChatSession && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-3xl max-w-2xl w-full h-[85vh] max-h-[720px] shadow-2xl border-2 border-amber-300 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            
+            {/* Live Room Header with Synchronized Countdown Clock */}
+            <div className="bg-gradient-to-r from-[#5a0c16] via-[#78131e] to-[#991b1b] text-white p-4 px-5 flex items-center justify-between shrink-0 shadow-md">
+              <div className="flex items-center gap-3">
+                <img 
+                  src={liveChatSession.astrologerAvatar || 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=200&auto=format&fit=crop&q=80'} 
+                  alt={liveChatSession.astrologerName}
+                  className="w-11 h-11 rounded-full object-cover border-2 border-amber-300" 
+                />
+                <div>
+                  <h3 className="font-serif font-black text-sm sm:text-base text-white">
+                    {liveChatSession.astrologerName}
+                  </h3>
+                  <p className="text-[11px] text-amber-200 font-serif">
+                    {liveChatSession.astrologerTitle} • {liveChatSession.durationMinutes} Mins Session
+                  </p>
+                </div>
+              </div>
+
+              {/* Synchronized Countdown Clock */}
+              <div className="flex items-center gap-3">
+                <div className="text-right">
+                  <div className="text-[9px] font-bold uppercase tracking-wider text-amber-200">Session Clock</div>
+                  <div className={`font-mono text-xl sm:text-2xl font-black flex items-center justify-end gap-1 ${
+                    chatTimeRemaining <= 0 
+                      ? 'text-rose-300' 
+                      : chatTimeRemaining <= 120 
+                      ? 'text-amber-300 animate-pulse' 
+                      : 'text-emerald-300'
+                  }`}>
+                    <Clock className="w-4 h-4" />
+                    <span>{formatTime(chatTimeRemaining)}</span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setLiveChatSession(null)}
+                  className="p-1.5 rounded-full hover:bg-white/10 text-white/80 hover:text-white cursor-pointer ml-1"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Chat Feed */}
+            <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-[#fdfbf7]">
+              {liveChatSession.messages?.map((msg, idx) => {
+                const isDevotee = msg.sender === 'customer' || msg.sender === 'devotee';
+                const isAstrologer = msg.sender === 'astrologer';
+                const isSystem = msg.sender === 'system';
+
+                if (isSystem) {
+                  return (
+                    <div key={idx} className="text-center my-2">
+                      <span className="inline-block bg-amber-50 border border-amber-300/80 text-amber-950 px-3 py-1.5 rounded-full text-[11px] font-serif shadow-2xs">
+                        {msg.text}
+                      </span>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div key={idx} className={`flex flex-col ${isDevotee ? 'items-end' : 'items-start'}`}>
+                    <div className="text-[10px] text-stone-500 font-serif mb-0.5 px-1">
+                      {isDevotee ? '🙏 You' : '🕉️ ' + msg.senderName} • {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                    <div className={`max-w-[80%] p-3 rounded-2xl text-xs font-serif leading-relaxed shadow-xs ${
+                      isDevotee 
+                        ? 'bg-[#78131e] text-white rounded-tr-none' 
+                        : 'bg-white border border-stone-200 text-stone-900 rounded-tl-none'
+                    }`}>
+                      {msg.text}
+                    </div>
+                  </div>
+                );
+              })}
+              <div ref={chatEndRef} />
+            </div>
+
+            {/* Consecrated Remedies if submitted */}
+            {liveChatSession.astrologerRemedies && (
+              <div className="p-3 bg-amber-50/90 border-t border-amber-200 text-xs font-serif text-amber-950 shrink-0">
+                <div className="flex items-center gap-1.5 font-bold text-amber-900 text-[11px] mb-1">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Consecrated Astrologer Remedies:</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-[10px]">
+                  <div>Ratna: <strong>{liveChatSession.astrologerRemedies.gemstone}</strong></div>
+                  <div>Mantra: <strong>{liveChatSession.astrologerRemedies.mantra}</strong></div>
+                </div>
               </div>
             )}
+
+            {/* Input Bar or Auto-Lock Notice */}
+            <div className="p-3.5 border-t border-stone-200 bg-white shrink-0">
+              {chatTimeRemaining <= 0 || liveChatSession.sessionStatus === 'time_expired' ? (
+                <div className="p-2.5 bg-rose-50 border border-rose-300 rounded-xl flex items-center gap-2.5 text-rose-950 text-xs font-serif">
+                  <Lock className="w-4 h-4 text-rose-600 shrink-0" />
+                  <span>Consultation time limit ended (00:00). Chat input is locked. Your remedies are recorded above.</span>
+                </div>
+              ) : (
+                <form onSubmit={handleDevoteeSendMessage} className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={devoteeMsg}
+                    onChange={(e) => setDevoteeMsg(e.target.value)}
+                    placeholder="Type your question or reply to the astrologer..."
+                    className="flex-1 bg-stone-50 border border-stone-300 focus:border-[#78131e] rounded-xl px-3.5 py-2 text-xs text-stone-800 outline-none"
+                  />
+                  <button
+                    type="submit"
+                    className="px-4 py-2 rounded-xl bg-[#78131e] hover:bg-[#600e17] text-white text-xs font-bold font-serif shadow-xs flex items-center gap-1.5 cursor-pointer shrink-0"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Send</span>
+                  </button>
+                </form>
+              )}
+            </div>
+
           </div>
         </div>
       )}

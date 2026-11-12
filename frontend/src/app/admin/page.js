@@ -70,6 +70,7 @@ import VideoStudioModal from '../../components/VideoStudioModal';
 import VideoPublishStudio from '../../components/VideoPublishStudio';
 import { allFestivalsData } from '../../data/festivalsData';
 import BrandingSettingsStudio from '../../components/BrandingSettingsStudio';
+import AstrologerDeskStudio from '../../components/AstrologerDeskStudio';
 import { getStoredBranding, DEFAULT_BRANDING, applyFaviconToDocument } from '../../data/brandingData';
 
 const API_BASE = 'http://localhost:5000/api';
@@ -4182,31 +4183,7 @@ export default function UnifiedConsolePage() {
           {/* TAB 11: ASTROLOGER DESK                                   */}
           {/* ========================================================= */}
           {activeTab === 'astrology' && (
-            <div className="space-y-4">
-              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
-                <h3 className="text-xl font-black text-slate-900 flex items-center space-x-2">
-                  <Compass className="w-5 h-5 text-purple-700" />
-                  <span>Astrologer Jyotish Workspace ({consultations.length})</span>
-                </h3>
-              </div>
-
-              <div className="space-y-3">
-                {consultations.map((c) => (
-                  <div key={c._id} className="bg-white p-5 rounded-2xl border space-y-2 text-xs">
-                    <div className="flex items-center justify-between font-bold">
-                      <span>{c.devoteeName} ({c.devoteePhone})</span>
-                      <span className="bg-purple-100 text-purple-900 px-2 py-0.5 rounded-full text-[10px] uppercase">{c.status}</span>
-                    </div>
-                    <div className="bg-purple-50 p-3 rounded-xl flex gap-4 text-[11px]">
-                      <span>DOB: <strong>{c.birthDetails?.dateOfBirth}</strong></span>
-                      <span>Place: <strong>{c.birthDetails?.placeOfBirth}</strong></span>
-                      <span>Rasi: <strong>{c.birthDetails?.rasi}</strong></span>
-                    </div>
-                    <p className="text-slate-600 bg-slate-50 p-2.5 rounded-xl border">"{c.problemDescription}"</p>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <AstrologerDeskStudio initialConsultations={consultations} />
           )}
 
           {/* ========================================================= */}
