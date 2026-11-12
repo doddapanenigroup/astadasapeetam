@@ -5,10 +5,12 @@ import Link from 'next/link';
 import AdBanner from '../../components/AdBanner';
 import { 
   Newspaper, Calendar, Download, Share2, ZoomIn, 
-  ZoomOut, ChevronLeft, ChevronRight, FileText, Sparkles, X, BookOpen, Clock, Tag, ExternalLink
+  ZoomOut, ChevronLeft, ChevronRight, FileText, Sparkles, X, BookOpen, Clock, Tag, ExternalLink, Globe
 } from 'lucide-react';
 
 export default function EPaperPage() {
+  // Language Switcher: 'english' (Default), 'telugu', 'telangana'
+  const [language, setLanguage] = useState('english');
   const [selectedEdition, setSelectedEdition] = useState('all-india');
   const [currentPage, setCurrentPage] = useState(1);
   const [newsArticles, setNewsArticles] = useState([]);
@@ -16,31 +18,32 @@ export default function EPaperPage() {
   const [selectedStoryModal, setSelectedStoryModal] = useState(null);
 
   const editions = [
-    { id: 'all-india', name: 'All-India Grand Sanctuary Edition', telugu: 'అఖిల భారత ప్రధాన సంచిక' },
-    { id: 'telangana', name: 'Telangana & Hyderabad Kshetram', telugu: 'తెలంగాణ & భాగ్యనగర సంచిక' },
-    { id: 'andhra', name: 'Andhra & Tirupati Srivari Peetham', telugu: 'ఆంధ్రప్రదేశ్ & తిరుపతి సంచిక' },
-    { id: 'kashi', name: 'Kashi & North Peethas Special', telugu: 'కాశీ & ఉత్తర పీఠాల విశేష సంచిక' }
+    { id: 'all-india', name: 'All-India Grand Sanctuary Edition', telugu: 'అఖిల భారత ప్రధాన సంచిక', defaultLang: 'english' },
+    { id: 'telangana', name: 'Telangana Regional Edition', telugu: 'తెలంగాణ & భాగ్యనగర సంచిక', defaultLang: 'telangana' },
+    { id: 'andhra', name: 'Andhra & Tirupati Srivari Peetham', telugu: 'ఆంధ్రప్రదేశ్ & తిరుపతి సంచిక', defaultLang: 'telugu' },
+    { id: 'kashi', name: 'Kashi & North Peethas Special', telugu: 'కాశీ & ఉత్తర పీఠాల విశేష సంచిక', defaultLang: 'english' }
   ];
 
-  const defaultEditorialStories = [
+  // 1. English Edition Stories (Completely in English)
+  const englishStories = [
     {
-      _id: 'default-1',
-      title: 'Grand Maha Somavaram Abhishekams at Kashi & Srisailam Sanctuaries',
+      _id: 'en-1',
+      title: 'Grand Maha Somavaram Abhishekams at Kashi & Srisailam Sanctuaries with Lakhs of Devotees',
       titleTelugu: 'కాశీ & శ్రీశైల క్షేత్రాలలో శ్రావణ సోమవార మహా రుద్రాభిషేకం: లక్షలాదిగా భక్తులు',
-      excerpt: 'Devotees gather at holy Ganga ghats and Krishna river kshetras for continuous Rudrabhishekam and Akhanda Bilvarchana.',
-      content: 'వారణాసి క్షేత్రంలోని శ్రీ కాశీ విశ్వనాథ స్వామి ఆలయం మరియు శ్రీశైల భ్రమరాంబ సమేత మల్లికార్జున స్వామి ఆలయాలలో విశేష ఏకాదశ రుద్రాభిషేకం నేడు అత్యంత భక్తిశ్రద్ధలతో నిర్వహించబడింది. దేశ విదేశాల నుండి వేలాదిగా తరలివచ్చిన భక్తులకు దేవాదాయ శాఖ పర్యవేక్షణలో నిరంతర అన్నప్రసాద వితరణ మరియు శీఘ్ర దర్శన ఏర్పాట్లు కల్పించారు.',
+      excerpt: 'Devotees gather along sacred Ganga ghats and Krishna river kshetras for unbroken Rudrabhishekam and Akhanda Bilvarchana in divine celebration.',
+      content: 'At the holy kshetras of Sri Kashi Vishwanath in Varanasi and Sri Bhramaramba Mallikarjuna Swamy in Srisailam, grand Ekadasa Rudrabhishekam was performed today with immense Vedic fervor during Brahma Muhurtham.\n\nHundreds of Vedic scholars and saints offered holy Ganga water, panchamritam, sacred vibhuti, and bilva leaves to Lord Shiva accompanied by resonant chants of Namakam and Chamakam. Temple authorities under the endowments department have established continuous Annaprasadam distribution counters, medical aid camps, and express queue lines for senior citizens.\n\nAccording to the temple chief executive, over 1.2 lakh devotees received sacred darshan by twilight, and all arrangements are continuing seamlessly through the holy Somavaram vigil.',
       featuredImage: '/images/temple_kashi.jpg',
       createdAt: new Date().toISOString(),
       authorName: 'Sri Astadasapeetam Chief Editor',
       category: 'news',
-      deity: 'Lord Shiva & Parashakti'
+      deity: 'Lord Shiva & Universal Mother Parashakti'
     },
     {
-      _id: 'default-2',
-      title: 'Tirumala Annual Brahmotsavams Schedule & Special Vahana Seva Guidelines',
+      _id: 'en-2',
+      title: 'Tirumala Annual Brahmotsavams Schedule & Special Vahana Seva Guidelines Released by TTD',
       titleTelugu: 'తిరుమల శ్రీవారి సాలకట్ల బ్రహ్మోత్సవాల షెడ్యూల్ విడుదల - విశేష వాహన సేవలు',
-      excerpt: 'TTD releases comprehensive calendar for upcoming Brahmotsavam processions including Garuda Seva and Rathotsavam timings.',
-      content: 'తిరుమల తిరుపతి దేవస్థానం శ్రీవారి వార్షిక బ్రహ్మోత్సవాల తేదీలను మరియు వాహన సేవల వివరాలను అధికారికంగా ప్రకటించింది. గరుడ సేవ రోజున లక్షలాది భక్తులు తరలిరానున్న నేపథ్యంలో విస్తృత భద్రతా ఏర్పాట్లు, తాగునీరు మరియు ప్రసాద వితరణ కేంద్రాలు ఏర్పాటు చేస్తున్నారు.',
+      excerpt: 'TTD unveils comprehensive calendar for upcoming Brahmotsavam processions including Garuda Seva and Rathotsavam timings.',
+      content: 'Tirumala Tirupati Devasthanams (TTD) has officially published the comprehensive schedule for the grand annual Brahmotsavams of Lord Sri Venkateswara Swamy.\n\nThe nine-day celestial festivities will commence with sacred Dhwajarohanam in the presence of the Pontiffs. The highly anticipated Garuda Seva will take place on the fifth day, drawing several hundred thousand pilgrims from around the world.\n\nSpecial drinking water supply points, 24-hour medical emergency centers, and continuous Annaprasadam counters will operate across the four Mada Streets to ensure pilgrim convenience.',
       featuredImage: '/images/temple_tirupati.jpg',
       createdAt: new Date().toISOString(),
       authorName: 'Tirumala Devasthanam Bureau',
@@ -48,16 +51,108 @@ export default function EPaperPage() {
       deity: 'Lord Sri Venkateswara'
     },
     {
-      _id: 'default-3',
-      title: 'Navaratri Special Kumkumarchana Timings Announced at 18 Maha Shakti Peethas',
+      _id: 'en-3',
+      title: 'Navaratri Special Kumkumarchana Timings Announced Across 18 Maha Shakti Peethas',
       titleTelugu: 'అష్టాదశ మహాశక్తి పీఠాలలో శరన్నవరాత్రి మహోత్సవాల ముందస్తు ఏర్పాట్లు',
-      excerpt: 'Temple trusts across all 18 Shakti Peethas coordinate for 9 days of continuous Chandi Homams and Suvasini Pujas.',
-      content: 'భారతదేశం మరియు పొరుగు దేశాలలో కొలువైన అష్టాదశ మహాశక్తి పీఠాలలో రానున్న దేవీ నవరాత్రుల ఉత్సవాల ఏర్పాట్లు ముమ్మరంగా ప్రారంభమయ్యాయి. కామాఖ్య, శ్రీశైలం, జోగులాంబ, ఉజ్జయిని, కంచి మరియు శృంగేరి క్షేత్రాలలో భక్తుల కోసం ప్రత్యేక దర్శన క్యూలైన్లు మరియు నిత్య చండీ హోమాలు సిద్ధం చేయబడ్డాయి.',
+      excerpt: 'Temple trusts across all 18 Shakti Peethas coordinate for 9 days of continuous Chandi Homams, Suvasini Pujas, and sanctum kumkuma distribution.',
+      content: 'Temple trusts across all 18 Maha Shakti Peethas in India, Sri Lanka, and neighboring holy lands have finalized arrangements for the grand Sharad Navaratri celebrations.\n\nFrom Kamakhya in Assam to Jogulamba in Alampur, Srisailam in Andhra, Ujjain Harsiddhi, and Kanchi Kamakshi, continuous Chandi Homams and Suvasini archanas will be held.\n\nDevotees can participate in sankalpams online and receive sanctum kumkuma prasadam delivered to their homes.',
       featuredImage: '/images/temple_kashi.jpg',
       createdAt: new Date().toISOString(),
       authorName: 'Peethas Advisory Board',
       category: 'news',
       deity: 'Maha Shakti Swaroopini'
+    },
+    {
+      _id: 'en-4',
+      title: 'Ancient Palm-Leaf Inscriptions Digitization Drive Launched by Astadasapeetam Research Wing',
+      titleTelugu: 'అష్టాదశ పీఠాల విశిష్టతపై తాళపత్ర గ్రంథాల డిజిటలైజేషన్ ప్రారంభం',
+      excerpt: 'Vedic research foundation initiates comprehensive scanning of rare Agamic manuscripts to preserve heritage rituals.',
+      content: 'A major heritage initiative has commenced under the patronage of Vedic scholars to preserve over 10,000 rare palm-leaf manuscripts documenting sacred rituals, sthala puranams, and architectural measurements of ancient Shakti Peethas.\n\nHigh-resolution multispectral imaging technology is being utilized to restore degraded Sanskrit and Telugu scripts for future generations.',
+      featuredImage: '/images/panchangam_hero.jpg',
+      createdAt: new Date().toISOString(),
+      authorName: 'Heritage Documentation Division',
+      category: 'news',
+      deity: 'Mother Saraswati Devi'
+    }
+  ];
+
+  // 2. Telugu Edition Stories (ఆంధ్రప్రదేశ్ & సార్వత్రిక తెలుగు సంచిక)
+  const teluguStories = [
+    {
+      _id: 'te-1',
+      title: 'Grand Maha Somavaram Abhishekams at Kashi & Srisailam Sanctuaries',
+      titleTelugu: 'కాశీ & శ్రీశైల క్షేత్రాలలో శ్రావణ సోమవార మహా రుద్రాభిషేకం: లక్షలాదిగా తరలివచ్చిన భక్తులు',
+      excerpt: 'గంగా నదీ తీరంలో మరియు కృష్ణా నది తీరాన వేద మంత్రోచ్ఛారణలతో మార్మోగిన పుణ్య క్షేత్రాలు — దేవాదాయ శాఖ ఆధ్వర్యంలో సమగ్ర ఏర్పాట్లు.',
+      content: 'వారణాసి క్షేత్రంలోని శ్రీ కాశీ విశ్వనాథ స్వామి ఆలయం మరియు శ్రీశైల భ్రమరాంబ సమేత మల్లికార్జున స్వామి ఆలయాలలో విశేష ఏకాదశ రుద్రాభిషేకం నేడు అత్యంత భక్తిశ్రద్ధలతో నిర్వహించబడింది. దేశ విదేశాల నుండి వేలాదిగా తరలివచ్చిన భక్తులకు దేవాదాయ శాఖ పర్యవేక్షణలో నిరంతర అన్నప్రసాద వితరణ మరియు శీఘ్ర దర్శన ఏర్పాట్లు కల్పించారు.\n\nబ్రాహ్మీ ముహూర్తంలో ప్రారంభమైన అభిషేకాల్లో వేద పండితులు నమక చమక సహితంగా పరమశివునికి పంచామృత స్నపనం గావించారు. సాయంత్రం వేళల్లో మహామంగళ హారతితో క్షేత్రాలు దివ్యకాంతులతో వెలుగొందాయి.',
+      featuredImage: '/images/temple_kashi.jpg',
+      createdAt: new Date().toISOString(),
+      authorName: 'శ్రీ అష్టాదశ పీఠం ఎడిటోరియల్ డెస్క్',
+      category: 'news',
+      deity: 'పరమశివుడు & భ్రమరాంబికా దేవి'
+    },
+    {
+      _id: 'te-2',
+      title: 'Tirumala Annual Brahmotsavams Schedule & Special Vahana Seva Guidelines',
+      titleTelugu: 'తిరుమల శ్రీవారి సాలకట్ల బ్రహ్మోత్సవాల షెడ్యూల్ విడుదల - విశేష వాహన సేవలు',
+      excerpt: 'తిరుమల తిరుపతి దేవస్థానం శ్రీవారి వార్షిక బ్రహ్మోత్సవాల తేదీలను మరియు వాహన సేవల వివరాలను అధికారికంగా ప్రకటించింది.',
+      content: 'తిరుమల తిరుపతి దేవస్థానం (టీటీడీ) శ్రీ వేంకటేశ్వర స్వామి వార్షిక బ్రహ్మోత్సవాల షెడ్యూల్‌ను విడుదల చేసింది. తొమ్మిది రోజుల పాటు అత్యంత వైభవంగా జరిగే ఈ ఉత్సవాల్లో ధ్వజారోహణంతో వేడుకలు ప్రారంభమవుతాయి.\n\nఐదవ రోజున జరిగే గరుడ సేవకు భారీ సంఖ్యలో భక్తులు తరలివచ్చే అవకాశం ఉన్నందున నాలుగు మాడ వీధుల్లో నిరంతర అన్నప్రసాద వితరణ మరియు భద్రతా ఏర్పాట్లు పటిష్టం చేశారు.',
+      featuredImage: '/images/temple_tirupati.jpg',
+      createdAt: new Date().toISOString(),
+      authorName: 'తిరుమల క్షేత్ర సమాచార విభాగం',
+      category: 'news',
+      deity: 'శ్రీ వేంకటేశ్వర స్వామి'
+    },
+    {
+      _id: 'te-3',
+      title: 'Navaratri Special Kumkumarchana Timings Announced Across 18 Maha Shakti Peethas',
+      titleTelugu: 'అష్టాదశ మహాశక్తి పీఠాలలో శరన్నవరాత్రి మహోత్సవాల ముందస్తు ఏర్పాట్లు',
+      excerpt: '18 మహాశక్తి పీఠాలలో తొమ్మిది రోజుల పాటు నిరంతర చండీ హోమాలు, సువాసినీ పూజలు మరియు అఖండ దీపారాధన ఏర్పాట్లు పూర్తి.',
+      content: 'అఖిల భారత అష్టాదశ మహాశక్తి పీఠాలలో రానున్న శరన్నవరాత్రుల వైభవోత్సవాలకు సన్నాహాలు ముమ్మరమయ్యాయి. కామాఖ్య, శ్రీశైలం, జోగులాంబ, ఉజ్జయిని, కంచి మరియు శృంగేరి పుణ్యక్షేత్రాలలో భక్తుల కోసం ప్రత్యేక క్యూలైన్లు మరియు నిత్య చండీ హోమాలు నిర్వహించనున్నారు.',
+      featuredImage: '/images/temple_kashi.jpg',
+      createdAt: new Date().toISOString(),
+      authorName: 'పీఠాల ధర్మసభ',
+      category: 'news',
+      deity: 'మహాశక్తి స్వరూపిణి'
+    }
+  ];
+
+  // 3. Telangana Regional Edition Stories (తెలంగాణ ప్రాంతీయ సంచిక)
+  const telanganaStories = [
+    {
+      _id: 'tg-1',
+      title: 'Yadadri & Vemulawada Sanctuaries Witness Huge Devotee Rush for Special Sevas',
+      titleTelugu: 'యాదాద్రి & వేములవాడ క్షేత్రాలలో భక్తుల విశేష రద్దీ - వైభవంగా లక్ష్మీ నరసింహ నిత్య కల్యాణోత్సవం',
+      excerpt: 'తెలంగాణలోని ప్రముఖ పుణ్యక్షేత్రాలైన యాదగిరిగుట్ట, వేములవాడ రాజరాజేశ్వర స్వామి ఆలయాలలో భక్తుల పోటెత్తు ప్రవాహం.',
+      content: 'తెలంగాణ రాష్ట్రంలో అత్యంత ప్రసిద్ధి చెందిన శ్రీ యాదాద్రి లక్ష్మీ నరసింహ స్వామి వారి దివ్య క్షేత్రంలో నేడు భక్తుల రద్దీ విశేషంగా పెరిగింది. ఉదయం సుప్రభాత సేవ మొదలుకొని రాత్రి శయనోత్సవం వరకు ఆలయం కిక్కిరిసింది. కల్యాణ మండపంలో స్వామి అమ్మవార్ల నిత్య కల్యాణం వైభవంగా నిర్వహించబడింది.\n\nఅలాగే వేములవాడ శ్రీ రాజరాజేశ్వర స్వామి వారి ఆలయంలో వేలాది మంది భక్తులు కోడె మొక్కులు చెల్లించుకున్నారు. భక్తులకు ఎలాంటి అసౌకర్యం కలగకుండా దేవస్థాన అధికారులు క్యూలైన్లు, మంచినీటి సదుపాయాలు మరియు అన్నదాన కౌంటర్లను పర్యవేక్షిస్తున్నారు.\n\nమరోవైపు అష్టాదశ శక్తి పీఠాలలో ఒకటైన జోగులాంబ గద్వాల క్షేత్రంలో అమ్మవారికి విశేష కుంకుమార్చనలు ఘనంగా జరిగాయి.',
+      featuredImage: '/images/temple_tirupati.jpg',
+      createdAt: new Date().toISOString(),
+      authorName: 'తెలంగాణ క్షేత్ర ప్రతినిధి, భాగ్యనగరం',
+      category: 'news',
+      deity: 'శ్రీ లక్ష్మీ నరసింహ స్వామి & శ్రీ రాజరాజేశ్వర స్వామి'
+    },
+    {
+      _id: 'tg-2',
+      title: 'Alampur Jogulamba 5th Maha Shakti Peetham Special Friday Kumkuma Archana',
+      titleTelugu: 'అలంపూర్ జోగులాంబ 5వ మహాశక్తి పీఠంలో శుక్రవార విశేష కుంకుమార్చన & చండీ పారాయణం',
+      excerpt: 'తుంగభద్ర నదీ తీరాన వెలసిన దక్షిణ కాశీ అలంపూర్ క్షేత్రంలో భక్తులతో కిటకిటలాడిన బాలబ్రహ్మేశ్వర స్వామి ఆలయం.',
+      content: 'జోగులాంబ గద్వాల జిల్లాలోని అలంపూర్ శ్రీ జోగులాంబ దేవి 5వ శక్తి పీఠంలో శుక్రవారం సందర్భంగా వేలాదిగా మహిళా భక్తులు విచ్చేసి సామూహిక కుంకుమార్చనలలో పాల్గొన్నారు.\n\nబాలబ్రహ్మేశ్వర స్వామి వారికి ఏకాదశ రుద్రాభిషేకం శాస్త్రోక్తంగా జరిగింది. వేద పండితులు లలితా సహస్రనామ పారాయణం నిర్వహించారు.',
+      featuredImage: '/images/temple_kashi.jpg',
+      createdAt: new Date().toISOString(),
+      authorName: 'అలంపూర్ క్షేత్ర బ్యూరో',
+      category: 'news',
+      deity: 'శ్రీ జోగులాంబ దేవి & బాలబ్రహ్మేశ్వర స్వామి'
+    },
+    {
+      _id: 'tg-3',
+      title: 'Bhadrachalam Sitarama Swamy Temple Vaikunta Ekadashi Arrangements Commence',
+      titleTelugu: 'భద్రాచలం శ్రీ సీతారామచంద్ర స్వామి దివ్య క్షేత్రంలో ముక్కోటి ఏకాదశి ముందస్తు ఏర్పాట్లు',
+      excerpt: 'గోదావరి తీరంలో భద్రాద్రి రామయ్యకు ఉత్తర ద్వార దర్శనం కోసం సర్వ సన్నాహాలు ప్రారంభం.',
+      content: 'దక్షిణ అయోధ్యగా పేరొందిన భద్రాచలం శ్రీ సీతారామచంద్ర స్వామి దేవస్థానంలో రాబోయే వైకుంఠ ఏకాదశి అధ్యయనోత్సవాలకు ఏర్పాట్లు ప్రారంభమయ్యాయి. ఉత్తర ద్వార దర్శనం రోజున వచ్చే లక్షలాది భక్తుల కోసం గోదావరి నదీ ఘాట్ల వద్ద పటిష్ట బారికేడ్లు ఏర్పాటు చేస్తున్నారు.',
+      featuredImage: '/images/panchangam_hero.jpg',
+      createdAt: new Date().toISOString(),
+      authorName: 'భద్రాద్రి సమాచార విభాగం',
+      category: 'news',
+      deity: 'శ్రీ సీతారామచంద్ర స్వామి'
     }
   ];
 
@@ -67,21 +162,11 @@ export default function EPaperPage() {
       fetch('http://localhost:5000/api/posts?category=news&status=published&limit=30')
         .then(res => res.json())
         .then(data => {
-          let list = [];
           if (data.success && Array.isArray(data.data) && data.data.length > 0) {
-            list = data.data;
+            setNewsArticles(data.data);
           }
-
-          // If no custom news articles from server yet, merge with editorial stories
-          if (list.length === 0) {
-            list = defaultEditorialStories;
-          }
-
-          setNewsArticles(list);
         })
-        .catch(() => {
-          setNewsArticles(defaultEditorialStories);
-        })
+        .catch(() => {})
         .finally(() => setLoading(false));
     };
 
@@ -93,11 +178,62 @@ export default function EPaperPage() {
     }
   }, []);
 
-  // Compute pagination and active story slices
-  const totalPages = Math.max(1, Math.ceil(newsArticles.length / 4));
-  const leadStory = newsArticles[(currentPage - 1) * 4] || newsArticles[0] || defaultEditorialStories[0];
-  const sideStories = newsArticles.slice((currentPage - 1) * 4 + 1, (currentPage - 1) * 4 + 4);
-  const extraStories = newsArticles.slice((currentPage - 1) * 4 + 4, (currentPage - 1) * 4 + 7);
+  // Determine active story pool based on chosen language
+  const getActiveStories = () => {
+    if (language === 'english') {
+      // If custom news articles exist, format them for English; else fallback to englishStories
+      if (newsArticles.length > 0) {
+        return newsArticles.map(a => ({
+          ...a,
+          displayTitle: a.title,
+          displaySubtitle: a.titleTelugu || a.excerpt,
+          displayExcerpt: a.excerpt || a.content?.slice(0, 160) + '...',
+          displayContent: a.content || a.excerpt
+        }));
+      }
+      return englishStories.map(a => ({
+        ...a,
+        displayTitle: a.title,
+        displaySubtitle: a.excerpt,
+        displayExcerpt: a.excerpt,
+        displayContent: a.content
+      }));
+    }
+
+    if (language === 'telangana') {
+      return telanganaStories.map(a => ({
+        ...a,
+        displayTitle: a.titleTelugu,
+        displaySubtitle: a.title,
+        displayExcerpt: a.excerpt,
+        displayContent: a.content
+      }));
+    }
+
+    // Default: Telugu
+    if (newsArticles.length > 0) {
+      return newsArticles.map(a => ({
+        ...a,
+        displayTitle: a.titleTelugu || a.title,
+        displaySubtitle: a.title,
+        displayExcerpt: a.excerpt || a.content?.slice(0, 160) + '...',
+        displayContent: a.content || a.excerpt
+      }));
+    }
+    return teluguStories.map(a => ({
+      ...a,
+      displayTitle: a.titleTelugu,
+      displaySubtitle: a.title,
+      displayExcerpt: a.excerpt,
+      displayContent: a.content
+    }));
+  };
+
+  const activeStories = getActiveStories();
+  const totalPages = Math.max(1, Math.ceil(activeStories.length / 4));
+  const leadStory = activeStories[(currentPage - 1) * 4] || activeStories[0];
+  const sideStories = activeStories.slice((currentPage - 1) * 4 + 1, (currentPage - 1) * 4 + 4);
+  const extraStories = activeStories.slice((currentPage - 1) * 4 + 4, (currentPage - 1) * 4 + 7);
 
   const todayDateStr = new Date().toLocaleDateString('en-IN', {
     weekday: 'long',
@@ -118,80 +254,188 @@ export default function EPaperPage() {
             <span>Digital Bhakti Dinapatrika • Devotional News &amp; E-Paper Edition</span>
           </div>
           <h1 className="text-2xl sm:text-4xl font-serif font-black text-amber-100 tracking-tight">
-            Sri Astadasapeetam Daily Devotional E-Paper (ఈ-పేపర్)
+            Sri Astadasapeetam Daily Devotional E-Paper Edition
           </h1>
           <p className="text-xs sm:text-sm text-stone-300 mt-1 max-w-2xl leading-relaxed">
-            All Devotional News published by the editors appears here formatted as authentic digital newspaper pages, featuring breaking temple updates, darshan announcements, utsavam schedules, and sacred commentaries.
+            All Devotional News published by the editors appears here formatted as authentic digital newspaper pages, with language switching between <strong>English</strong>, <strong>Telugu</strong>, and <strong>Telangana</strong> editions.
           </p>
         </div>
       </div>
 
       <div className="w-[98.5%] max-w-[1400px] mx-auto px-4 sm:px-6 py-8 space-y-8">
-        {/* Newspaper Controls Toolbar */}
-        <div className="bg-white rounded-3xl p-4 sm:p-5 border border-[#e8d5bc] shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-bold text-stone-500 uppercase tracking-wider">Editions:</span>
-            {editions.map(ed => (
-              <button
-                key={ed.id}
-                onClick={() => setSelectedEdition(ed.id)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
-                  selectedEdition === ed.id ? 'bg-[#78131e] text-white shadow-2xs' : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
-                }`}
-              >
-                {ed.name.split(' ')[0]} Edition
-              </button>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-2 self-start md:self-auto">
-            {/* Page Navigation */}
-            <div className="flex items-center bg-stone-100 p-1 rounded-xl border border-stone-200 text-xs font-bold">
-              <button 
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="p-1.5 hover:bg-white rounded-lg disabled:opacity-40 cursor-pointer"
-                title="Previous Page"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <span className="px-3">Page {currentPage} of {Math.max(1, totalPages)}</span>
-              <button 
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                disabled={currentPage >= totalPages}
-                className="p-1.5 hover:bg-white rounded-lg disabled:opacity-40 cursor-pointer"
-                title="Next Page"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
+        
+        {/* ========================================================================= */}
+        {/* NEWSPAPER CONTROLS & LANGUAGE EDITION SWITCHER (JUST ABOVE EDITIONS)     */}
+        {/* ========================================================================= */}
+        <div className="bg-white rounded-3xl p-5 sm:p-6 border border-[#e8d5bc] shadow-xs space-y-4">
+          
+          {/* Top Row: Language Switcher (English, Telugu, Telangana) */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 pb-4 border-b border-stone-200">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-800 flex items-center justify-center border border-amber-300 shrink-0">
+                <Globe className="w-4 h-4 text-[#78131e]" />
+              </div>
+              <div>
+                <span className="text-xs font-black text-[#78131e] uppercase tracking-wider block">
+                  Choose Language Edition:
+                </span>
+                <span className="text-[11px] text-stone-500">
+                  Switch full newspaper content between English, Telugu, and Telangana
+                </span>
+              </div>
             </div>
 
-            <button
-              onClick={() => alert(`Downloading today's Astadasapeetam Digital E-Paper Edition PDF for ${todayDateStr}...`)}
-              className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-black text-xs px-3.5 py-2 rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>Download PDF</span>
-            </button>
+            {/* 3-Way Switcher Buttons */}
+            <div className="flex items-center bg-stone-100 p-1 rounded-2xl border border-stone-300 shadow-inner">
+              <button
+                type="button"
+                onClick={() => setLanguage('english')}
+                className={`px-4 py-2 rounded-xl text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
+                  language === 'english'
+                    ? 'bg-[#78131e] text-white shadow-xs scale-100'
+                    : 'text-stone-700 hover:text-stone-950 hover:bg-white/80'
+                }`}
+                title="View Full Newspaper in English"
+              >
+                <span>🇬🇧 English (Default)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setLanguage('telugu')}
+                className={`px-4 py-2 rounded-xl text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
+                  language === 'telugu'
+                    ? 'bg-[#78131e] text-white shadow-xs scale-100 font-serif'
+                    : 'text-stone-700 hover:text-stone-950 hover:bg-white/80'
+                }`}
+                title="View Full Newspaper in Telugu"
+              >
+                <span>🕉️ Telugu (తెలుగు)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setLanguage('telangana')}
+                className={`px-4 py-2 rounded-xl text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
+                  language === 'telangana'
+                    ? 'bg-[#78131e] text-white shadow-xs scale-100 font-serif'
+                    : 'text-stone-700 hover:text-stone-950 hover:bg-white/80'
+                }`}
+                title="View Telangana Regional Devotional Edition"
+              >
+                <span>🚩 Telangana (తెలంగాణ)</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Bottom Row: Regional Editions & Page Controls */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-bold text-stone-500 uppercase tracking-wider">Editions:</span>
+              {editions.map(ed => (
+                <button
+                  key={ed.id}
+                  onClick={() => {
+                    setSelectedEdition(ed.id);
+                    if (ed.defaultLang) setLanguage(ed.defaultLang);
+                  }}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                    selectedEdition === ed.id 
+                      ? 'bg-[#78131e] text-white shadow-2xs' 
+                      : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
+                  }`}
+                >
+                  {ed.name.split(' ')[0]} Edition
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-2 self-start md:self-auto">
+              {/* Page Navigation */}
+              <div className="flex items-center bg-stone-100 p-1 rounded-xl border border-stone-200 text-xs font-bold">
+                <button 
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="p-1.5 hover:bg-white rounded-lg disabled:opacity-40 cursor-pointer"
+                  title="Previous Page"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <span className="px-3">Page {currentPage} of {Math.max(1, totalPages)}</span>
+                <button 
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage >= totalPages}
+                  className="p-1.5 hover:bg-white rounded-lg disabled:opacity-40 cursor-pointer"
+                  title="Next Page"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+
+              <button
+                onClick={() => alert(`Downloading ${language.toUpperCase()} Astadasapeetam Digital E-Paper Edition PDF for ${todayDateStr}...`)}
+                className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-black text-xs px-3.5 py-2 rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Download PDF</span>
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Realistic Digital Newspaper Page Sheet */}
+        {/* ========================================================================= */}
+        {/* REALISTIC DIGITAL NEWSPAPER PAGE SHEET (DYNAMIC PER LANGUAGE)             */}
+        {/* ========================================================================= */}
         <div className="bg-[#fffefb] rounded-3xl p-6 sm:p-10 border border-[#e8d5bc] shadow-sm space-y-6">
+          
           {/* Newspaper Masthead */}
           <div className="text-center pb-6 border-b-4 border-double border-stone-800 space-y-2">
-            <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-amber-900">
-              శ్రీ అష్టాదశ పీఠం నిత్య భక్తి పత్రిక • SRI ASTADASAPEETAM DEVOTIONAL HERALD
-            </span>
-            <h2 className="text-3xl sm:text-5xl font-serif font-black text-stone-950 tracking-tight">
-              అష్టాదశ పీఠం భక్తి ప్రభాతమ్
-            </h2>
-            <div className="flex flex-wrap items-center justify-between text-xs text-stone-600 font-serif border-t border-b border-stone-300 py-1.5 px-3 font-bold">
-              <span>సంపుటి 12 • సంచిక 142 (E-Paper)</span>
-              <span>{todayDateStr}</span>
-              <span>వర్గం: ఆధ్యాత్మిక వార్తలు (Devotional News)</span>
-              <span>ధర: ఉచిత నిత్య ఆధ్యాత్మిక సేవ</span>
-            </div>
+            {language === 'english' ? (
+              <>
+                <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-amber-900">
+                  SRI ASTADASAPEETAM DEVOTIONAL HERALD • DAILY SPIRITUAL CHRONICLE
+                </span>
+                <h2 className="text-3xl sm:text-5xl font-serif font-black text-stone-950 tracking-tight">
+                  ASTADASAPEETAM DEVOTIONAL HERALD
+                </h2>
+                <div className="flex flex-wrap items-center justify-between text-xs text-stone-600 font-serif border-t border-b border-stone-300 py-1.5 px-3 font-bold">
+                  <span>Volume 12 • Issue 142 (Digital E-Paper)</span>
+                  <span>{todayDateStr}</span>
+                  <span>Category: Devotional News (Sacred Epistles)</span>
+                  <span>Price: Free Daily Spiritual Service</span>
+                </div>
+              </>
+            ) : language === 'telangana' ? (
+              <>
+                <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-amber-900">
+                  తెలంగాణ భక్తి దినపత్రిక • SRI ASTADASAPEETAM TELANGANA REGIONAL EDITION
+                </span>
+                <h2 className="text-3xl sm:text-5xl font-serif font-black text-stone-950 tracking-tight">
+                  అష్టాదశ పీఠం తెలంగాణ భక్తి ప్రభాతమ్
+                </h2>
+                <div className="flex flex-wrap items-center justify-between text-xs text-stone-600 font-serif border-t border-b border-stone-300 py-1.5 px-3 font-bold">
+                  <span>సంపుటి 12 • సంచిక 142 (తెలంగాణ ఈ-పేపర్)</span>
+                  <span>{todayDateStr}</span>
+                  <span>ప్రాంతం: భాగ్యనగరం &amp; తెలంగాణ పుణ్యక్షేత్రాలు</span>
+                  <span>ధర: ఉచిత నిత్య ఆధ్యాత్మిక సేవ</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-amber-900">
+                  శ్రీ అష్టాదశ పీఠం నిత్య భక్తి పత్రిక • SRI ASTADASAPEETAM DEVOTIONAL HERALD
+                </span>
+                <h2 className="text-3xl sm:text-5xl font-serif font-black text-stone-950 tracking-tight">
+                  అష్టాదశ పీఠం భక్తి ప్రభాతమ్
+                </h2>
+                <div className="flex flex-wrap items-center justify-between text-xs text-stone-600 font-serif border-t border-b border-stone-300 py-1.5 px-3 font-bold">
+                  <span>సంపుటి 12 • సంచిక 142 (ఈ-పేపర్)</span>
+                  <span>{todayDateStr}</span>
+                  <span>వర్గం: ఆధ్యాత్మిక వార్తలు (Devotional News)</span>
+                  <span>ధర: ఉచిత నిత్య ఆధ్యాత్మిక సేవ</span>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Newspaper Columns Layout */}
@@ -202,7 +446,11 @@ export default function EPaperPage() {
               <div className="lg:col-span-8 space-y-4 border-b lg:border-b-0 lg:border-r border-stone-200 lg:pr-8">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-mono font-bold uppercase text-white bg-[#78131e] px-2.5 py-0.5 rounded shadow-2xs">
-                    ముఖ్యవార్త • Lead Devotional Chronicle
+                    {language === 'english' 
+                      ? 'LEAD CHRONICLE • BREAKING DEVOTIONAL NEWS' 
+                      : language === 'telangana'
+                      ? 'తెలంగాణ ముఖ్యవార్త • దివ్య క్షేత్ర సమాచారం'
+                      : 'ముఖ్యవార్త • Lead Devotional Chronicle'}
                   </span>
                   <span className="text-[11px] font-mono text-stone-500 font-semibold">
                     {new Date(leadStory.createdAt || Date.now()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
@@ -213,12 +461,12 @@ export default function EPaperPage() {
                   onClick={() => setSelectedStoryModal(leadStory)}
                   className="text-2xl sm:text-3xl font-serif font-black text-stone-950 leading-tight hover:text-[#78131e] cursor-pointer transition-colors"
                 >
-                  {leadStory.titleTelugu || leadStory.title}
+                  {leadStory.displayTitle}
                 </h3>
 
-                {leadStory.titleTelugu && leadStory.title && (
+                {leadStory.displaySubtitle && leadStory.displaySubtitle !== leadStory.displayTitle && (
                   <p className="text-sm font-serif font-semibold text-stone-700 italic border-l-2 border-amber-600 pl-3">
-                    {leadStory.title}
+                    {leadStory.displaySubtitle}
                   </p>
                 )}
 
@@ -233,9 +481,9 @@ export default function EPaperPage() {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/75 to-transparent p-3 text-white text-xs font-serif flex items-center justify-between">
-                      <span>{leadStory.deity ? `క్షేత్ర దైవం: ${leadStory.deity}` : 'దివ్య క్షేత్ర సమాచారం'}</span>
+                      <span>{leadStory.deity ? `${language === 'english' ? 'Presiding Deity: ' : 'క్షేత్ర దైవం: '}${leadStory.deity}` : (language === 'english' ? 'Sacred Temple Chronicle' : 'దివ్య క్షేత్ర సమాచారం')}</span>
                       <span className="text-[10px] text-amber-300 font-sans font-bold flex items-center gap-1">
-                        <span>Click to read full story</span>
+                        <span>{language === 'english' ? 'Click to read full story' : 'సంపూర్ణ వార్త చదవండి'}</span>
                         <ChevronRight className="w-3 h-3" />
                       </span>
                     </div>
@@ -243,19 +491,19 @@ export default function EPaperPage() {
                 )}
 
                 <p className="text-xs sm:text-sm font-serif text-stone-800 leading-relaxed text-justify line-clamp-6">
-                  {leadStory.content || leadStory.excerpt}
+                  {leadStory.displayContent || leadStory.displayExcerpt}
                 </p>
 
                 <div className="pt-2 flex items-center justify-between border-t border-stone-100">
                   <div className="text-xs text-stone-500 font-serif">
-                    నివేదిక: <strong className="text-stone-800">{leadStory.authorName || 'శ్రీ అష్టాదశ పీఠం ప్రత్యేక ప్రతినిధి'}</strong>
+                    {language === 'english' ? 'Special Report: ' : 'నివేదిక: '}
+                    <strong className="text-stone-800">{leadStory.authorName || 'Sri Astadasapeetam Editorial Desk'}</strong>
                   </div>
                   <button
                     onClick={() => setSelectedStoryModal(leadStory)}
                     className="text-xs font-bold text-[#78131e] hover:text-[#5a0d16] flex items-center gap-1 hover:underline cursor-pointer"
                   >
-                    <span>సంపూర్ణ వార్త చదవండి (Read Full Story)</span>
-                    <ChevronRight className="w-3.5 h-3.5" />
+                    <span>{language === 'english' ? 'Read Full Story (English) ›' : 'సంపూర్ణ వార్త చదవండి ›'}</span>
                   </button>
                 </div>
               </div>
@@ -264,7 +512,7 @@ export default function EPaperPage() {
             {/* Right Column: Newspaper News Columns */}
             <div className="lg:col-span-4 space-y-5">
               <h4 className="font-serif font-black text-sm uppercase tracking-wider text-[#78131e] pb-1 border-b-2 border-[#78131e] flex items-center justify-between">
-                <span>నేటి ప్రధాన ఆధ్యాత్మిక విశేషాలు</span>
+                <span>{language === 'english' ? "TODAY'S DEVOTIONAL HIGHLIGHTS" : language === 'telangana' ? "తెలంగాణ క్షేత్ర విశేషాలు" : "నేటి ప్రధాన ఆధ్యాత్మిక విశేషాలు"}</span>
                 <span className="text-[10px] font-mono text-stone-500">News Feed</span>
               </h4>
 
@@ -279,26 +527,26 @@ export default function EPaperPage() {
                     >
                       <div className="flex items-center justify-between">
                         <span className="text-[9px] font-mono font-bold text-amber-900 bg-amber-200/60 px-1.5 py-0.5 rounded uppercase">
-                          వార్త విశేషం {sIdx + 2}
+                          {language === 'english' ? `Chronicle ${sIdx + 2}` : `వార్త విశేషం ${sIdx + 2}`}
                         </span>
                         <span className="text-[10px] text-stone-400 font-mono">
                           {new Date(story.createdAt || Date.now()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
                         </span>
                       </div>
                       <h5 className="font-serif font-bold text-sm text-stone-900 leading-snug group-hover:text-[#78131e] transition-colors">
-                        {story.titleTelugu || story.title}
+                        {story.displayTitle}
                       </h5>
                       <p className="text-xs text-stone-600 line-clamp-2 leading-relaxed">
-                        {story.excerpt || story.content}
+                        {story.displayExcerpt || story.displayContent}
                       </p>
                       <div className="pt-1 flex items-center justify-end text-[11px] font-bold text-amber-800">
-                        <span className="group-hover:underline">వివరాలు చూడండి &rarr;</span>
+                        <span className="group-hover:underline">{language === 'english' ? 'View Details →' : 'వివరాలు చూడండి →'}</span>
                       </div>
                     </div>
                   ))
                 ) : (
                   <div className="p-4 bg-stone-50 rounded-2xl border border-dashed border-stone-300 text-center text-xs text-stone-500">
-                    No secondary stories on this page. Use publisher studio to compose new Devotional News.
+                    No secondary stories on this page.
                   </div>
                 )}
               </div>
@@ -306,26 +554,30 @@ export default function EPaperPage() {
               {/* Daily Panchangam Almanac Column Box */}
               <div className="p-4 bg-gradient-to-br from-[#180A24] to-[#3B1268] text-white rounded-2xl space-y-2 border border-amber-400/40 shadow-xs">
                 <span className="text-[10px] font-mono font-bold text-amber-400 uppercase tracking-wider">
-                  నేటి పంచాంగ ముఖ్యాంశాలు (Panchangam)
+                  {language === 'english' ? "TODAY'S PANCHANGAM GLIMPSE • VEDIC ALMANAC" : "నేటి పంచాంగ ముఖ్యాంశాలు (PANCHANGAM)"}
                 </span>
                 <h5 className="text-xs font-serif font-bold text-amber-100">
-                  శుక్ల పంచమి • రోహిణి నక్షత్రం • బ్రహ్మ ముహూర్తం
+                  {language === 'english' 
+                    ? "Shukla Panchami • Rohini Nakshatram • Brahma Muhurtham" 
+                    : "శుక్ల పంచమి • రోహిణి నక్షత్రం • బ్రహ్మ ముహూర్తం"}
                 </h5>
                 <p className="text-[11px] text-stone-300 leading-relaxed">
-                  అమృత కాలం: ఉదయం 8:45 నుండి 10:15 వరకు. రాహు కాలం: సాయంత్రం 4:30 నుండి 6:00 వరకు.
+                  {language === 'english'
+                    ? "Amrita Kalam: 08:45 AM - 10:15 AM | Rahu Kalam: 04:30 PM - 06:00 PM."
+                    : "అమృత కాలం: ఉదయం 8:45 నుండి 10:15 వరకు. రాహు కాలం: సాయంత్రం 4:30 నుండి 6:00 వరకు."}
                 </p>
                 <div className="pt-1 flex items-center justify-between">
                   <Link
                     href="/panchangam"
                     className="inline-block text-[11px] font-bold text-amber-400 hover:text-amber-300 hover:underline"
                   >
-                    సంపూర్ణ పంచాంగం చూడండి &rarr;
+                    {language === 'english' ? "View Complete Panchangam →" : "సంపూర్ణ పంచాంగం చూడండి →"}
                   </Link>
                   <Link
                     href="/astrology"
                     className="inline-block text-[11px] font-bold text-stone-300 hover:text-white"
                   >
-                    జ్యోతిష్య విశ్లేషణ
+                    {language === 'english' ? "Astrology Desk" : "జ్యోతిష్య విశ్లేషణ"}
                   </Link>
                 </div>
               </div>
@@ -336,7 +588,7 @@ export default function EPaperPage() {
           {extraStories.length > 0 && (
             <div className="pt-6 border-t-2 border-stone-200">
               <h4 className="font-serif font-black text-sm uppercase tracking-wider text-stone-800 mb-4 pb-1 border-b border-stone-200">
-                మరిన్ని క్షేత్ర వార్తా విశేషాలు (More Devotional Chronicles)
+                {language === 'english' ? "MORE DEVOTIONAL KSHETRA CHRONICLES" : "మరిన్ని క్షేత్ర వార్తా విశేషాలు"}
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {extraStories.map((story, eIdx) => (
@@ -355,10 +607,10 @@ export default function EPaperPage() {
                       </div>
                     )}
                     <h5 className="font-serif font-bold text-xs text-stone-900 group-hover:text-[#78131e] line-clamp-2">
-                      {story.titleTelugu || story.title}
+                      {story.displayTitle}
                     </h5>
                     <p className="text-[11px] text-stone-600 line-clamp-2">
-                      {story.excerpt || story.content}
+                      {story.displayExcerpt || story.displayContent}
                     </p>
                   </div>
                 ))}
@@ -384,7 +636,7 @@ export default function EPaperPage() {
 
             <div className="flex items-center space-x-2">
               <span className="text-[10px] font-mono font-bold bg-[#78131e] text-white px-2.5 py-0.5 rounded uppercase">
-                ఆధ్యాత్మిక వార్త • E-Paper Edition
+                {language === 'english' ? 'DEVOTIONAL NEWS • DIGITAL E-PAPER EDITION' : 'ఆధ్యాత్మిక వార్త • ఈ-పేపర్ సంచిక'}
               </span>
               <span className="text-xs font-mono text-stone-500">
                 {new Date(selectedStoryModal.createdAt || Date.now()).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}
@@ -393,11 +645,11 @@ export default function EPaperPage() {
 
             <div>
               <h2 className="text-2xl sm:text-3xl font-serif font-black text-stone-950 leading-tight">
-                {selectedStoryModal.titleTelugu || selectedStoryModal.title}
+                {selectedStoryModal.displayTitle || selectedStoryModal.title}
               </h2>
-              {selectedStoryModal.titleTelugu && selectedStoryModal.title && (
+              {selectedStoryModal.displaySubtitle && selectedStoryModal.displaySubtitle !== selectedStoryModal.displayTitle && (
                 <p className="text-sm font-serif text-stone-600 italic mt-1">
-                  {selectedStoryModal.title}
+                  {selectedStoryModal.displaySubtitle}
                 </p>
               )}
             </div>
@@ -413,17 +665,25 @@ export default function EPaperPage() {
             )}
 
             <div className="border-t border-b border-stone-200 py-3 flex flex-wrap items-center justify-between text-xs text-stone-600 font-serif">
-              <span>నివేదిక: <strong className="text-stone-900">{selectedStoryModal.authorName || 'శ్రీ అష్టాదశ పీఠం ఎడిటోరియల్'}</strong></span>
-              {selectedStoryModal.deity && <span>దైవ రూపం: <strong className="text-amber-800">{selectedStoryModal.deity}</strong></span>}
+              <span>
+                {language === 'english' ? 'Report by: ' : 'నివేదిక: '}
+                <strong className="text-stone-900">{selectedStoryModal.authorName || 'Sri Astadasapeetam Editorial'}</strong>
+              </span>
+              {selectedStoryModal.deity && (
+                <span>
+                  {language === 'english' ? 'Sanctum Deity: ' : 'దైవ రూపం: '}
+                  <strong className="text-amber-800">{selectedStoryModal.deity}</strong>
+                </span>
+              )}
             </div>
 
             <div className="font-serif text-stone-800 text-sm sm:text-base leading-relaxed text-justify space-y-3 whitespace-pre-line max-h-96 overflow-y-auto pr-2">
-              {selectedStoryModal.content || selectedStoryModal.excerpt}
+              {selectedStoryModal.displayContent || selectedStoryModal.content || selectedStoryModal.excerpt}
             </div>
 
             <div className="pt-3 border-t border-stone-200 flex items-center justify-between">
               <span className="text-xs text-stone-500 font-serif italic">
-                శ్రీ అష్టాదశ పీఠం డిజిటల్ దినపత్రిక సంచిక
+                {language === 'english' ? 'Sri Astadasapeetam Digital Devotional Herald' : 'శ్రీ అష్టాదశ పీఠం డిజిటల్ దినపత్రిక సంచిక'}
               </span>
               <button
                 onClick={() => setSelectedStoryModal(null)}
