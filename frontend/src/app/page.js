@@ -45,20 +45,22 @@ export default function HomePage() {
 
             {/* Latest Articles + Latest Videos */}
             <ArticlesAndVideos />
-
-            {/* Marketplace Promotional Ribbon (Dynamic from Admin Console) */}
-            <DynamicMarketplaceSpotlight />
-
-            {/* Recommended Devotional Products + Upcoming Festivals */}
-            <div className="w-full">
-              <ProductsAndFestivalsRow />
-            </div>
           </div>
 
           {/* Continuous Right Sidebar (Col 3.5 / 3 on XL with Slot 3 Ad & Dynamic Sloka of the Day) */}
           <div className="lg:col-span-4 xl:col-span-3">
             <RightSidebarFull />
           </div>
+        </div>
+
+        {/* Marketplace Promotional Ribbon (Dynamic from Admin Console) */}
+        <div className="my-4">
+          <DynamicMarketplaceSpotlight />
+        </div>
+
+        {/* Same-Level 3-Card Section: Recommended Devotional Products + Upcoming Festivals + Google Ad */}
+        <div className="w-full my-4">
+          <ProductsAndFestivalsRow />
         </div>
 
         {/* 5. Bottom Anchor Leaderboard Banner Ad (Slot 5: 970x250) */}
