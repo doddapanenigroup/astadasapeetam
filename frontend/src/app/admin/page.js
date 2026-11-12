@@ -55,7 +55,10 @@ import {
   VolumeX,
   FolderPlus,
   Grid,
-  List
+  List,
+  Video,
+  Calendar,
+  Clock
 } from 'lucide-react';
 import { FacebookIcon, TwitterXIcon, InstagramIcon, YoutubeIcon, WhatsAppIcon } from '../../components/SocialIcons';
 import { allSlokasData, slokaCategories } from '../../data/slokasData';
@@ -63,6 +66,8 @@ import { DEFAULT_ADS_CONFIG, getInitialAdsConfig } from '../../components/AdBann
 import DynamicPostStudio, { DEVOTIONAL_CATEGORIES, DEFAULT_POST_DATA } from '../../components/DynamicPostStudio';
 import { getAllCategories } from '../../data/categoriesData';
 import AddCategoryModal from '../../components/AddCategoryModal';
+import VideoStudioModal from '../../components/VideoStudioModal';
+import { allFestivalsData } from '../../data/festivalsData';
 import BrandingSettingsStudio from '../../components/BrandingSettingsStudio';
 import { getStoredBranding, DEFAULT_BRANDING, applyFaviconToDocument } from '../../data/brandingData';
 
@@ -107,6 +112,288 @@ export default function UnifiedConsolePage() {
 
   // Filters & Search
   const [postSearch, setPostSearch] = useState('');
+
+  // =========================================================================
+  // VIDEO MANAGEMENT STATE (Devotional, Puja, Bhajans, Latest Videos)
+  // =========================================================================
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+  const [videos, setVideos] = useState([]);
+  const [videosLoading, setVideosLoading] = useState(false);
+  const [videoCategoryFilter, setVideoCategoryFilter] = useState('all');
+  const [videoSearch, setVideoSearch] = useState('');
+  const [videoOnlyLatest, setVideoOnlyLatest] = useState(false);
+
+  // =========================================================================
+  // FESTIVAL CALENDAR STATE (Chronological Dates, Tithis & Fasting Schedules)
+  // Strictly separated from general articles/festivals
+  // =========================================================================
+  const [festivalEvents, setFestivalEvents] = useState([]);
+  const [festivalLoading, setFestivalLoading] = useState(false);
+  const [festivalMonthFilter, setFestivalMonthFilter] = useState('all');
+  const [festivalSearch, setFestivalSearch] = useState('');
+  const [isAddFestivalModalOpen, setIsAddFestivalModalOpen] = useState(false);
+  const [editingFestival, setEditingFestival] = useState(null);
+
+  const DEFAULT_FESTIVAL_FORM = {
+    name: '',
+    teluguName: '',
+    sanskritName: '',
+    date: '',
+    day: '',
+    month: 'JAN',
+    monthShort: 'JAN',
+    year: 2026,
+    tithi: '',
+    hinduMonth: '',
+    deity: '',
+    pujaTime: '',
+    fastingType: '',
+    image: '/images/fest_ugadi.png',
+    summary: '',
+    pujaVidhi: '',
+    significance: '',
+    isMajor: true
+  };
+  const [festivalFormData, setFestivalFormData] = useState(DEFAULT_FESTIVAL_FORM);
+
+  const loadVideos = async () => {
+    try {
+      setVideosLoading(true);
+      let localVids = [];
+      try {
+        const stored = localStorage.getItem('astada_custom_videos');
+        if (stored) localVids = JSON.parse(stored);
+      } catch (e) {}
+
+      const res = await fetch(`${API_BASE}/videos`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.data && Array.isArray(json.data)) {
+          const merged = [...json.data];
+          localVids.forEach(item => {
+            if (!merged.some(m => (m._id && m._id === item._id) || (m.videoUrl === item.videoUrl))) {
+              merged.unshift(item);
+            }
+          });
+          setVideos(merged);
+          return;
+        }
+      }
+      setVideos(localVids);
+    } catch (err) {
+      try {
+        const stored = localStorage.getItem('astada_custom_videos');
+        if (stored) setVideos(JSON.parse(stored));
+      } catch (e) {}
+    } finally {
+      setVideosLoading(false);
+    }
+  };
+
+  const handleToggleLatestVideo = async (video) => {
+    const updatedVal = !video.isLatestVideo;
+    const vidId = video._id || video.id;
+
+    // Optimistic UI update
+    setVideos(prev => prev.map(v => (v._id === vidId || v.id === vidId || v.videoUrl === video.videoUrl) ? { ...v, isLatestVideo: updatedVal } : v));
+
+    // LocalStorage
+    try {
+      const stored = localStorage.getItem('astada_custom_videos');
+      if (stored) {
+        const list = JSON.parse(stored);
+        const updated = list.map(v => (v._id === vidId || v.id === vidId || v.videoUrl === video.videoUrl) ? { ...v, isLatestVideo: updatedVal } : v);
+        localStorage.setItem('astada_custom_videos', JSON.stringify(updated));
+      }
+      window.dispatchEvent(new Event('astada_videos_updated'));
+    } catch (e) {}
+
+    // API
+    if (vidId && typeof vidId === 'string' && vidId.length > 10) {
+      try {
+        await fetch(`${API_BASE}/videos/${vidId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ isLatestVideo: updatedVal })
+        });
+      } catch (e) {}
+    }
+
+    showToast('success', updatedVal ? `★ Added "${video.title}" to Homepage Latest Videos!` : `Removed "${video.title}" from Latest Videos.`);
+  };
+
+  const handleDeleteVideo = async (video) => {
+    if (!window.confirm(`Are you sure you want to delete "${video.title}"?`)) return;
+    const vidId = video._id || video.id;
+
+    setVideos(prev => prev.filter(v => v._id !== vidId && v.id !== vidId && v.videoUrl !== video.videoUrl));
+
+    try {
+      const stored = localStorage.getItem('astada_custom_videos');
+      if (stored) {
+        const list = JSON.parse(stored);
+        const updated = list.filter(v => v._id !== vidId && v.id !== vidId && v.videoUrl !== video.videoUrl);
+        localStorage.setItem('astada_custom_videos', JSON.stringify(updated));
+      }
+      window.dispatchEvent(new Event('astada_videos_updated'));
+    } catch (e) {}
+
+    if (vidId && typeof vidId === 'string' && vidId.length > 10) {
+      try {
+        await fetch(`${API_BASE}/videos/${vidId}`, { method: 'DELETE' });
+      } catch (e) {}
+    }
+
+    showToast('success', `Video "${video.title}" deleted.`);
+  };
+
+  const loadFestivalEvents = async () => {
+    try {
+      setFestivalLoading(true);
+      let localEvents = [];
+      try {
+        const stored = localStorage.getItem('astada_festival_calendar_events');
+        if (stored) localEvents = JSON.parse(stored);
+      } catch (e) {}
+
+      const res = await fetch(`${API_BASE}/festival-calendar`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.data && Array.isArray(json.data) && json.data.length > 0) {
+          const merged = [...json.data];
+          localEvents.forEach(item => {
+            if (!merged.some(m => (m._id && m._id === item._id) || (m.slug && m.slug === item.slug) || (m.name === item.name))) {
+              merged.unshift(item);
+            }
+          });
+          setFestivalEvents(merged);
+          return;
+        }
+      }
+
+      if (localEvents.length === 0 && allFestivalsData && allFestivalsData.length > 0) {
+        setFestivalEvents(allFestivalsData);
+      } else {
+        setFestivalEvents(localEvents);
+      }
+    } catch (err) {
+      try {
+        const stored = localStorage.getItem('astada_festival_calendar_events');
+        if (stored) setFestivalEvents(JSON.parse(stored));
+        else if (allFestivalsData) setFestivalEvents(allFestivalsData);
+      } catch (e) {}
+    } finally {
+      setFestivalLoading(false);
+    }
+  };
+
+  const handleSaveFestivalEvent = async (e) => {
+    e.preventDefault();
+    if (!festivalFormData.name || !festivalFormData.date) {
+      showToast('error', 'Festival Name and Date are required');
+      return;
+    }
+
+    const payload = {
+      ...festivalFormData,
+      monthShort: festivalFormData.monthShort || (festivalFormData.month ? festivalFormData.month.slice(0, 3).toUpperCase() : 'JAN'),
+      _id: editingFestival ? (editingFestival._id || editingFestival.id) : `fest_${Date.now()}`
+    };
+
+    if (editingFestival) {
+      setFestivalEvents(prev => prev.map(f => (f._id === payload._id || f.id === payload._id || f.name === editingFestival.name) ? payload : f));
+    } else {
+      setFestivalEvents(prev => [payload, ...prev]);
+    }
+
+    try {
+      let storedList = [];
+      const stored = localStorage.getItem('astada_festival_calendar_events');
+      if (stored) storedList = JSON.parse(stored);
+      if (editingFestival) {
+        storedList = storedList.map(f => (f._id === payload._id || f.id === payload._id || f.name === editingFestival.name) ? payload : f);
+      } else {
+        storedList.unshift(payload);
+      }
+      localStorage.setItem('astada_festival_calendar_events', JSON.stringify(storedList));
+      window.dispatchEvent(new Event('astada_festivals_updated'));
+    } catch (e) {}
+
+    try {
+      if (editingFestival && editingFestival._id && typeof editingFestival._id === 'string' && editingFestival._id.length > 10) {
+        await fetch(`${API_BASE}/festival-calendar/${editingFestival._id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } else {
+        await fetch(`${API_BASE}/festival-calendar`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      }
+    } catch (e) {}
+
+    showToast('success', editingFestival ? `✨ Updated Festival Calendar: "${payload.name}"` : `✨ Added "${payload.name}" to Festival Calendar!`);
+    setIsAddFestivalModalOpen(false);
+    setEditingFestival(null);
+    setFestivalFormData(DEFAULT_FESTIVAL_FORM);
+  };
+
+  const handleDeleteFestivalEvent = async (festival) => {
+    if (!window.confirm(`Delete "${festival.name}" from the Festival Calendar?`)) return;
+    const festId = festival._id || festival.id;
+
+    setFestivalEvents(prev => prev.filter(f => f._id !== festId && f.id !== festId && f.name !== festival.name));
+
+    try {
+      const stored = localStorage.getItem('astada_festival_calendar_events');
+      if (stored) {
+        const list = JSON.parse(stored);
+        const filtered = list.filter(f => f._id !== festId && f.id !== festId && f.name !== festival.name);
+        localStorage.setItem('astada_festival_calendar_events', JSON.stringify(filtered));
+      }
+      window.dispatchEvent(new Event('astada_festivals_updated'));
+    } catch (e) {}
+
+    if (festId && typeof festId === 'string' && festId.length > 10) {
+      try {
+        await fetch(`${API_BASE}/festival-calendar/${festId}`, { method: 'DELETE' });
+      } catch (e) {}
+    }
+
+    showToast('success', `Removed "${festival.name}" from Festival Calendar.`);
+  };
+
+  // Filtered lists for Videos and Festival Calendar
+  const filteredVideos = videos.filter(v => {
+    const matchesCat = videoCategoryFilter === 'all' || v.category === videoCategoryFilter;
+    const matchesLatest = !videoOnlyLatest || v.isLatestVideo;
+    const q = videoSearch.toLowerCase().trim();
+    const matchesSearch = !q ||
+      (v.title && v.title.toLowerCase().includes(q)) ||
+      (v.titleTelugu && v.titleTelugu.toLowerCase().includes(q)) ||
+      (v.temple && v.temple.toLowerCase().includes(q)) ||
+      (v.speakerOrArtist && v.speakerOrArtist.toLowerCase().includes(q));
+    return matchesCat && matchesLatest && matchesSearch;
+  });
+
+  const filteredFestivals = festivalEvents.filter(f => {
+    const matchesMonth = festivalMonthFilter === 'all' || 
+      f.monthShort === festivalMonthFilter || 
+      f.month === festivalMonthFilter || 
+      (f.date && f.date.toUpperCase().includes(festivalMonthFilter));
+    const q = festivalSearch.toLowerCase().trim();
+    const matchesSearch = !q ||
+      (f.name && f.name.toLowerCase().includes(q)) ||
+      (f.teluguName && f.teluguName.toLowerCase().includes(q)) ||
+      (f.tithi && f.tithi.toLowerCase().includes(q)) ||
+      (f.deity && f.deity.toLowerCase().includes(q)) ||
+      (f.hinduMonth && f.hinduMonth.toLowerCase().includes(q));
+    return matchesMonth && matchesSearch;
+  });
+
   const [postCategoryFilter, setPostCategoryFilter] = useState('all');
   const [postStatusFilter, setPostStatusFilter] = useState('all'); // 'all' | 'published' | 'draft'
   const [postViewMode, setPostViewMode] = useState('table'); // 'table' | 'grid'
@@ -114,6 +401,10 @@ export default function UnifiedConsolePage() {
   const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
 
   useEffect(() => {
+    const handleVideosUpdate = () => loadVideos();
+    const handleFestivalsUpdate = () => loadFestivalEvents();
+    window.addEventListener('astada_videos_updated', handleVideosUpdate);
+    window.addEventListener('astada_festivals_updated', handleFestivalsUpdate);
     const handleCategoriesUpdate = () => {
       setAllCategories(getAllCategories());
     };
@@ -436,6 +727,8 @@ export default function UnifiedConsolePage() {
         if (activeToken) {
           await fetchAllData(activeToken);
         }
+        await loadVideos();
+        await loadFestivalEvents();
 
         // Fetch saved social profiles
         const socialRes = await fetch(`${API_BASE}/public/settings/social_profiles`);
@@ -937,7 +1230,10 @@ export default function UnifiedConsolePage() {
         { id: 'spirituals', label: 'Spirituals & Peethas', icon: Sparkles, badge: '18', accent: 'from-pink-500 to-rose-600', textAccent: 'text-pink-400' },
         { id: 'slokas', label: '3-Way Slokas Studio', icon: BookOpen, badge: slokasDataList.length, accent: 'from-amber-500 to-orange-600', textAccent: 'text-amber-400' },
         { id: 'addPost', label: 'Add Post', icon: PlusCircle, accent: 'from-teal-500 to-emerald-600', textAccent: 'text-teal-400' },
-        { id: 'postList', label: 'Post List', icon: FileText, badge: posts.length, accent: 'from-sky-500 to-blue-600', textAccent: 'text-sky-400' }
+        { id: 'postList', label: 'Post List', icon: FileText, badge: posts.length, accent: 'from-sky-500 to-blue-600', textAccent: 'text-sky-400' },
+        { id: 'addVideo', label: 'Add Video', icon: Video, isAction: true, onClick: () => setIsVideoModalOpen(true), accent: 'from-rose-500 to-red-600', textAccent: 'text-rose-400' },
+        { id: 'videoDesk', label: 'Video Desk', icon: Play, badge: videos.length, accent: 'from-red-500 to-rose-600', textAccent: 'text-red-400' },
+        { id: 'festivalCalendar', label: 'Festival Calendar', icon: Calendar, badge: '2026', accent: 'from-amber-500 to-yellow-600', textAccent: 'text-amber-400' }
       ]
     },
     {
@@ -1018,7 +1314,7 @@ export default function UnifiedConsolePage() {
                 return (
                   <button
                     key={item.id}
-                    onClick={() => setActiveTab(item.id)}
+                    onClick={() => { if (item.onClick) { item.onClick(); } else { setActiveTab(item.id); } }}
                     className={`w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl font-bold transition-all duration-150 text-left cursor-pointer group ${
                       isActive
                         ? 'bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-500 text-stone-950 shadow-lg shadow-amber-500/25 font-black translate-x-0.5'
@@ -3054,6 +3350,14 @@ export default function UnifiedConsolePage() {
                   </div>
 
                   <button
+                    onClick={() => setIsVideoModalOpen(true)}
+                    className="bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer shadow-xs border border-rose-400/40 flex items-center space-x-1.5 shrink-0 transition"
+                    title="Publish a Devotional, Puja, or Bhajans Video"
+                  >
+                    <Video className="w-4 h-4 text-white" />
+                    <span>+ Add Video</span>
+                  </button>
+                  <button
                     onClick={() => setActiveTab('addPost')}
                     className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:brightness-110 text-stone-950 px-3.5 py-2 rounded-xl text-xs font-black cursor-pointer shadow-xs border border-amber-300/40 flex items-center space-x-1.5 shrink-0 transition"
                   >
@@ -3868,6 +4172,463 @@ export default function UnifiedConsolePage() {
             </div>
           )}
 
+
+          {/* ========================================================= */}
+          {/* TAB: DEVOTIONAL VIDEO DESK                                */}
+          {/* ========================================================= */}
+          {activeTab === 'videoDesk' && (
+            <div className="space-y-6">
+              {/* Header & Stats Banner */}
+              <div className="bg-gradient-to-r from-[#180a24] via-[#2d1144] to-[#1a0a27] text-white p-6 rounded-3xl border border-[#3e1b5b] shadow-xl relative overflow-hidden">
+                <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="bg-rose-500/20 text-rose-300 border border-rose-400/30 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full font-mono flex items-center gap-1.5">
+                        <Play className="w-3 h-3 text-rose-400 fill-rose-400" />
+                        Devotional Media Hub
+                      </span>
+                      <span className="text-xs text-purple-200/70">• YouTube Embeds &amp; Live Feeds</span>
+                    </div>
+                    <h2 className="text-2xl sm:text-3xl font-black font-serif text-white">
+                      Devotional Video Desk (వీడియో డెస్క్)
+                    </h2>
+                    <p className="text-xs sm:text-sm text-purple-200/90 mt-1 max-w-2xl leading-relaxed">
+                      Publish Puja Videos, Divine Bhajans, Suprabhatam &amp; Live Darshans. Directly toggle which videos appear in the Homepage <span className="text-amber-300 font-bold">&quot;LATEST VIDEOS&quot;</span> section.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-3 shrink-0">
+                    <button
+                      onClick={() => setIsVideoModalOpen(true)}
+                      className="bg-gradient-to-r from-rose-600 via-rose-500 to-red-600 hover:brightness-110 text-white px-5 py-3 rounded-2xl text-xs font-black shadow-lg shadow-rose-900/30 flex items-center gap-2 cursor-pointer transition transform hover:-translate-y-0.5"
+                    >
+                      <Video className="w-4 h-4 text-white" />
+                      <span>+ Add / Publish Video</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* KPI Counters */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-5 border-t border-purple-500/20 text-xs">
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-3.5 backdrop-blur-xs">
+                    <div className="text-[10px] uppercase font-mono tracking-wider text-purple-300">Total Videos</div>
+                    <div className="text-2xl font-black text-white mt-0.5">{videos.length}</div>
+                  </div>
+                  <div className="bg-amber-500/10 border border-amber-400/20 rounded-2xl p-3.5 backdrop-blur-xs">
+                    <div className="text-[10px] uppercase font-mono tracking-wider text-amber-300">In Latest Videos</div>
+                    <div className="text-2xl font-black text-amber-400 mt-0.5">
+                      {videos.filter(v => v.isLatestVideo).length}
+                    </div>
+                  </div>
+                  <div className="bg-emerald-500/10 border border-emerald-400/20 rounded-2xl p-3.5 backdrop-blur-xs">
+                    <div className="text-[10px] uppercase font-mono tracking-wider text-emerald-300">Live Streams</div>
+                    <div className="text-2xl font-black text-emerald-400 mt-0.5">
+                      {videos.filter(v => v.isLive || v.category === 'live-darshan').length}
+                    </div>
+                  </div>
+                  <div className="bg-sky-500/10 border border-sky-400/20 rounded-2xl p-3.5 backdrop-blur-xs">
+                    <div className="text-[10px] uppercase font-mono tracking-wider text-sky-300">Total Views</div>
+                    <div className="text-2xl font-black text-sky-400 mt-0.5">
+                      {videos.reduce((acc, v) => acc + (v.viewsCount || 0), 0).toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Video Desk Controls: Filter & Search */}
+              <div className="bg-white p-4 rounded-2xl border border-stone-200 shadow-2xs flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <select
+                    value={videoCategoryFilter}
+                    onChange={(e) => setVideoCategoryFilter(e.target.value)}
+                    className="bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs font-bold text-stone-700 focus:outline-none focus:border-amber-500"
+                  >
+                    <option value="all">All Video Categories ({videos.length})</option>
+                    <option value="devotional-videos">Devotional Videos</option>
+                    <option value="puja-videos">Puja &amp; Abhishekam Videos</option>
+                    <option value="divine-bhajans">Divine Bhajans &amp; Chants</option>
+                    <option value="live-darshan">Temple Live Darshan</option>
+                    <option value="pravachanams">Vedic Pravachanams</option>
+                    <option value="mantras-chants">Mantras &amp; Stotrams</option>
+                  </select>
+
+                  <button
+                    onClick={() => setVideoOnlyLatest(prev => !prev)}
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border transition cursor-pointer ${
+                      videoOnlyLatest
+                        ? 'bg-amber-500 text-stone-950 border-amber-500 shadow-xs'
+                        : 'bg-stone-50 text-stone-600 border-stone-200 hover:bg-stone-100'
+                    }`}
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Latest Videos Only ({videos.filter(v => v.isLatestVideo).length})</span>
+                  </button>
+                </div>
+
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    placeholder="Search video title, temple..."
+                    value={videoSearch}
+                    onChange={(e) => setVideoSearch(e.target.value)}
+                    className="bg-stone-50 border border-stone-200 rounded-xl pl-8 pr-3 py-2 text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:border-amber-500 w-48 sm:w-64"
+                  />
+                </div>
+              </div>
+
+              {/* Video Grid List */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {filteredVideos.map((video) => {
+                  const vidId = video._id || video.id;
+                  return (
+                    <div
+                      key={vidId || video.videoUrl}
+                      className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-2xs hover:shadow-md transition flex flex-col justify-between"
+                    >
+                      {/* Thumbnail Header */}
+                      <div className="relative aspect-video bg-stone-900 group">
+                        <img
+                          src={video.thumbnail || 'https://images.unsplash.com/photo-1544717305-2782549b5136?q=80&w=600'}
+                          alt={video.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+
+                        <div className="absolute top-3 left-3">
+                          <span className="bg-black/60 backdrop-blur-xs text-amber-300 border border-amber-400/30 text-[10px] font-black uppercase px-2 py-0.5 rounded-md font-mono">
+                            {video.category?.replace('-', ' ')}
+                          </span>
+                        </div>
+
+                        <div className="absolute top-3 right-3">
+                          {video.isLive ? (
+                            <span className="bg-red-600 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded-md flex items-center gap-1 animate-pulse">
+                              <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
+                              LIVE
+                            </span>
+                          ) : (
+                            <span className="bg-black/70 text-white text-[10px] font-bold px-2 py-0.5 rounded-md font-mono">
+                              {video.duration || '05:00'}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="absolute inset-0 flex items-center justify-center opacity-80 group-hover:opacity-100 transition">
+                          <a
+                            href={video.videoUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-11 h-11 rounded-full bg-amber-500/90 text-stone-950 flex items-center justify-center shadow-lg group-hover:scale-110 transition"
+                            title="Watch Video"
+                          >
+                            <Play className="w-5 h-5 fill-stone-950 ml-0.5" />
+                          </a>
+                        </div>
+                      </div>
+
+                      {/* Video Meta */}
+                      <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
+                        <div>
+                          <h4 className="font-bold text-stone-900 text-sm leading-snug line-clamp-2">
+                            {video.title}
+                          </h4>
+                          {video.titleTelugu && (
+                            <p className="text-xs text-amber-900/80 font-serif mt-0.5 line-clamp-1">
+                              {video.titleTelugu}
+                            </p>
+                          )}
+                          {video.temple && (
+                            <p className="text-[11px] text-stone-500 mt-1 flex items-center gap-1">
+                              <span>🛕 {video.temple}</span>
+                              {video.speakerOrArtist && <span>• {video.speakerOrArtist}</span>}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* ACTION: KEEP IN LATEST VIDEOS TOGGLE */}
+                        <div className="pt-3 border-t border-stone-100 flex items-center justify-between gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleLatestVideo(video)}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                              video.isLatestVideo
+                                ? 'bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs font-black'
+                                : 'bg-stone-100 text-stone-600 border border-stone-200 hover:bg-stone-200'
+                            }`}
+                            title="Click to toggle whether this video appears in Homepage LATEST VIDEOS"
+                          >
+                            {video.isLatestVideo ? (
+                              <>
+                                <CheckCircle2 className="w-4 h-4 text-amber-600 fill-amber-400" />
+                                <span>★ In Latest Videos</span>
+                              </>
+                            ) : (
+                              <>
+                                <div className="w-3.5 h-3.5 rounded border border-stone-400 bg-white"></div>
+                                <span>+ Keep in Latest</span>
+                              </>
+                            )}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteVideo(video)}
+                            className="p-1.5 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                            title="Delete Video"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {filteredVideos.length === 0 && (
+                <div className="py-16 text-center text-stone-400 bg-white rounded-2xl border border-stone-200">
+                  <div className="text-4xl mb-3">📹</div>
+                  <div className="font-bold text-stone-700 text-base">No Videos Found</div>
+                  <p className="text-xs text-stone-400 mt-1 max-w-sm mx-auto">
+                    No devotional videos match your filter. Click &quot;+ Add / Publish Video&quot; above to upload your first devotional video.
+                  </p>
+                  <button
+                    onClick={() => setIsVideoModalOpen(true)}
+                    className="mt-4 bg-rose-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-rose-700 cursor-pointer shadow-xs inline-flex items-center gap-1.5"
+                  >
+                    <Video className="w-4 h-4" />
+                    <span>Publish Devotional Video</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ========================================================= */}
+          {/* TAB: VEDIC FESTIVAL CALENDAR DESK                         */}
+          {/* ========================================================= */}
+          {activeTab === 'festivalCalendar' && (
+            <div className="space-y-6">
+              {/* Header & Stats Banner */}
+              <div className="bg-gradient-to-r from-[#2a1306] via-[#3a1b0c] to-[#1c0b03] text-white p-6 rounded-3xl border border-[#522912] shadow-xl relative overflow-hidden">
+                <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="bg-amber-500/20 text-amber-300 border border-amber-400/30 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full font-mono flex items-center gap-1.5">
+                        <Calendar className="w-3 h-3 text-amber-400" />
+                        Hindu Lunar Panchangam
+                      </span>
+                      <span className="text-xs text-amber-200/70">• Tithis, Fasting &amp; Muhurthams</span>
+                    </div>
+                    <h2 className="text-2xl sm:text-3xl font-black font-serif text-white">
+                      Festival Calendar Desk (పండుగల క్యాలెండర్ డెస్క్)
+                    </h2>
+                    <p className="text-xs sm:text-sm text-amber-100/90 mt-1 max-w-2xl leading-relaxed">
+                      Strictly separated from articles &amp; stories. Manage chronological Hindu calendar dates, lunar tithis, fasting rules (Upavasam), and puja muhurthams for 2026.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2.5 shrink-0">
+                    <Link
+                      href="/festival-calendar"
+                      target="_blank"
+                      className="bg-white/10 hover:bg-white/20 text-amber-200 border border-amber-400/30 px-3.5 py-2.5 rounded-2xl text-xs font-bold flex items-center gap-1.5 transition"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>View Live Calendar</span>
+                    </Link>
+                    <button
+                      onClick={() => {
+                        setEditingFestival(null);
+                        setFestivalFormData(DEFAULT_FESTIVAL_FORM);
+                        setIsAddFestivalModalOpen(true);
+                      }}
+                      className="bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-600 hover:brightness-110 text-stone-950 px-4 py-2.5 rounded-2xl text-xs font-black shadow-lg shadow-amber-900/30 flex items-center gap-2 cursor-pointer transition transform hover:-translate-y-0.5"
+                    >
+                      <Plus className="w-4 h-4 text-stone-950" />
+                      <span>+ Add Festival Calendar Entry</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* KPI Counters */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-5 border-t border-amber-500/20 text-xs">
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-3.5 backdrop-blur-xs">
+                    <div className="text-[10px] uppercase font-mono tracking-wider text-amber-200">Total Calendar Events</div>
+                    <div className="text-2xl font-black text-white mt-0.5">{festivalEvents.length}</div>
+                  </div>
+                  <div className="bg-amber-500/10 border border-amber-400/20 rounded-2xl p-3.5 backdrop-blur-xs">
+                    <div className="text-[10px] uppercase font-mono tracking-wider text-amber-300">Major Mahotsavams</div>
+                    <div className="text-2xl font-black text-amber-400 mt-0.5">
+                      {festivalEvents.filter(f => f.isMajor).length}
+                    </div>
+                  </div>
+                  <div className="bg-emerald-500/10 border border-emerald-400/20 rounded-2xl p-3.5 backdrop-blur-xs">
+                    <div className="text-[10px] uppercase font-mono tracking-wider text-emerald-300">Fasting Days (Vratas)</div>
+                    <div className="text-2xl font-black text-emerald-400 mt-0.5">
+                      {festivalEvents.filter(f => f.fastingType).length}
+                    </div>
+                  </div>
+                  <div className="bg-purple-500/10 border border-purple-400/20 rounded-2xl p-3.5 backdrop-blur-xs">
+                    <div className="text-[10px] uppercase font-mono tracking-wider text-purple-300">Calendar Year</div>
+                    <div className="text-2xl font-black text-purple-300 mt-0.5">2026 (శ్రీ క్రోధి)</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Calendar Filter & Search */}
+              <div className="bg-white p-4 rounded-2xl border border-stone-200 shadow-2xs flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <select
+                    value={festivalMonthFilter}
+                    onChange={(e) => setFestivalMonthFilter(e.target.value)}
+                    className="bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs font-bold text-stone-700 focus:outline-none focus:border-amber-500"
+                  >
+                    <option value="all">All Lunar Months ({festivalEvents.length})</option>
+                    <option value="JAN">January (Makara Masa)</option>
+                    <option value="FEB">February (Magha Masa)</option>
+                    <option value="MAR">March (Chaitra Masa)</option>
+                    <option value="APR">April (Vaisakha Masa)</option>
+                    <option value="MAY">May (Jyeshtha Masa)</option>
+                    <option value="JUN">June (Ashadha Masa)</option>
+                    <option value="JUL">July</option>
+                    <option value="AUG">August (Sravana Masa)</option>
+                    <option value="SEP">September (Bhadrapada Masa)</option>
+                    <option value="OCT">October (Ashwina Masa)</option>
+                    <option value="NOV">November (Kartika Masa)</option>
+                    <option value="DEC">December (Margashirsha Masa)</option>
+                  </select>
+                </div>
+
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    placeholder="Search festival name, tithi, deity..."
+                    value={festivalSearch}
+                    onChange={(e) => setFestivalSearch(e.target.value)}
+                    className="bg-stone-50 border border-stone-200 rounded-xl pl-8 pr-3 py-2 text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:border-amber-500 w-48 sm:w-64"
+                  />
+                </div>
+              </div>
+
+              {/* Festival Calendar Event List */}
+              <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-2xs">
+                <div className="divide-y divide-stone-100">
+                  {filteredFestivals.map((fest) => {
+                    const festId = fest._id || fest.id;
+                    return (
+                      <div
+                        key={festId || fest.name}
+                        className="p-4 sm:p-5 hover:bg-stone-50/80 transition flex flex-col md:flex-row md:items-center justify-between gap-4"
+                      >
+                        {/* Date Box + Details */}
+                        <div className="flex items-start gap-4">
+                          <div className="w-16 h-16 rounded-2xl bg-amber-50 border border-amber-200 flex flex-col items-center justify-center shrink-0 text-amber-900 shadow-2xs">
+                            <span className="text-[10px] uppercase font-mono font-bold text-amber-700">
+                              {fest.monthShort || fest.month || '2026'}
+                            </span>
+                            <span className="text-xl font-black">
+                              {fest.day || (fest.date ? fest.date.split(' ')[0] : '•')}
+                            </span>
+                          </div>
+
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-bold text-stone-900 text-sm sm:text-base">
+                                {fest.name}
+                              </h4>
+                              {fest.isMajor && (
+                                <span className="bg-rose-100 text-rose-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-rose-200">
+                                  Major
+                                </span>
+                              )}
+                            </div>
+
+                            {fest.teluguName && (
+                              <div className="text-xs text-amber-900 font-serif font-bold">
+                                {fest.teluguName}
+                              </div>
+                            )}
+
+                            <div className="flex flex-wrap items-center gap-2 text-xs text-stone-500 pt-0.5">
+                              {fest.date && <span className="font-medium text-stone-700">📅 {fest.date}</span>}
+                              {fest.tithi && <span className="bg-purple-50 text-purple-700 px-2 py-0.5 rounded-md font-mono text-[10px] border border-purple-200">🌙 {fest.tithi}</span>}
+                              {fest.deity && <span className="text-stone-600">🕉️ {fest.deity}</span>}
+                              {fest.fastingType && <span className="text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md text-[10px] border border-amber-200">🪔 {fest.fastingType}</span>}
+                            </div>
+
+                            {fest.pujaTime && (
+                              <div className="text-[11px] text-stone-600 flex items-center gap-1 pt-0.5">
+                                <Clock className="w-3 h-3 text-amber-600" />
+                                <span>{fest.pujaTime}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex items-center gap-2 self-end md:self-center shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingFestival(fest);
+                              setFestivalFormData({
+                                name: fest.name || '',
+                                teluguName: fest.teluguName || '',
+                                sanskritName: fest.sanskritName || '',
+                                date: fest.date || '',
+                                day: fest.day || '',
+                                month: fest.month || fest.monthShort || 'JAN',
+                                monthShort: fest.monthShort || (fest.month ? fest.month.slice(0, 3).toUpperCase() : 'JAN'),
+                                year: fest.year || 2026,
+                                tithi: fest.tithi || '',
+                                hinduMonth: fest.hinduMonth || '',
+                                deity: fest.deity || '',
+                                pujaTime: fest.pujaTime || '',
+                                fastingType: fest.fastingType || '',
+                                image: fest.image || '/images/fest_ugadi.png',
+                                summary: fest.summary || '',
+                                pujaVidhi: fest.pujaVidhi || '',
+                                significance: fest.significance || '',
+                                isMajor: fest.isMajor !== undefined ? fest.isMajor : true
+                              });
+                              setIsAddFestivalModalOpen(true);
+                            }}
+                            className="p-2 text-stone-500 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition border border-stone-200 cursor-pointer"
+                            title="Edit Entry"
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteFestivalEvent(fest)}
+                            className="p-2 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition border border-stone-200 cursor-pointer"
+                            title="Delete Entry"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {filteredFestivals.length === 0 && (
+                  <div className="py-16 text-center text-stone-400">
+                    <div className="text-4xl mb-3">🗓️</div>
+                    <div className="font-bold text-stone-700 text-base">No Festival Entries Found</div>
+                    <p className="text-xs text-stone-400 mt-1 max-w-sm mx-auto">
+                      No festival calendar events match your month filter or search query.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* ========================================================= */}
           {/* TAB 14: PLATFORM ANALYTICS                                */}
           {/* ========================================================= */}
@@ -4059,6 +4820,192 @@ export default function UnifiedConsolePage() {
           </div>
         </div>
       )}
+
+
+      {/* ========================================================= */}
+      {/* FESTIVAL CALENDAR ADD/EDIT MODAL                          */}
+      {/* ========================================================= */}
+      {isAddFestivalModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl border border-stone-200 overflow-hidden my-8">
+            <div className="bg-gradient-to-r from-[#2a1306] via-[#3a1b0c] to-[#1c0b03] text-white p-5 flex items-center justify-between border-b border-[#522912]">
+              <div className="flex items-center space-x-2.5">
+                <Calendar className="w-5 h-5 text-amber-400" />
+                <h3 className="font-black text-base text-amber-200">
+                  {editingFestival ? 'Edit Festival Calendar Entry' : 'Add New Vedic Festival Calendar Entry'}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAddFestivalModalOpen(false)}
+                className="text-stone-400 hover:text-white p-1 rounded-lg cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveFestivalEvent} className="p-6 space-y-4 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-bold text-stone-700 mb-1">Festival Name (English) *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Maha Shivaratri"
+                    value={festivalFormData.name}
+                    onChange={(e) => setFestivalFormData({ ...festivalFormData, name: e.target.value })}
+                    className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-xs text-stone-900 focus:outline-none focus:border-amber-500 font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-stone-700 mb-1">Telugu Name (పండుగ పేరు) *</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. మహా శివరాత్రి"
+                    value={festivalFormData.teluguName}
+                    onChange={(e) => setFestivalFormData({ ...festivalFormData, teluguName: e.target.value })}
+                    className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-xs text-amber-950 focus:outline-none focus:border-amber-500 font-serif font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-stone-700 mb-1">Full Date *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. 17 February 2026"
+                    value={festivalFormData.date}
+                    onChange={(e) => setFestivalFormData({ ...festivalFormData, date: e.target.value })}
+                    className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-xs text-stone-900 focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-stone-700 mb-1">Month Short Code</label>
+                  <select
+                    value={festivalFormData.monthShort}
+                    onChange={(e) => setFestivalFormData({ ...festivalFormData, monthShort: e.target.value, month: e.target.value })}
+                    className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-xs text-stone-900 focus:outline-none focus:border-amber-500 font-bold"
+                  >
+                    <option value="JAN">JAN (January / Makara)</option>
+                    <option value="FEB">FEB (February / Magha)</option>
+                    <option value="MAR">MAR (March / Chaitra)</option>
+                    <option value="APR">APR (April / Vaisakha)</option>
+                    <option value="MAY">MAY (May / Jyeshtha)</option>
+                    <option value="JUN">JUN (June / Ashadha)</option>
+                    <option value="JUL">JUL (July)</option>
+                    <option value="AUG">AUG (August / Sravana)</option>
+                    <option value="SEP">SEP (September / Bhadrapada)</option>
+                    <option value="OCT">OCT (October / Ashwina)</option>
+                    <option value="NOV">NOV (November / Kartika)</option>
+                    <option value="DEC">DEC (December / Margashirsha)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-stone-700 mb-1">Lunar Tithi</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Magha Bahula Chaturdashi"
+                    value={festivalFormData.tithi}
+                    onChange={(e) => setFestivalFormData({ ...festivalFormData, tithi: e.target.value })}
+                    className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-xs text-stone-900 focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-stone-700 mb-1">Presiding Deity</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Lord Shiva / Sri Rama"
+                    value={festivalFormData.deity}
+                    onChange={(e) => setFestivalFormData({ ...festivalFormData, deity: e.target.value })}
+                    className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-xs text-stone-900 focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-stone-700 mb-1">Fasting Rule / Upavasam</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Nirjala / Phalahar Upavasam"
+                    value={festivalFormData.fastingType}
+                    onChange={(e) => setFestivalFormData({ ...festivalFormData, fastingType: e.target.value })}
+                    className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-xs text-stone-900 focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-stone-700 mb-1">Puja Muhurtham / Timings</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Nishita Kaal: 12:09 AM to 01:00 AM"
+                    value={festivalFormData.pujaTime}
+                    onChange={(e) => setFestivalFormData({ ...festivalFormData, pujaTime: e.target.value })}
+                    className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-xs text-stone-900 focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-stone-700 mb-1">Spiritual Significance &amp; Highlights</label>
+                <textarea
+                  rows="2"
+                  placeholder="Spiritual significance, blessings and cosmic energy of this festival..."
+                  value={festivalFormData.significance}
+                  onChange={(e) => setFestivalFormData({ ...festivalFormData, significance: e.target.value })}
+                  className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2 text-xs text-stone-900 focus:outline-none focus:border-amber-500"
+                ></textarea>
+              </div>
+
+              <div className="flex items-center space-x-2 pt-1">
+                <input
+                  type="checkbox"
+                  id="modalIsMajorFest"
+                  checked={festivalFormData.isMajor}
+                  onChange={(e) => setFestivalFormData({ ...festivalFormData, isMajor: e.target.checked })}
+                  className="rounded border-stone-300 text-amber-600 focus:ring-amber-500 w-4 h-4 cursor-pointer"
+                />
+                <label htmlFor="modalIsMajorFest" className="text-xs font-bold text-stone-800 cursor-pointer">
+                  Highlight as Major Mahotsavam on Vedic Calendar
+                </label>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-3 border-t border-stone-200">
+                <button
+                  type="button"
+                  onClick={() => setIsAddFestivalModalOpen(false)}
+                  className="px-4 py-2 border border-stone-200 rounded-xl text-stone-600 hover:bg-stone-50 cursor-pointer font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:brightness-110 text-stone-950 px-5 py-2 rounded-xl font-black shadow border border-amber-300/40 cursor-pointer"
+                >
+                  {editingFestival ? 'Save Changes' : 'Add to Calendar'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* VIDEO STUDIO MODAL                                        */}
+      {/* ========================================================= */}
+      <VideoStudioModal
+        isOpen={isVideoModalOpen}
+        onClose={() => setIsVideoModalOpen(false)}
+        onVideoPublished={(newVideo) => {
+          setVideos(prev => [newVideo, ...prev]);
+          showToast('success', `✨ Video "${newVideo.title}" published successfully!`);
+          if (activeTab !== 'videoDesk') {
+            setActiveTab('videoDesk');
+          }
+        }}
+      />
 
       {/* Add New Category with Custom Slug Modal */}
       <AddCategoryModal

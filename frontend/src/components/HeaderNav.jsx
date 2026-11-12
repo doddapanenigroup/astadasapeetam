@@ -124,6 +124,23 @@ export default function HeaderNav() {
             {/* Dropdown Menu */}
             <div className="absolute right-0 top-full pt-1.5 hidden group-hover:block z-50">
               <div className="bg-white rounded-2xl shadow-xl border border-[#ebdcc7] py-2 w-64 text-stone-800 text-xs space-y-0.5 max-h-[80vh] overflow-y-auto">
+                <Link href="/festival-calendar" className="flex items-center gap-2.5 px-3 py-2 hover:bg-amber-50 hover:text-[#78131e] font-bold text-amber-950 bg-amber-50/40">
+                  <Calendar className="w-3.5 h-3.5 text-amber-700" />
+                  <span>Festival Calendar (క్యాలెండర్)</span>
+                </Link>
+
+                <Link href="/articles" className="flex items-center gap-2.5 px-3 py-2 hover:bg-amber-50 hover:text-[#78131e] font-medium text-stone-700">
+                  <BookOpen className="w-3.5 h-3.5 text-amber-700" />
+                  <span>All Articles (వ్యాసాలు)</span>
+                </Link>
+
+                <Link href="/videos" className="flex items-center gap-2.5 px-3 py-2 hover:bg-amber-50 hover:text-[#78131e] font-medium text-stone-700">
+                  <Play className="w-3.5 h-3.5 text-amber-700" />
+                  <span>Devotional Videos (వీడియోలు)</span>
+                </Link>
+
+                <div className="my-1 border-t border-stone-100"></div>
+
                 <Link href="/gods" className="flex items-center gap-2.5 px-3 py-2 hover:bg-amber-50 hover:text-[#78131e] font-medium text-stone-700">
                   <Sparkles className="w-3.5 h-3.5 text-amber-700" />
                   <span>Gods &amp; Avatars</span>

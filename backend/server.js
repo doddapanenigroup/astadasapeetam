@@ -16,6 +16,8 @@ const adminRoutes = require('./src/routes/adminRoutes');
 const marketingRoutes = require('./src/routes/marketingRoutes');
 const astrologerRoutes = require('./src/routes/astrologerRoutes');
 const postRoutes = require('./src/routes/postRoutes');
+const videoRoutes = require('./src/routes/videoRoutes');
+const festivalCalendarRoutes = require('./src/routes/festivalCalendarRoutes');
 const settingRoutes = require('./src/routes/settingRoutes');
 const publicRoutes = require('./src/routes/publicRoutes');
 const errorHandler = require('./src/middleware/errorHandler');
@@ -26,6 +28,8 @@ const Product = require('./src/models/Product');
 const SiteContent = require('./src/models/SiteContent');
 const Consultation = require('./src/models/Consultation');
 const Post = require('./src/models/Post');
+const Video = require('./src/models/Video');
+const FestivalCalendar = require('./src/models/FestivalCalendar');
 const Setting = require('./src/models/Setting');
 
 const app = express();
@@ -73,6 +77,8 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/marketing', marketingRoutes);
 app.use('/api/astrologer', astrologerRoutes);
 app.use('/api/posts', postRoutes);
+app.use('/api/videos', videoRoutes);
+app.use('/api/festival-calendar', festivalCalendarRoutes);
 app.use('/api/settings', settingRoutes);
 
 // Custom Error Handler
@@ -556,6 +562,183 @@ const startServer = async () => {
         });
         console.log('✅ Social Profile Connections Seeded Successfully');
       }
+
+      // 7. Seed initial Devotional, Puja, Bhajans & Latest Videos
+      const videoCount = await Video.countDocuments();
+      if (videoCount === 0) {
+        console.log('🌱 Seeding initial Devotional & Latest Videos...');
+        const initialVideos = [
+          {
+            title: 'Suprabhatam',
+            titleTelugu: 'శ్రీ వేంకటేశ్వర సుప్రభాతం',
+            category: 'devotional-videos',
+            subtitle: 'Lord Venkateswara',
+            duration: '20:30',
+            temple: 'Tirumala Tirupati Devasthanam',
+            speakerOrArtist: 'M.S. Subbulakshmi',
+            videoUrl: 'https://www.youtube.com/watch?v=F0f1C6j3eO4',
+            embedUrl: 'https://www.youtube-nocookie.com/embed/F0f1C6j3eO4',
+            thumbnail: 'https://images.unsplash.com/photo-1544717305-2782549b5136?q=80&w=600',
+            description: 'Sacred morning awakening stotra of Lord Sri Venkateswara chanted by Bharat Ratna M.S. Subbulakshmi.',
+            isLatestVideo: true,
+            status: 'published',
+            viewsCount: 24500
+          },
+          {
+            title: 'Shiva Abhishekam',
+            titleTelugu: 'మహా రుద్రాభిషేకం & నమక చమక సహిత శివ పూజ',
+            category: 'puja-videos',
+            subtitle: 'Powerful Mantra',
+            duration: '15:45',
+            temple: 'Kashi Vishwanath Jyotirlinga',
+            speakerOrArtist: 'Vedic Pundits',
+            videoUrl: 'https://www.youtube.com/watch?v=b4b2T5f5P_k',
+            embedUrl: 'https://www.youtube-nocookie.com/embed/b4b2T5f5P_k',
+            thumbnail: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=600',
+            description: 'Complete sacred Rudrabhishekam with Panchamrita snana, holy Bilva archana and Vedic chanting.',
+            isLatestVideo: true,
+            status: 'published',
+            viewsCount: 18200
+          },
+          {
+            title: 'Hanuman Chalisa',
+            titleTelugu: 'సంపూర్ణ శ్రీ హనుమాన్ చాలీసా గానం',
+            category: 'divine-bhajans',
+            subtitle: 'With Lyrics',
+            duration: '09:50',
+            temple: 'Sankat Mochan Temple, Varanasi',
+            speakerOrArtist: 'Hariharan & Traditional Chorus',
+            videoUrl: 'https://www.youtube.com/watch?v=AETFv498624',
+            embedUrl: 'https://www.youtube-nocookie.com/embed/AETFv498624',
+            thumbnail: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?q=80&w=600',
+            description: 'Immense courage and protection hymn composed by Goswami Tulsidas with Telugu and English lyrics.',
+            isLatestVideo: true,
+            status: 'published',
+            viewsCount: 31000
+          },
+          {
+            title: 'Tirumala Sri Venkateswara Swamy Nijapada Live Darshan',
+            titleTelugu: 'తిరుమల శ్రీ వేంకటేశ్వర స్వామి నిజపాద లైవ్ దర్శనం',
+            category: 'live-darshan',
+            subtitle: 'TTD SVBC Archakas',
+            duration: 'LIVE',
+            temple: 'Tirumala Tirupati Devasthanam',
+            speakerOrArtist: 'TTD SVBC',
+            videoUrl: 'https://www.youtube.com/watch?v=live_stream',
+            embedUrl: 'https://www.youtube-nocookie.com/embed/live_stream?channel=TTDOfficial',
+            thumbnail: '/images/temple_tirupati.jpg',
+            description: '24x7 Sacred Darshan from the holy hill of Tirumala with live Vedic chanting.',
+            isLatestVideo: false,
+            isLive: true,
+            status: 'published',
+            viewsCount: 52000
+          }
+        ];
+        await Video.insertMany(initialVideos);
+        console.log(`✅ ${initialVideos.length} Devotional & Latest Videos Seeded Successfully`);
+      }
+      // 8. Seed initial Festival Calendar Entries (Separated from general articles)
+      const festCount = await FestivalCalendar.countDocuments();
+      if (festCount === 0) {
+        console.log('🌱 Seeding initial Vedic Festival Calendar Entries...');
+        const initialFestivals = [
+          {
+            name: 'Maha Shivaratri',
+            teluguName: 'మహా శివరాత్రి',
+            sanskritName: 'महाशिवरात्रि',
+            slug: 'maha-shivaratri',
+            date: '17 February 2026',
+            day: '17',
+            month: 'FEB',
+            monthShort: 'FEB',
+            year: 2026,
+            tithi: 'Magha Bahula Chaturdashi',
+            hinduMonth: 'Magha Masa',
+            deity: 'Lord Shiva (Sadashiva)',
+            pujaTime: 'Nishita Kaal Puja: 12:09 AM to 01:00 AM',
+            fastingType: 'Nirjala / Phalahar Upavasam',
+            image: '/images/vid_shiva_real.jpg',
+            summary: 'The Great Night of Shiva celebrating his cosmic Tandava and sacred union with Goddess Parvati.',
+            pujaVidhi: '1. Brahma Muhurtha Snanam\n2. Bilva Archana with Om Namah Shivaya\n3. 4-Pahar Rudrabhishekam\n4. All-night Jagaran',
+            significance: 'Brings liberation (Moksha) and dissolves past karmas.',
+            categories: ['major-mahotsavams', 'all'],
+            isMajor: true,
+            status: 'active'
+          },
+          {
+            name: 'Ugadi (Telugu New Year)',
+            teluguName: 'శ్రీ క్రోధి నామ సంవత్సర ఉగాది',
+            sanskritName: 'युगादि',
+            slug: 'ugadi',
+            date: '19 March 2026',
+            day: '19',
+            month: 'MAR',
+            monthShort: 'MAR',
+            year: 2026,
+            tithi: 'Chaitra Shukla Padyami',
+            hinduMonth: 'Chaitra Masa',
+            deity: 'Lord Brahma & Vishnu',
+            pujaTime: 'Pratahkala: 06:15 AM to 08:30 AM',
+            fastingType: 'Shadruchi Prasadam Fast',
+            image: '/images/fest_ugadi.png',
+            summary: 'Auspicious commencement of the Hindu New Year across Andhra Pradesh and Telangana.',
+            pujaVidhi: '1. Tailabhyangana Snanam\n2. Mango leaf Thoranalu\n3. Ugadi Pachadi intake\n4. Panchanga Sravanam',
+            significance: 'Equanimity and spiritual harmony in life.',
+            categories: ['major-mahotsavams', 'all'],
+            isMajor: true,
+            status: 'active'
+          },
+          {
+            name: 'Sri Rama Navami',
+            teluguName: 'శ్రీరామ నవమి (సీతారాముల కళ్యాణం)',
+            sanskritName: 'श्रीरामनवमी',
+            slug: 'sri-rama-navami',
+            date: '27 March 2026',
+            day: '27',
+            month: 'MAR',
+            monthShort: 'MAR',
+            year: 2026,
+            tithi: 'Chaitra Shukla Navami',
+            hinduMonth: 'Chaitra Masa',
+            deity: 'Lord Sri Rama & Sita Devi',
+            pujaTime: 'Madhyahna Muhurtham: 11:12 AM to 01:38 PM',
+            fastingType: 'Phalahar Fast until sunset',
+            image: '/images/news_gita.jpg',
+            summary: 'Divine appearance of Lord Rama and celestial Sitarama Kalyana Mahotsavam.',
+            pujaVidhi: '1. Sri Rama archana with Tulasi leaves\n2. Sitarama Kalyana seva\n3. Panakam and Vadapappu Naivedyam',
+            significance: 'Bestows righteousness, family peace and courage.',
+            categories: ['major-mahotsavams', 'all'],
+            isMajor: true,
+            status: 'active'
+          },
+          {
+            name: 'Diwali (Deepavali Mahotsavam)',
+            teluguName: 'దీపావళి లక్ష్మీ కుబేర పూజ',
+            sanskritName: 'दीपावली',
+            slug: 'diwali',
+            date: '08 November 2026',
+            day: '08',
+            month: 'NOV',
+            monthShort: 'NOV',
+            year: 2026,
+            tithi: 'Ashwina Amavasya',
+            hinduMonth: 'Kartika Masa',
+            deity: 'Maha Lakshmi & Kuber Swamy',
+            pujaTime: 'Pradosha Kala Lakshmi Puja: 06:15 PM - 08:20 PM',
+            fastingType: 'Upavasam until Lakshmi Arati',
+            image: '/images/fest_diwali.png',
+            summary: 'Festival of Lights, vanquishing darkness and ushering divine wealth, wisdom and auspiciousness.',
+            pujaVidhi: '1. 108 Ghee Deepa Aradhana\n2. Sri Sukta & Kanakadhara Stotra Parayana\n3. Lakshmi Kuber Archana',
+            significance: 'Dispels spiritual darkness and grants boundless prosperity.',
+            categories: ['major-mahotsavams', 'all'],
+            isMajor: true,
+            status: 'active'
+          }
+        ];
+        await FestivalCalendar.insertMany(initialFestivals);
+        console.log(`✅ ${initialFestivals.length} Vedic Festival Calendar Entries Seeded Successfully`);
+      }
+
 
     } catch (seedErr) {
       console.error('Seed error:', seedErr.message);
