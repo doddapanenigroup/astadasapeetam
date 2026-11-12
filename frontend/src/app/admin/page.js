@@ -71,6 +71,7 @@ import VideoPublishStudio from '../../components/VideoPublishStudio';
 import { allFestivalsData } from '../../data/festivalsData';
 import BrandingSettingsStudio from '../../components/BrandingSettingsStudio';
 import AstrologerDeskStudio from '../../components/AstrologerDeskStudio';
+import MarketplaceCommerceStudio from '../../components/MarketplaceCommerceStudio';
 import { getStoredBranding, DEFAULT_BRANDING, applyFaviconToDocument } from '../../data/brandingData';
 
 const API_BASE = 'http://localhost:5000/api';
@@ -1946,102 +1947,16 @@ export default function UnifiedConsolePage() {
           )}
 
           {/* ========================================================= */}
-          {/* TAB 3: MARKETPLACE                                        */}
+          {/* TAB 3: MARKETPLACE & SACRED COMMERCE SUITE                 */}
           {/* ========================================================= */}
           {activeTab === 'marketplace' && (
-            <div className="space-y-4">
-              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <h3 className="text-xl font-black text-slate-900 flex items-center space-x-2">
-                    <ShoppingBag className="w-5 h-5 text-emerald-700" />
-                    <span>Marketplace Inventory &amp; Stock Studio</span>
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Manage puja kits, certified rudraksha, energized yantras, and sanctum prasadam.
-                  </p>
-                </div>
-
-                <button
-                  onClick={() => setIsAddProductOpen(true)}
-                  className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:brightness-110 text-stone-950 px-4 py-2 rounded-xl text-xs font-black flex items-center space-x-1.5 shadow border border-amber-300/40 cursor-pointer transition"
-                >
-                  <PlusCircle className="w-4 h-4 text-stone-950" />
-                  <span>Add New Product</span>
-                </button>
-              </div>
-
-              {/* Category Filter Pills (Dynamic Devotional Spectrum) */}
-              <div className="bg-white p-3 rounded-2xl border border-amber-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-thin">
-                  {marketplaceCategories.map((cat) => (
-                    <button
-                      key={cat.id}
-                      onClick={() => setProductCategoryFilter(cat.id)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shrink-0 cursor-pointer ${
-                        productCategoryFilter === cat.id
-                          ? 'bg-gradient-to-r from-amber-600 to-amber-700 text-white shadow-xs'
-                          : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
-                      }`}
-                    >
-                      <span>{cat.label}</span>
-                    </button>
-                  ))}
-
-                  <button
-                    onClick={() => {
-                      setIsAddProductOpen(true);
-                      setIsCustomCategoryMode(true);
-                    }}
-                    className="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-100 transition flex items-center space-x-1 shrink-0 cursor-pointer"
-                  >
-                    <span>+ New Category</span>
-                  </button>
-                </div>
-                <div className="text-xs font-bold text-stone-500 shrink-0">
-                  {filteredProducts.length} of {products.length} products
-                </div>
-              </div>
-
-              {/* Products Table / Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredProducts.map((p) => (
-                  <div key={p._id} className="bg-white rounded-2xl border p-5 shadow-xs space-y-3 flex flex-col justify-between">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black uppercase bg-emerald-100 text-emerald-900 px-2 py-0.5 rounded-full">
-                          {p.category}
-                        </span>
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          p.inStock ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
-                        }`}>
-                          {p.inStock ? 'IN STOCK' : 'OUT OF STOCK'}
-                        </span>
-                      </div>
-                      <h4 className="font-bold text-sm text-slate-900 line-clamp-1">{p.name}</h4>
-                      <p className="text-xs text-slate-500 line-clamp-2">{p.subtitle}</p>
-                      <div className="flex items-baseline space-x-2 pt-1">
-                        <span className="text-base font-black text-slate-900">₹{p.price}</span>
-                        {p.originalPrice && (
-                          <span className="text-xs text-slate-400 line-through">₹{p.originalPrice}</span>
-                        )}
-                        <span className="text-[10px] bg-rose-100 text-rose-800 font-bold px-1.5 py-0.2 rounded">
-                          {p.discount}
-                        </span>
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={() => handleToggleProductStock(p._id)}
-                      className={`w-full py-1.5 rounded-xl border text-xs font-bold transition ${
-                        p.inStock ? 'border-rose-300 text-rose-700 hover:bg-rose-50' : 'border-emerald-300 text-emerald-700 hover:bg-emerald-50'
-                      }`}
-                    >
-                      {p.inStock ? 'Mark Out of Stock' : 'Mark In Stock'}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <MarketplaceCommerceStudio
+              products={products}
+              setProducts={setProducts}
+              campaigns={campaigns}
+              setCampaigns={setCampaigns}
+              showToast={showToast}
+            />
           )}
 
           {/* ========================================================= */}
