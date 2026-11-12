@@ -13,7 +13,7 @@ import {
 import { 
   Home, Flame, Sparkles, Calendar, Compass, Landmark, 
   BookOpen, Clock, Video, ShoppingBag, ChevronDown, Search, 
-  ShoppingCart, Menu, X, Bus 
+  ShoppingCart, Menu, X, Bus, Play 
 } from 'lucide-react';
 
 const iconMap = {

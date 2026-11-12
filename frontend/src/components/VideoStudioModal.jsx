@@ -2,9 +2,10 @@
 
 import React, { useState } from 'react';
 import { 
-  X, Video, Sparkles, Youtube, Check, Eye, Play, 
+  X, Video, Sparkles, Check, Eye, Play, 
   Clock, Landmark, Tag, AlertCircle, CheckCircle2 
 } from 'lucide-react';
+import { YoutubeIcon } from './SocialIcons';
 
 export const VIDEO_CATEGORIES = [
   { id: 'devotional-videos', label: 'Devotional Videos', icon: '🪔', telugu: 'భక్తి వీడియోలు' },
@@ -259,7 +260,7 @@ export default function VideoStudioModal({ isOpen, onClose, onVideoPublished }) 
           <div className="space-y-3 bg-amber-50/50 p-4 rounded-2xl border border-amber-200/70">
             <div>
               <label className="block text-xs font-bold text-[#78131e] mb-1 flex items-center space-x-1.5">
-                <Youtube className="w-3.5 h-3.5 text-red-600" />
+                <YoutubeIcon className="w-3.5 h-3.5 text-red-600" />
                 <span>YouTube Video URL or Embed Link *</span>
               </label>
               <input
