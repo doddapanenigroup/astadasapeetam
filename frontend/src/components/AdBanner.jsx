@@ -74,6 +74,20 @@ export const DEFAULT_ADS_CONFIG = {
     ctaText: 'Explore Yatras',
     targetUrl: '/yatralu',
     theme: 'cosmic-dark'
+  },
+  'slot-6': {
+    id: 'slot-6',
+    name: 'Lower Right Sidebar Devotional Ad',
+    location: 'Right Column below E-Paper (beside Devotional Products & Festivals)',
+    dimensions: '300 × 250',
+    status: 'active',
+    provider: 'private', // Can be toggled to 'google' via Admin Console or Ad Studio
+    title: 'Divine Temple Pooja & Archana Seva',
+    subtitle: 'Perform sankalpam in your family name at famous sacred kshetras.',
+    badge: 'TEMPLE SEVA',
+    ctaText: 'Book Seva Now',
+    targetUrl: '/marketplace',
+    theme: 'saffron-gold'
   }
 };
 

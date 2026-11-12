@@ -328,6 +328,9 @@ export default function RightSidebarFull() {
           />
         </div>
       </div>
+
+      {/* 11. Lower Right Sidebar Devotional Ad Slot (Slot 6: 300x250 - Private or Google Ad) */}
+      <AdBanner slotId="slot-6" type="sidebar" label="Lower Sidebar Ad (300x250)" />
     </aside>
   );
 }

@@ -1705,7 +1705,7 @@ export default function UnifiedConsolePage() {
                 <div className="space-y-1.5 max-w-2xl">
                   <div className="flex items-center space-x-2">
                     <span className="bg-amber-400/20 text-amber-300 border border-amber-400/40 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full tracking-wider">
-                      5 Homepage Ad Slots Engine
+                      6 Homepage Ad Slots Engine
                     </span>
                     <span className="text-xs text-purple-200/80 font-mono">Google AdSense + Private Direct Ads</span>
                   </div>
@@ -1713,7 +1713,7 @@ export default function UnifiedConsolePage() {
                     Homepage Advertisements &amp; Sponsored Desk
                   </h2>
                   <p className="text-xs text-purple-100/90 leading-relaxed">
-                    Configure all 5 ad units across the homepage. Choose between <strong>Private Direct Ads</strong> (temple trusts, spiritual stores) or <strong>Google AdSense</strong>. Use the <strong>Hide Ad (Leave Reserved Space)</strong> option to pause ads while keeping the exact layout height intact so the page never jumps.
+                    Configure all 6 ad units across the homepage. Choose between <strong>Private Direct Ads</strong> (temple trusts, spiritual stores) or <strong>Google AdSense</strong>. Use the <strong>Hide Ad (Leave Reserved Space)</strong> option to pause ads while keeping the exact layout height intact so the page never jumps.
                   </p>
                 </div>
 
@@ -1733,7 +1733,7 @@ export default function UnifiedConsolePage() {
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
                 <div className="bg-white p-4 rounded-2xl border border-stone-200 shadow-2xs space-y-1">
                   <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">Total Ad Spaces</span>
-                  <div className="text-2xl font-black text-stone-900 font-serif">5 Slots</div>
+                  <div className="text-2xl font-black text-stone-900 font-serif">6 Slots</div>
                   <span className="text-[10px] text-purple-700 font-semibold">100% Configured</span>
                 </div>
 
@@ -1802,6 +1802,12 @@ export default function UnifiedConsolePage() {
                     badge: 'SLOT 5 • BOTTOM LEADERBOARD (970 × 250)',
                     name: 'Bottom Anchor Full-Width Banner',
                     desc: 'Appears above the Footer Newsletter & App download bar at the bottom of the page.'
+                  },
+                  {
+                    id: 'slot-6',
+                    badge: 'SLOT 6 • LOWER SIDEBAR (300 × 250)',
+                    name: 'Lower Right Sidebar Devotional Ad',
+                    desc: 'Fills the space below E-Paper in the right sidebar beside Recommended Devotional Products & Upcoming Festivals.'
                   }
                 ].map((slotDef, index) => {
                   const slotConfig = (homeAdsConfig && homeAdsConfig[slotDef.id]) || DEFAULT_ADS_CONFIG[slotDef.id] || {};
