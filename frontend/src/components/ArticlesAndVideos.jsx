@@ -1,14 +1,203 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { latestArticles as defaultArticles, latestVideos as defaultVideos } from '../data/mockData';
-import { ChevronRight, Play, BookOpen, Video, X, Sparkles, Clock, Calendar } from 'lucide-react';
+import { ChevronRight, Play, Pause, BookOpen, Video, X, Sparkles, Clock, Calendar, RotateCcw, RotateCw, SkipBack, SkipForward, Volume2, VolumeX } from 'lucide-react';
 
 export default function ArticlesAndVideos() {
   const [articles, setArticles] = useState(defaultArticles);
   const [videos, setVideos] = useState(defaultVideos);
   const [activeVideoModal, setActiveVideoModal] = useState(null);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
+  const [seekFeedback, setSeekFeedback] = useState(null);
+
+  const iframeRef = useRef(null);
+  const currentTimeRef = useRef(0);
+  const feedbackTimerRef = useRef(null);
+
+  // Send control commands to YouTube embed via postMessage API
+  const sendYouTubeCommand = (func, args = []) => {
+    if (iframeRef.current && iframeRef.current.contentWindow) {
+      try {
+        iframeRef.current.contentWindow.postMessage(
+          JSON.stringify({
+            event: 'command',
+            func: func,
+            args: args
+          }),
+          '*'
+        );
+      } catch (err) {}
+    }
+  };
+
+  const formatSeconds = (secs) => {
+    const m = Math.floor(secs / 60);
+    const s = Math.floor(secs % 60);
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  };
+
+  // Skip relative seconds (e.g. +10s forward, -10s backward)
+  const handleSeekRelative = (seconds) => {
+    const current = currentTimeRef.current || 0;
+    const target = Math.max(0, current + seconds);
+    currentTimeRef.current = target;
+    sendYouTubeCommand('seekTo', [target, true]);
+
+    setSeekFeedback({
+      type: seconds > 0 ? 'forward' : 'backward',
+      text: seconds > 0 ? `+${seconds}s` : `${seconds}s`,
+      time: formatSeconds(target)
+    });
+    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
+    feedbackTimerRef.current = setTimeout(() => setSeekFeedback(null), 1000);
+  };
+
+  const handleTogglePlayPause = () => {
+    if (isPlaying) {
+      sendYouTubeCommand('pauseVideo');
+      setIsPlaying(false);
+      setSeekFeedback({ type: 'pause', text: 'Paused' });
+    } else {
+      sendYouTubeCommand('playVideo');
+      setIsPlaying(true);
+      setSeekFeedback({ type: 'play', text: 'Playing' });
+    }
+    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
+    feedbackTimerRef.current = setTimeout(() => setSeekFeedback(null), 900);
+  };
+
+  const handleToggleMute = () => {
+    if (isMuted) {
+      sendYouTubeCommand('unMute');
+      setIsMuted(false);
+      setSeekFeedback({ type: 'unmute', text: 'Sound On' });
+    } else {
+      sendYouTubeCommand('mute');
+      setIsMuted(true);
+      setSeekFeedback({ type: 'mute', text: 'Muted' });
+    }
+    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
+    feedbackTimerRef.current = setTimeout(() => setSeekFeedback(null), 900);
+  };
+
+  const currentIndex = videos.findIndex(v => v.id === activeVideoModal?.id);
+
+  const handlePrevVideo = () => {
+    if (videos.length === 0) return;
+    const prevIdx = currentIndex > 0 ? currentIndex - 1 : videos.length - 1;
+    currentTimeRef.current = 0;
+    setIsPlaying(true);
+    setActiveVideoModal(videos[prevIdx]);
+    setSeekFeedback({ type: 'prev', text: '⏮ Previous Video' });
+    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
+    feedbackTimerRef.current = setTimeout(() => setSeekFeedback(null), 1000);
+  };
+
+  const handleNextVideo = () => {
+    if (videos.length === 0) return;
+    const nextIdx = currentIndex < videos.length - 1 ? currentIndex + 1 : 0;
+    currentTimeRef.current = 0;
+    setIsPlaying(true);
+    setActiveVideoModal(videos[nextIdx]);
+    setSeekFeedback({ type: 'next', text: 'Next Video ⏭' });
+    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
+    feedbackTimerRef.current = setTimeout(() => setSeekFeedback(null), 1000);
+  };
+
+  // Listen to postMessage from YouTube player to synchronize current playback time
+  useEffect(() => {
+    const handleMessage = (e) => {
+      try {
+        const data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
+        if (data && data.event === 'infoDelivery' && data.info) {
+          if (typeof data.info.currentTime === 'number') {
+            currentTimeRef.current = data.info.currentTime;
+          }
+          if (typeof data.info.playerState === 'number') {
+            setIsPlaying(data.info.playerState === 1);
+          }
+        }
+      } catch (err) {}
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
+  // Listen to Keyboard keys: ArrowLeft/Right for -10s/+10s, Space/K for Play/Pause, Shift+Arrows for Next/Prev
+  useEffect(() => {
+    if (!activeVideoModal) return;
+
+    currentTimeRef.current = 0;
+    setIsPlaying(true);
+
+    const handleKeyDown = (e) => {
+      // Do not capture if user is in an input or textarea
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) {
+        return;
+      }
+
+      // Close modal on Escape
+      if (e.key === 'Escape') {
+        setActiveVideoModal(null);
+        return;
+      }
+
+      // Next Video: Shift + Right Arrow, ']', 'n', 'N'
+      if ((e.shiftKey && e.key === 'ArrowRight') || e.key === ']' || e.key === 'n' || e.key === 'N') {
+        e.preventDefault();
+        handleNextVideo();
+        return;
+      }
+
+      // Previous Video: Shift + Left Arrow, '[', 'p', 'P'
+      if ((e.shiftKey && e.key === 'ArrowLeft') || e.key === '[' || e.key === 'p' || e.key === 'P') {
+        e.preventDefault();
+        handlePrevVideo();
+        return;
+      }
+
+      // Forward (+10 seconds): Right Arrow (→), 'l', 'L'
+      if (e.key === 'ArrowRight' || e.key === 'l' || e.key === 'L') {
+        e.preventDefault();
+        handleSeekRelative(10);
+        return;
+      }
+
+      // Backward (-10 seconds): Left Arrow (←), 'j', 'J'
+      if (e.key === 'ArrowLeft' || e.key === 'j' || e.key === 'J') {
+        e.preventDefault();
+        handleSeekRelative(-10);
+        return;
+      }
+
+      // Play / Pause: Space, 'k', 'K'
+      if (e.code === 'Space' || e.key === ' ' || e.key === 'k' || e.key === 'K') {
+        e.preventDefault();
+        handleTogglePlayPause();
+        return;
+      }
+
+      // Mute / Unmute: 'm', 'M'
+      if (e.key === 'm' || e.key === 'M') {
+        e.preventDefault();
+        handleToggleMute();
+        return;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeVideoModal, videos, currentIndex, isPlaying, isMuted]);
+
+  // Build YouTube embed url with enablejsapi=1 so it accepts keyboard controls & commands
+  const getControlledEmbedUrl = (url) => {
+    if (!url) return '';
+    const sep = url.includes('?') ? '&' : '?';
+    return `${url}${sep}enablejsapi=1&autoplay=1`;
+  };
 
   // 1. Fetch Dynamic Articles from Backend
   useEffect(() => {
@@ -225,30 +414,41 @@ export default function ArticlesAndVideos() {
       </div>
 
       {/* ========================================================= */}
-      {/* Video Playback Modal                                      */}
+      {/* Video Playback Modal with Full Keyboard Controls (←/→)    */}
       {/* ========================================================= */}
       {activeVideoModal && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
-          <div className="bg-stone-950 rounded-3xl border border-amber-500/40 shadow-2xl w-full max-w-3xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 text-white">
-            <div className="p-4 bg-gradient-to-r from-[#180A24] via-[#2A113E] to-[#140620] flex items-center justify-between border-b border-purple-500/30">
-              <div className="flex items-center space-x-2">
-                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-                <h3 className="font-serif font-black text-sm text-white truncate max-w-md">
+        <div 
+          tabIndex={0}
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 outline-none select-none"
+        >
+          <div className="bg-stone-950 rounded-3xl border border-amber-500/40 shadow-2xl w-full max-w-3xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 text-white flex flex-col">
+            {/* Modal Header */}
+            <div className="p-3.5 sm:p-4 bg-gradient-to-r from-[#180A24] via-[#2A113E] to-[#140620] flex items-center justify-between border-b border-purple-500/30">
+              <div className="flex items-center space-x-2 truncate pr-2">
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0"></span>
+                <h3 className="font-serif font-black text-xs sm:text-sm text-white truncate">
                   {activeVideoModal.title}
                 </h3>
               </div>
-              <button
-                onClick={() => setActiveVideoModal(null)}
-                className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 text-purple-200 hover:text-white flex items-center justify-center transition cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
+
+              <div className="flex items-center space-x-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setActiveVideoModal(null)}
+                  className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 text-purple-200 hover:text-white flex items-center justify-center transition cursor-pointer"
+                  title="Close (Esc)"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
-            <div className="relative aspect-video w-full bg-black">
+            {/* Video Viewport Area with HUD Feedback */}
+            <div className="relative aspect-video w-full bg-black overflow-hidden group">
               {activeVideoModal.embedUrl ? (
                 <iframe
-                  src={activeVideoModal.embedUrl.includes('?') ? `${activeVideoModal.embedUrl}&autoplay=1` : `${activeVideoModal.embedUrl}?autoplay=1`}
+                  ref={iframeRef}
+                  src={getControlledEmbedUrl(activeVideoModal.embedUrl)}
                   title={activeVideoModal.title}
                   className="w-full h-full border-0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -268,14 +468,117 @@ export default function ArticlesAndVideos() {
                   </a>
                 </div>
               )}
+
+              {/* Animated HUD Feedback Overlay (Triggered by Keyboard Keys or On-Screen Clicks) */}
+              {seekFeedback && (
+                <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-30 animate-in fade-in zoom-in-90 duration-150">
+                  <div className="bg-black/85 backdrop-blur-md text-amber-300 border border-amber-400/50 px-5 py-3 rounded-2xl flex items-center gap-2.5 shadow-2xl">
+                    {seekFeedback.type === 'forward' && <RotateCw className="w-6 h-6 animate-spin text-amber-400" />}
+                    {seekFeedback.type === 'backward' && <RotateCcw className="w-6 h-6 animate-spin text-amber-400" />}
+                    {seekFeedback.type === 'play' && <Play className="w-6 h-6 fill-amber-400" />}
+                    {seekFeedback.type === 'pause' && <Pause className="w-6 h-6 fill-amber-400" />}
+                    {seekFeedback.type === 'prev' && <SkipBack className="w-6 h-6 text-amber-400" />}
+                    {seekFeedback.type === 'next' && <SkipForward className="w-6 h-6 text-amber-400" />}
+                    <span className="text-base font-black font-mono tracking-wide">
+                      {seekFeedback.text}
+                    </span>
+                    {seekFeedback.time && (
+                      <span className="text-xs font-mono text-purple-200">
+                        ({seekFeedback.time})
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
-            <div className="p-4 bg-stone-900/90 flex items-center justify-between text-xs text-stone-400 border-t border-stone-800">
-              <span>{activeVideoModal.sub}</span>
+            {/* Playback Control Bar with Keyboard Shortcuts */}
+            <div className="bg-[#12061c] px-4 py-2.5 border-t border-purple-900/40 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                {/* Previous Video */}
+                <button
+                  type="button"
+                  onClick={handlePrevVideo}
+                  className="bg-white/10 hover:bg-white/20 text-purple-200 hover:text-white px-2.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer border border-white/5"
+                  title="Previous Video (Shift + ←)"
+                >
+                  <SkipBack className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Prev</span>
+                </button>
+
+                {/* Backward -10s */}
+                <button
+                  type="button"
+                  onClick={() => handleSeekRelative(-10)}
+                  className="bg-white/10 hover:bg-amber-500 hover:text-stone-950 text-amber-200 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border border-amber-400/20"
+                  title="Rewind 10 Seconds (Press Left Arrow key ← or J)"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>-10s</span>
+                  <kbd className="hidden sm:inline bg-black/40 text-[9px] font-mono px-1 py-0.2 rounded border border-white/10">←</kbd>
+                </button>
+
+                {/* Play / Pause Toggle */}
+                <button
+                  type="button"
+                  onClick={handleTogglePlayPause}
+                  className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:brightness-110 text-stone-950 px-3 py-1.5 rounded-xl text-xs font-black transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  title="Play / Pause (Space or K)"
+                >
+                  {isPlaying ? (
+                    <>
+                      <Pause className="w-3.5 h-3.5 fill-current" />
+                      <span>Pause</span>
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-3.5 h-3.5 fill-current" />
+                      <span>Play</span>
+                    </>
+                  )}
+                  <kbd className="hidden sm:inline bg-black/20 text-[9px] font-mono px-1 py-0.2 rounded">Space</kbd>
+                </button>
+
+                {/* Forward +10s */}
+                <button
+                  type="button"
+                  onClick={() => handleSeekRelative(10)}
+                  className="bg-white/10 hover:bg-amber-500 hover:text-stone-950 text-amber-200 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border border-amber-400/20"
+                  title="Forward 10 Seconds (Press Right Arrow key → or L)"
+                >
+                  <RotateCw className="w-3.5 h-3.5" />
+                  <span>+10s</span>
+                  <kbd className="hidden sm:inline bg-black/40 text-[9px] font-mono px-1 py-0.2 rounded border border-white/10">→</kbd>
+                </button>
+
+                {/* Next Video */}
+                <button
+                  type="button"
+                  onClick={handleNextVideo}
+                  className="bg-white/10 hover:bg-white/20 text-purple-200 hover:text-white px-2.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer border border-white/5"
+                  title="Next Video (Shift + →)"
+                >
+                  <span className="hidden sm:inline">Next</span>
+                  <SkipForward className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {/* Keyboard keys pill */}
+              <div className="text-[10px] font-mono text-purple-300/80 hidden md:flex items-center gap-1.5">
+                <span>Keyboard:</span>
+                <span className="bg-white/5 px-1 py-0.5 rounded border border-white/10">← / J: -10s</span>
+                <span className="bg-white/5 px-1 py-0.5 rounded border border-white/10">→ / L: +10s</span>
+                <span className="bg-white/5 px-1 py-0.5 rounded border border-white/10">Space: ⏯</span>
+              </div>
+            </div>
+
+            {/* Footer with Video Meta & Direct Route */}
+            <div className="p-3 sm:p-4 bg-stone-900/90 flex items-center justify-between text-xs text-stone-400 border-t border-stone-800">
+              <span className="truncate max-w-xs">{activeVideoModal.sub}</span>
               <Link
                 href="/videos"
                 onClick={() => setActiveVideoModal(null)}
-                className="text-amber-400 hover:text-amber-300 font-bold inline-flex items-center gap-1"
+                className="text-amber-400 hover:text-amber-300 font-bold inline-flex items-center gap-1 shrink-0"
               >
                 <span>Browse All Videos</span>
                 <ChevronRight className="w-3.5 h-3.5" />
