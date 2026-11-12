@@ -729,15 +729,23 @@ export default function UnifiedConsolePage() {
         if (activeToken) {
           await fetchAllData(activeToken);
         }
-        await loadVideos();
-        await loadFestivalEvents();
+        try {
+          await loadVideos();
+        } catch {}
+        try {
+          await loadFestivalEvents();
+        } catch {}
 
-        // Fetch saved social profiles
-        const socialRes = await fetch(`${API_BASE}/public/settings/social_profiles`);
-        const socialData = await socialRes.json();
-        if (socialData.success && socialData.data) {
-          setSocialProfiles(socialData.data);
-        }
+        // Fetch saved social profiles safely
+        try {
+          const socialRes = await fetch(`${API_BASE}/public/settings/social_profiles`).catch(() => null);
+          if (socialRes && socialRes.ok) {
+            const socialData = await socialRes.json().catch(() => null);
+            if (socialData && socialData.success && socialData.data) {
+              setSocialProfiles(socialData.data);
+            }
+          }
+        } catch {}
       } catch (err) {
         console.error('Init error:', err);
       }
@@ -2109,6 +2117,36 @@ export default function UnifiedConsolePage() {
                   </div>
                   <span className="text-[10px] text-rose-600 font-semibold">Spiritual &amp; Temple Trusts</span>
                 </div>
+              </div>
+
+              {/* Quick Google Ads Policy & Action Ribbon */}
+              <div className="bg-blue-50 border-2 border-blue-200 p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2.5 text-blue-950 font-medium">
+                  <span className="w-2.5 h-2.5 rounded-full bg-blue-600 animate-pulse shrink-0" />
+                  <span>
+                    <strong>Google AdSense Active:</strong> Ad slots are displayed in standard Google Ads format (with Google Ad badges and layout) so they are never confused with native website content sections.
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const updated = {};
+                    ['slot-1', 'slot-2', 'slot-3', 'slot-4', 'slot-5', 'slot-6'].forEach(id => {
+                      const cur = (homeAdsConfig && homeAdsConfig[id]) || DEFAULT_ADS_CONFIG[id];
+                      updated[id] = { ...cur, provider: 'google', status: 'active' };
+                    });
+                    setHomeAdsConfig(updated);
+                    if (typeof window !== 'undefined') {
+                      localStorage.setItem('astada_ads_config', JSON.stringify(updated));
+                      window.dispatchEvent(new Event('astada_ads_updated'));
+                    }
+                    showToast('success', 'All 6 slots set to Google Ads!');
+                  }}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-xs transition-colors cursor-pointer shrink-0 flex items-center gap-1.5"
+                >
+                  <span>🌐</span>
+                  <span>Set All to Google Ads</span>
+                </button>
               </div>
 
               {/* The 5 Homepage Ad Slots Configuration Cards */}

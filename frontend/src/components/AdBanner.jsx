@@ -11,7 +11,7 @@ export const DEFAULT_ADS_CONFIG = {
     location: 'Above Main Homepage Feed & Carousel',
     dimensions: '728 × 90',
     status: 'active', // 'active' | 'hidden_reserve_space' | 'disabled'
-    provider: 'private', // 'private' | 'google'
+    provider: 'google', // 'google' | 'private' (default google to avoid confusion with website sections)
     title: 'Experience Divine Energy • Premium Rudraksha',
     subtitle: 'Lab-certified 1-14 Mukhi authentic Himalayan beads & energized yantras.',
     badge: 'FESTIVAL SPECIAL',
@@ -25,7 +25,7 @@ export const DEFAULT_ADS_CONFIG = {
     location: 'Between Explore Categories & Devotional Grid',
     dimensions: '728 × 90',
     status: 'active',
-    provider: 'private',
+    provider: 'google',
     title: 'Tirumala Srivari Nitya Laddu & Maha Prasadam Seva',
     subtitle: 'Direct sanctum blessed prasadam delivered with utmost Satvik purity.',
     badge: 'DIRECT SANCTUM',
@@ -39,7 +39,7 @@ export const DEFAULT_ADS_CONFIG = {
     location: 'Right Column Continuous Devotional Widget Dock',
     dimensions: '300 × 250',
     status: 'active',
-    provider: 'private',
+    provider: 'google',
     title: 'Consult Vedic Panditas & Astrologers',
     subtitle: 'Instant kundali analysis, dosha nivarana & auspicious muhurtham.',
     badge: 'VEDIC JYOTISHA',
@@ -53,7 +53,7 @@ export const DEFAULT_ADS_CONFIG = {
     location: 'Between Astrologers Banner & Sacred Articles Row',
     dimensions: '728 × 90',
     status: 'active',
-    provider: 'private',
+    provider: 'google',
     title: 'Pure Copper 3D Maha Meru Sri Yantra (Prana Pratishtha)',
     subtitle: 'Sacred geometry pyramid energized with Lalita Sahasranama archana.',
     badge: 'SRI VIDYA ENERGIZED',
@@ -67,7 +67,7 @@ export const DEFAULT_ADS_CONFIG = {
     location: 'Above Footer Newsletter & App Download Section',
     dimensions: '970 × 250',
     status: 'active',
-    provider: 'private',
+    provider: 'google',
     title: 'Kashi Vishwanath & Rameswaram Sacred Yatra Pass',
     subtitle: 'All-inclusive guided pilgrimage package with priority sanctum darshan.',
     badge: 'YATRA SPECIAL',
@@ -81,7 +81,7 @@ export const DEFAULT_ADS_CONFIG = {
     location: 'Right Column below E-Paper (beside Devotional Products & Festivals)',
     dimensions: '300 × 600',
     status: 'active',
-    provider: 'private',
+    provider: 'google',
     title: 'Divine Temple Pooja & Archana Seva',
     subtitle: 'Perform sankalpam in your family name at famous sacred kshetras across India.',
     badge: 'TEMPLE SEVA',
@@ -108,7 +108,9 @@ export const getInitialAdsConfig = () => {
             if (parsed[key] && typeof parsed[key] === 'object') {
               base[key] = {
                 ...base[key],
-                ...parsed[key]
+                ...parsed[key],
+                // Always ensure google provider is used to prevent confusion with website sections
+                provider: 'google'
               };
               if (key === 'slot-6' && parsed[key].dimensions === '300 × 250') {
                 base[key].dimensions = '300 × 600';
@@ -212,35 +214,67 @@ export default function AdBanner({
   // 3. IF ACTIVE WITH GOOGLE ADS (Production Ready)
   if (adConfig.provider === 'google') {
     if (type === 'sidebar') {
-      const minHClass = isLargeSidebar ? 'min-h-[540px]' : 'min-h-[250px]';
+      const minHClass = isLargeSidebar ? 'min-h-[580px]' : 'min-h-[250px]';
       return (
-        <div className={`w-full bg-[#f8fafc] border border-slate-300 rounded-3xl p-5 text-center flex flex-col items-center justify-between ${minHClass} shadow-xs relative overflow-hidden ${className}`}>
-          <div className="w-full flex items-center justify-between pb-2 border-b border-slate-200 text-[10px] text-slate-500 font-mono">
-            <span className="font-bold flex items-center gap-1.5 text-blue-700">
-              <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
-              Google AdSense
+        <div className={`w-full bg-[#fcfdfe] border border-[#dadce0] rounded-3xl p-5 text-center flex flex-col items-center justify-between ${minHClass} shadow-xs relative overflow-hidden ${className}`}>
+          {/* Google Top Header */}
+          <div className="w-full flex items-center justify-between pb-2 border-b border-[#eceff1] text-[10px] text-stone-500 font-sans">
+            <span className="font-bold flex items-center gap-1.5 text-[#1a73e8]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#1a73e8] animate-pulse"></span>
+              Ad · Google AdSense
             </span>
-            <span>Advertisement</span>
+            <span className="flex items-center gap-1 text-stone-400">
+              <span className="w-3 h-3 rounded-full border border-stone-300 text-[8px] flex items-center justify-center font-bold text-stone-500">i</span>
+              <span>Advertisement</span>
+            </span>
           </div>
 
-          <div className="my-auto py-6 space-y-3">
-            <div className="text-3xl">🌐</div>
-            <div className="text-sm font-bold text-slate-800 tracking-wide">
-              Live Google Network Skyscraper
+          {/* Ad Creative */}
+          <div className="my-auto py-6 space-y-4 w-full">
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-[#e8f0fe] border border-[#d2e3fc] flex items-center justify-center text-2xl shadow-inner">
+              <span className="font-sans font-black text-2xl bg-gradient-to-r from-blue-600 via-red-500 to-amber-500 bg-clip-text text-transparent">
+                G
+              </span>
             </div>
-            <p className="text-xs text-slate-500 max-w-xs mx-auto">
-              Personalized responsive devotional partner advertisement unit
-            </p>
+            
+            <div className="space-y-1">
+              <div className="text-[11px] text-[#1a73e8] font-sans font-bold">
+                Sponsored • Verified Network
+              </div>
+              <h4 className="text-base font-black text-stone-900 font-sans tracking-tight leading-snug">
+                {isLargeSidebar ? 'Google Half-Page Skyscraper' : 'Google Medium Rectangle'}
+              </h4>
+              <p className="text-xs text-stone-500 max-w-xs mx-auto font-sans leading-relaxed">
+                Responsive contextual advertiser unit for devotional devotees & pilgrimages.
+              </p>
+            </div>
+
             {isLargeSidebar && (
-              <div className="p-2.5 bg-slate-100 rounded-xl text-[11px] text-slate-600 font-mono font-bold">
-                Google Skyscraper • {adConfig.dimensions || '300 × 600'}
+              <div className="p-3 bg-stone-50 rounded-2xl border border-stone-200 text-xs text-stone-600 font-sans space-y-1.5 text-left">
+                <div className="flex items-center gap-1.5 text-[11px] font-bold text-stone-700">
+                  <span>✓ Highly Targeted Network Unit</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-[11px] text-stone-500">
+                  <span>✓ Multi-device Adaptive Layout</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-[11px] text-stone-500">
+                  <span>✓ Zero Layout Shift (CLS Protected)</span>
+                </div>
               </div>
             )}
+
+            <div className="pt-2">
+              <div className="w-full py-2.5 rounded-xl bg-[#1a73e8] hover:bg-[#1557b0] text-white text-xs font-sans font-bold flex items-center justify-center gap-1.5 shadow-2xs transition-colors cursor-pointer">
+                <span>Learn More</span>
+                <ExternalLink className="w-3 h-3" />
+              </div>
+            </div>
           </div>
 
-          <div className="w-full pt-2 border-t border-slate-100 flex items-center justify-between text-[9px] text-slate-400 uppercase tracking-widest font-mono">
+          {/* Bottom Google Footer */}
+          <div className="w-full pt-2 border-t border-[#eceff1] flex items-center justify-between text-[9px] text-stone-400 font-sans uppercase tracking-wider">
             <span>Ads by Google</span>
-            <span>{adConfig.dimensions}</span>
+            <span className="font-mono">{adConfig.dimensions || (isLargeSidebar ? '300 × 600' : '300 × 250')}</span>
           </div>
         </div>
       );
@@ -248,23 +282,55 @@ export default function AdBanner({
 
     return (
       <div className={`w-full mx-auto py-2.5 ${className}`}>
-        <div className="bg-[#f8fafc] border border-slate-300 rounded-2xl p-4 px-6 flex flex-col sm:flex-row items-center justify-between shadow-xs gap-3">
-          <div className="flex items-center gap-3 text-center sm:text-left">
-            <span className="text-[10px] bg-blue-600 text-white uppercase px-2.5 py-1 rounded font-black font-mono tracking-wider shadow-2xs shrink-0">
-              Google Ads
+        <div className="bg-[#fcfdfe] border border-[#dadce0] rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4 relative overflow-hidden group hover:border-[#1a73e8] transition-all">
+          {/* Top subtle micro-bar for mobile */}
+          <div className="w-full flex sm:hidden items-center justify-between text-[10px] text-stone-400 font-sans border-b border-stone-100 pb-1">
+            <span className="font-bold text-[#1a73e8] flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#1a73e8]" />
+              Ad · Google
             </span>
-            <div>
-              <div className="text-xs sm:text-sm font-bold text-slate-800 tracking-wide flex items-center gap-2">
-                <span>Google AdSense • Responsive Partner Unit</span>
+            <span>Advertisement</span>
+          </div>
+
+          <div className="flex items-center gap-4 text-center sm:text-left w-full sm:w-auto">
+            {/* Google G icon badge */}
+            <div className="w-10 h-10 rounded-xl bg-white border border-[#dadce0] flex items-center justify-center shrink-0 shadow-2xs">
+              <span className="font-sans font-black text-lg bg-gradient-to-r from-blue-600 via-red-500 to-amber-500 bg-clip-text text-transparent">
+                G
+              </span>
+            </div>
+
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
+                <span className="text-[10px] bg-[#e8f0fe] text-[#1a73e8] border border-[#d2e3fc] px-2 py-0.5 rounded font-black font-sans uppercase tracking-wider">
+                  Ad
+                </span>
+                <span className="text-xs sm:text-sm font-bold text-stone-900 font-sans tracking-tight">
+                  Google Sponsored Partner • Responsive Network Unit
+                </span>
+                <span className="text-[11px] text-stone-400 font-sans hidden md:inline">
+                  • googleadservices.com
+                </span>
               </div>
-              <div className="text-[11px] text-slate-500">
-                Live Google certified network advertisement space
-              </div>
+              <p className="text-xs text-stone-500 font-sans">
+                Targeted devotional marketplace & sacred yatra advertisement unit
+              </p>
             </div>
           </div>
-          <span className="text-[10px] text-slate-400 font-mono tracking-widest shrink-0">
-            Ads by Google
-          </span>
+
+          <div className="flex items-center gap-3 shrink-0">
+            <span className="text-[10px] font-mono text-stone-400 uppercase hidden lg:inline">
+              {adConfig.dimensions || '728 × 90'}
+            </span>
+            <div className="px-4 py-2 rounded-xl bg-[#1a73e8] hover:bg-[#1557b0] text-white text-xs font-sans font-bold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer">
+              <span>Visit Site</span>
+              <ExternalLink className="w-3 h-3" />
+            </div>
+            <div className="text-[10px] text-stone-400 flex items-center gap-1 font-sans pl-2 border-l border-stone-200">
+              <span className="w-3 h-3 rounded-full border border-stone-300 text-[8px] flex items-center justify-center font-bold text-stone-500">i</span>
+              <span>Ads by Google</span>
+            </div>
+          </div>
         </div>
       </div>
     );
