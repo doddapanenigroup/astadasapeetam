@@ -19,7 +19,7 @@ export default function HomePage() {
 
       {/* 2. Main 2-Column Layout */}
       <div className="w-[98.5%] max-w-[1920px] mx-auto py-3">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
           {/* Main Left Content Area (Col 8.5 / 9 on XL) */}
           <div className="lg:col-span-8 xl:col-span-9 flex flex-col space-y-4">
             {/* Hero Carousel (Dynamic Hero Banner) */}
@@ -50,7 +50,7 @@ export default function HomePage() {
             <DynamicMarketplaceSpotlight />
 
             {/* Recommended Devotional Products + Upcoming Festivals */}
-            <div className="flex-1 flex flex-col min-h-0">
+            <div className="w-full">
               <ProductsAndFestivalsRow />
             </div>
           </div>
