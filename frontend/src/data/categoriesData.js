@@ -2,6 +2,7 @@
 // Centralized categories store supporting both built-in categories and user-created custom categories with custom slugs
 
 export const BUILTIN_DEVOTIONAL_CATEGORIES = [
+  { id: 'news', slug: 'news', label: 'Devotional News (ఆధ్యాత్మిక వార్తలు)', icon: '📰', telugu: 'ఆధ్యాత్మిక వార్తలు & తాజా విశేషాలు', badge: 'Daily News', needsImage: true, desc: 'Breaking temple news, spiritual events, darshan announcements, utsavam schedules & daily e-paper front pages' },
   { id: 'temples', slug: 'temples', label: 'Sacred Temples & Peethas', icon: '🏛️', telugu: 'క్షేత్రాలు & పీఠాలు', badge: '18 Peethas', needsImage: true, desc: 'Temple history, darshan timings, sthala puranam, architecture & special sevas' },
   { id: 'yatralu', slug: 'yatralu', label: 'Teertha Yatralu (Pilgrimages)', icon: '🚩', telugu: 'తీర్థయాత్రలు', badge: 'Teertha Yatralu', needsImage: true, desc: 'Sacred pilgrimage circuits, confirmed VIP darshans, day-by-day itinerary & travel guidelines' },
   { id: 'astrology', slug: 'astrology', label: 'Vedic Astrology & Horoscopes', icon: '🔮', telugu: 'జ్యోతిష్యం & జాతక విశ్లేషణ', badge: 'Astrology', needsImage: false, desc: 'Birth charts, planetary gochara, transit predictions and astrological counseling' },

@@ -5,11 +5,14 @@ const Post = require('../models/Post');
 // @access  Public
 exports.getPosts = async (req, res, next) => {
   try {
-    const { category, status, search, limit } = req.query;
+    const { category, status, search, limit, isLatestArticle } = req.query;
     let query = {};
 
     if (category && category !== 'all') query.category = category;
     if (status && status !== 'all') query.status = status;
+    if (isLatestArticle !== undefined) {
+      query.isLatestArticle = isLatestArticle === 'true';
+    }
     if (search) {
       query.$or = [
         { title: { $regex: search, $options: 'i' } },
@@ -79,11 +82,13 @@ exports.createPost = async (req, res, next) => {
       ? slug.toLowerCase().replace(/[^a-z0-9-]/g, '-')
       : title.toLowerCase().replace(/[^a-z0-9-]/g, '-').slice(0, 50) + '-' + Date.now().toString().slice(-4);
 
+    const isNews = (category || '').toLowerCase() === 'news';
     const post = await Post.create({
       title,
       titleTelugu,
       slug: postSlug,
       category: category || 'temples',
+      isLatestArticle: isNews,
       excerpt: excerpt || title,
       content,
       devotionalVerse,
@@ -113,9 +118,13 @@ exports.createPost = async (req, res, next) => {
 // @access  Private (admin, digital_marketing, astrologer)
 exports.updatePost = async (req, res, next) => {
   try {
+    let updateData = { ...req.body };
+    if (updateData.category !== undefined) {
+      updateData.isLatestArticle = updateData.category.toLowerCase() === 'news';
+    }
     const post = await Post.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      updateData,
       { new: true, runValidators: true }
     );
 

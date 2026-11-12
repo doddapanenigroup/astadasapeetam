@@ -25,6 +25,10 @@ const postSchema = new mongoose.Schema(
       lowercase: true,
       default: 'temples'
     },
+    isLatestArticle: {
+      type: Boolean,
+      default: false
+    },
     excerpt: {
       type: String,
       trim: true

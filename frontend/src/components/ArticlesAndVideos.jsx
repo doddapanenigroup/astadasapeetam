@@ -199,28 +199,36 @@ export default function ArticlesAndVideos() {
     return `${url}${sep}enablejsapi=1&autoplay=1`;
   };
 
-  // 1. Fetch Dynamic Articles from Backend
+  // 1. Fetch Dynamic Exclusive News Articles for Homepage Latest Articles Row
   useEffect(() => {
-    fetch('http://localhost:5000/api/posts?status=published&limit=3')
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && Array.isArray(data.data) && data.data.length > 0) {
-          const mapped = data.data.map((item, idx) => ({
-            id: item._id || item.id || `art-${idx}`,
-            slug: item.slug || `article-${idx}`,
-            title: item.title,
-            titleTelugu: item.titleTelugu,
-            category: item.category || 'temples',
-            excerpt: item.excerpt || (item.content ? item.content.slice(0, 85) + '...' : ''),
-            image: item.featuredImage || defaultArticles[idx % defaultArticles.length]?.image || '/images/temple_kashi.jpg',
-            date: item.createdAt 
-              ? new Date(item.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
-              : 'Recent'
-          }));
-          setArticles(mapped.slice(0, 3));
-        }
-      })
-      .catch(() => {});
+    const loadNewsArticles = () => {
+      fetch('http://localhost:5000/api/posts?category=news&status=published&limit=3')
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+            const mapped = data.data.map((item, idx) => ({
+              id: item._id || item.id || `news-${idx}`,
+              slug: item.slug || `news-${idx}`,
+              title: item.title,
+              titleTelugu: item.titleTelugu,
+              category: 'news',
+              excerpt: item.excerpt || (item.content ? item.content.slice(0, 85) + '...' : ''),
+              image: item.featuredImage || '/images/temple_kashi.jpg',
+              date: item.createdAt 
+                ? new Date(item.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                : 'Recent News'
+            }));
+            setArticles(mapped.slice(0, 3));
+          }
+        })
+        .catch(() => {});
+    };
+
+    loadNewsArticles();
+    if (typeof window !== 'undefined') {
+      window.addEventListener('astada_posts_updated', loadNewsArticles);
+      return () => window.removeEventListener('astada_posts_updated', loadNewsArticles);
+    }
   }, []);
 
   // 2. Fetch Dynamic Videos from Backend & Local Cache
@@ -293,8 +301,9 @@ export default function ArticlesAndVideos() {
                 Latest Articles
               </h3>
               <Link 
-                href="/articles" 
+                href="/epaper" 
                 className="text-[10px] font-bold text-stone-500 hover:text-[#78131e] flex items-center transition-colors"
+                title="View All Devotional News in Digital E-Paper"
               >
                 <span>View All</span>
                 <ChevronRight className="w-3 h-3 ml-0.5" />

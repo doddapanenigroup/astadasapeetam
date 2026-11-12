@@ -39,6 +39,16 @@ import AddCategoryModal from './AddCategoryModal';
 export const DEVOTIONAL_CATEGORIES = BUILTIN_DEVOTIONAL_CATEGORIES;
 
 export const CATEGORY_SAMPLE_TEMPLATES = {
+  news: {
+    title: 'Historic Brahmotsavams Announced at Tirumala & Srisailam with Special Vahana Sevas',
+    titleTelugu: 'శ్రీ తిరుమల & శ్రీశైల క్షేత్రాలలో వైభవంగా బ్రహ్మోత్సవాల ప్రారంభం - విశేష వాహన సేవలు',
+    deity: 'Lord Venkateswara & Mallikarjuna Swamy',
+    featuredImage: '/images/temple_kashi.jpg',
+    tags: 'Devotional News, Brahmotsavams, Temple Updates, Tirumala, Srisailam',
+    keywords: 'Devotional News, Tirumala Brahmotsavam, Temple News, Spiritual Events, E-Paper',
+    excerpt: 'Breaking Devotional News: Devasthanam authorities unveil full schedule for annual Brahmotsavams with special Garuda Seva and Kalyanotsavam dates.',
+    content: 'Tirumala Tirupati Devasthanams (TTD) and Srisailam Devasthanam have officially announced the commencement of the grand annual Brahmotsavams. Thousands of devotees from across India and abroad are arriving to witness the celestial processions. Special arrangements have been made for Sarva Darshanam devotees with continuous Annaprasadam and medical camps. The high priest conducted sacred Ankurarpanam marking the auspicious start of the Vedic rituals.'
+  },
   temples: {
     title: 'Srisailam Bhramaramba Devi & Mallikarjuna Swamy Temple Puranam',
     titleTelugu: 'శ్రీశైల భ్రమరాంబికా మల్లికార్జున స్వామి క్షేత్ర మహాత్మ్యం',
@@ -289,7 +299,8 @@ export const DEFAULT_POST_DATA = {
   title: '',
   titleTelugu: '',
   slug: '',
-  category: 'temples',
+  category: 'news',
+  isLatestArticle: true,
   deity: 'Universal Mother Parashakti',
   featuredImage: '/images/temple_kashi.jpg',
   excerpt: '',
@@ -397,11 +408,13 @@ export default function DynamicPostStudio({
     const targetCat = catId || newPost.category;
     const targetCatObj = categories.find(c => c.id === targetCat || c.slug === targetCat);
     const template = CATEGORY_SAMPLE_TEMPLATES[targetCat];
+    const isNews = targetCat === 'news';
     if (template) {
       setNewPost(prev => ({
         ...prev,
         ...template,
         category: targetCat,
+        isLatestArticle: isNews,
         featuredImage: targetCatObj?.needsImage ? (template.featuredImage || '') : '',
         imageMeta: null,
         slug: template.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
@@ -413,10 +426,12 @@ export default function DynamicPostStudio({
   };
 
   const handleCategoryChange = (newCat) => {
+    const isNews = newCat === 'news';
     const catObj = categories.find(c => c.id === newCat || c.slug === newCat);
     setNewPost(prev => ({
       ...prev,
       category: newCat,
+      isLatestArticle: isNews,
       featuredImage: catObj?.needsImage ? prev.featuredImage : '',
       imageMeta: catObj?.needsImage ? prev.imageMeta : null
     }));
@@ -665,6 +680,55 @@ export default function DynamicPostStudio({
                     onChange={(e) => setNewPost({ ...newPost, deity: e.target.value })}
                     className="w-full border border-stone-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-amber-600"
                   />
+                </div>
+              </div>
+
+              {/* Feature in Homepage Latest Articles & E-Paper (Exclusive Category Rule) */}
+              <div className={`p-4 rounded-2xl border transition-all ${
+                newPost.category === 'news'
+                  ? 'bg-gradient-to-r from-amber-500/10 via-amber-100/50 to-stone-50 border-amber-400 shadow-2xs'
+                  : 'bg-stone-50 border-stone-200 opacity-80'
+              }`}>
+                <div className="flex items-start space-x-3">
+                  <div className="pt-0.5">
+                    <input
+                      type="checkbox"
+                      id="isLatestArticleCheckbox"
+                      checked={newPost.category === 'news'}
+                      disabled={true}
+                      readOnly
+                      className="w-4 h-4 text-amber-600 rounded border-stone-300 focus:ring-amber-500 cursor-not-allowed accent-amber-600"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <label htmlFor="isLatestArticleCheckbox" className="font-bold text-xs text-stone-900 cursor-not-allowed flex items-center space-x-1.5">
+                        <span>📰 Feature in Homepage "LATEST ARTICLES" Row &amp; E-Paper Edition</span>
+                      </label>
+                      {newPost.category === 'news' ? (
+                        <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-700" />
+                          <span>Always Included for News (ఆధ్యాత్మిక వార్తలు)</span>
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-full bg-stone-200 text-stone-600 border border-stone-300 flex items-center gap-1">
+                          <Lock className="w-3 h-3 text-stone-500" />
+                          <span>Locked: Reserved Exclusively for Devotional News</span>
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-stone-600 mt-1 leading-relaxed">
+                      {newPost.category === 'news' ? (
+                        <span className="text-amber-900 font-medium">
+                          ✓ Category <strong>Devotional News (ఆధ్యాత్మిక వార్తలు)</strong> is selected. This article is permanently locked to appear in the homepage <strong>"LATEST ARTICLES"</strong> section and dynamic digital <strong>E-Paper</strong> newspaper pages.
+                        </span>
+                      ) : (
+                        <span className="text-stone-500">
+                          ℹ️ Per platform publishing rules, only articles under the <strong>Devotional News (ఆధ్యాత్మిక వార్తలు)</strong> category appear in the homepage "LATEST ARTICLES" section. Non-news categories cannot be checked.
+                        </span>
+                      )}
+                    </p>
+                  </div>
                 </div>
               </div>
 
