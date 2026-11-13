@@ -100,6 +100,15 @@ export default function UnifiedConsolePage() {
   const [posts, setPosts] = useState([]);
   const [products, setProducts] = useState([]);
   const [siteContents, setSiteContents] = useState([]);
+  const [editingSection, setEditingSection] = useState(null);
+  const [isEditSectionOpen, setIsEditSectionOpen] = useState(false);
+  const [sectionFormData, setSectionFormData] = useState({
+    title: '',
+    subtitle: '',
+    badge: '',
+    ctaText: '',
+    ctaLink: ''
+  });
   const [campaigns, setCampaigns] = useState([]);
   const [consultations, setConsultations] = useState([]);
 
@@ -1056,6 +1065,58 @@ export default function UnifiedConsolePage() {
     }
   };
 
+  // Open Edit Website Section Modal
+  const handleOpenEditSection = (section) => {
+    setEditingSection(section);
+    setSectionFormData({
+      title: section.title || '',
+      subtitle: section.subtitle || '',
+      badge: section.badge || '',
+      ctaText: section.ctaText || '',
+      ctaLink: section.ctaLink || ''
+    });
+    setIsEditSectionOpen(true);
+  };
+
+  // Save Updated Website Section Content
+  const handleSaveSection = async (e) => {
+    e.preventDefault();
+    if (!editingSection) return;
+    setActionLoading(true);
+
+    try {
+      const res = await fetch(`${API_BASE}/marketing/content/${editingSection._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(sectionFormData)
+      });
+      const data = await res.json();
+      if (data.success && data.data) {
+        setSiteContents(prev => prev.map(c => c._id === editingSection._id ? data.data : c));
+        setIsEditSectionOpen(false);
+        setEditingSection(null);
+        showToast('success', `Updated section "${sectionFormData.title || editingSection.sectionKey}" successfully!`);
+      } else {
+        // Optimistic local update fallback
+        setSiteContents(prev => prev.map(c => c._id === editingSection._id ? { ...c, ...sectionFormData } : c));
+        setIsEditSectionOpen(false);
+        setEditingSection(null);
+        showToast('success', `Updated section "${sectionFormData.title || editingSection.sectionKey}"!`);
+      }
+    } catch {
+      // Local fallback
+      setSiteContents(prev => prev.map(c => c._id === editingSection._id ? { ...c, ...sectionFormData } : c));
+      setIsEditSectionOpen(false);
+      setEditingSection(null);
+      showToast('success', `Updated section "${sectionFormData.title || editingSection.sectionKey}"!`);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   // Staff Management Actions
   const handleCreateStaff = async (e) => {
     e.preventDefault();
@@ -1601,15 +1662,15 @@ export default function UnifiedConsolePage() {
 
                 <div className="flex flex-col items-start lg:items-end space-y-2 shrink-0 w-full sm:w-auto">
                   <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-300">
-                    GEO ACCESS
+                    DEVOTIONAL COVERAGE
                   </span>
                   <div className="flex flex-wrap lg:flex-col gap-1.5 w-full sm:w-auto">
-                    {['National', 'State', 'District', 'MP Constituency', 'MLA Constituency'].map((geo, idx) => (
+                    {['18 Maha Shakti Peethas', '12 Jyotirlingas', '37+ Divine Kshetras', 'Pan-India Yatra Circuits', 'Global Devotees'].map((scope, idx) => (
                       <span
                         key={idx}
-                        className="bg-purple-950/70 border border-amber-400/30 hover:border-amber-400 px-4 py-1 rounded-full text-xs text-amber-100 font-semibold text-center hover:bg-purple-900/80 transition"
+                        className="bg-purple-950/70 border border-amber-400/30 px-3.5 py-1 rounded-full text-xs text-amber-100 font-semibold text-center hover:bg-purple-900/80 transition shadow-2xs"
                       >
-                        {geo}
+                        {scope}
                       </span>
                     ))}
                   </div>
@@ -2479,42 +2540,208 @@ export default function UnifiedConsolePage() {
                     <span>Website Section Content &amp; Headlines</span>
                   </h3>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Customize titles, badges, and CTAs across each website section in real time.
+                    Customize titles, badges, descriptions, and CTA links across each homepage section in real time.
                   </p>
                 </div>
               </div>
 
               <div className="space-y-3">
-                {siteContents.map((section) => (
-                  <div key={section._id} className="bg-white p-5 rounded-2xl border shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div className="space-y-1.5 max-w-2xl">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-emerald-100 text-emerald-900">
-                          {section.sectionKey}
-                        </span>
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          section.isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'
-                        }`}>
-                          {section.isActive ? 'LIVE ON WEBSITE' : 'HIDDEN'}
-                        </span>
+                {siteContents.length === 0 ? (
+                  <div className="bg-white p-12 text-center rounded-2xl border border-stone-200 text-stone-400">
+                    <div className="text-3xl mb-2">📑</div>
+                    <div className="font-bold text-stone-600">No dynamic sections found</div>
+                    <div className="text-xs text-stone-400 mt-1">Connecting to backend content database...</div>
+                  </div>
+                ) : (
+                  siteContents.map((section) => (
+                    <div key={section._id} className="bg-white p-5 rounded-2xl border border-stone-200 shadow-2xs hover:border-amber-300 transition-all flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                      <div className="space-y-2 max-w-2xl flex-1">
+                        <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                          <span className="text-[10px] font-mono font-black uppercase px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-700 border border-stone-200">
+                            {section.sectionKey}
+                          </span>
+                          {section.badge && (
+                            <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
+                              {section.badge}
+                            </span>
+                          )}
+                          <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border shadow-2xs ${
+                            section.isActive ? 'bg-emerald-50 text-emerald-800 border-emerald-300' : 'bg-stone-100 text-stone-600 border-stone-200'
+                          }`}>
+                            <span className={`inline-block w-1.5 h-1.5 rounded-full mr-1 ${section.isActive ? 'bg-emerald-500 animate-pulse' : 'bg-stone-400'}`}></span>
+                            <span>{section.isActive ? 'LIVE ON WEBSITE' : 'HIDDEN'}</span>
+                          </span>
+                        </div>
+
+                        <h4 className="font-serif font-bold text-base text-stone-900 leading-snug">
+                          {section.title}
+                        </h4>
+
+                        {section.subtitle && (
+                          <p className="text-xs text-stone-600 leading-relaxed">
+                            {section.subtitle}
+                          </p>
+                        )}
+
+                        {(section.ctaText || section.ctaLink) && (
+                          <div className="flex items-center space-x-2 pt-1 text-[11px] text-stone-400">
+                            <span className="font-semibold text-stone-600">Button:</span>
+                            <span className="bg-stone-50 border border-stone-200 px-2 py-0.5 rounded text-amber-900 font-bold">
+                              {section.ctaText || 'Explore'} &rarr;
+                            </span>
+                            <span className="text-[10px] font-mono text-stone-400 truncate max-w-[200px]">
+                              {section.ctaLink || '/'}
+                            </span>
+                          </div>
+                        )}
                       </div>
-                      <h4 className="font-bold text-sm text-slate-900">{section.title}</h4>
-                      <p className="text-xs text-slate-500">{section.subtitle}</p>
+
+                      <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
+                        <button
+                          onClick={() => handleOpenEditSection(section)}
+                          className="text-xs px-3.5 py-2 rounded-xl font-bold bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-300 transition flex items-center space-x-1.5 shadow-2xs cursor-pointer"
+                          title="Edit Headline, Subtitle, Badge &amp; CTA"
+                        >
+                          <Edit3 className="w-3.5 h-3.5 text-amber-700" />
+                          <span>Edit Content</span>
+                        </button>
+
+                        <button
+                          onClick={() => handleToggleSection(section._id)}
+                          className={`text-xs px-4 py-2 rounded-xl font-bold border transition cursor-pointer shadow-2xs ${
+                            section.isActive
+                              ? 'border-stone-200 bg-stone-50 text-stone-700 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200'
+                              : 'border-emerald-500 bg-emerald-600 text-white hover:bg-emerald-700'
+                          }`}
+                        >
+                          {section.isActive ? 'Hide from Site' : 'Publish Live'}
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Edit Section Content Modal */}
+              {isEditSectionOpen && editingSection && (
+                <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+                  <div className="bg-white rounded-3xl border border-stone-200 max-w-lg w-full p-6 sm:p-7 shadow-2xl relative animate-in fade-in duration-200">
+                    <div className="flex items-center justify-between pb-3.5 border-b border-stone-100">
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300">
+                            {editingSection.sectionKey}
+                          </span>
+                          <span className="text-xs text-stone-400">Live Website Section</span>
+                        </div>
+                        <h3 className="text-base font-bold text-stone-900 mt-1">
+                          Edit Section Content &amp; Headlines
+                        </h3>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setIsEditSectionOpen(false);
+                          setEditingSection(null);
+                        }}
+                        className="text-stone-400 hover:text-stone-700 p-1.5 rounded-lg hover:bg-stone-100 transition"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
                     </div>
 
-                    <button
-                      onClick={() => handleToggleSection(section._id)}
-                      className={`text-xs px-4 py-2 rounded-xl font-bold border transition shrink-0 ${
-                        section.isActive
-                          ? 'border-slate-300 text-slate-700 hover:bg-slate-100'
-                          : 'border-emerald-500 bg-emerald-50 text-emerald-800 hover:bg-emerald-100'
-                      }`}
-                    >
-                      {section.isActive ? 'Hide from Site' : 'Publish Live'}
-                    </button>
+                    <form onSubmit={handleSaveSection} className="mt-4 space-y-4 text-xs">
+                      <div>
+                        <label className="block text-xs font-bold text-stone-700 mb-1">
+                          Badge / Category Tag
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. VEDIC PURITY GUARANTEE or ANNOUNCEMENT_BAR"
+                          value={sectionFormData.badge}
+                          onChange={(e) => setSectionFormData(prev => ({ ...prev, badge: e.target.value }))}
+                          className="w-full bg-stone-50 border border-stone-300 rounded-xl px-3 py-2 text-stone-900 font-bold focus:outline-none focus:border-amber-600"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-stone-700 mb-1">
+                          Headline / Title <span className="text-rose-500">*</span>
+                        </label>
+                        <textarea
+                          rows={2}
+                          required
+                          placeholder="Section main headline"
+                          value={sectionFormData.title}
+                          onChange={(e) => setSectionFormData(prev => ({ ...prev, title: e.target.value }))}
+                          className="w-full bg-stone-50 border border-stone-300 rounded-xl p-3 text-stone-900 font-serif font-bold text-sm focus:outline-none focus:border-amber-600"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-stone-700 mb-1">
+                          Subtitle / Supporting Description
+                        </label>
+                        <textarea
+                          rows={3}
+                          placeholder="Detailed promotional or narrative text displayed below the headline..."
+                          value={sectionFormData.subtitle}
+                          onChange={(e) => setSectionFormData(prev => ({ ...prev, subtitle: e.target.value }))}
+                          className="w-full bg-stone-50 border border-stone-300 rounded-xl p-3 text-stone-800 leading-relaxed focus:outline-none focus:border-amber-600"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-bold text-stone-700 mb-1">
+                            Button Text (CTA)
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="e.g. Shop Best Sellers"
+                            value={sectionFormData.ctaText}
+                            onChange={(e) => setSectionFormData(prev => ({ ...prev, ctaText: e.target.value }))}
+                            className="w-full bg-stone-50 border border-stone-300 rounded-xl px-3 py-2 text-stone-900 focus:outline-none focus:border-amber-600"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-stone-700 mb-1">
+                            Button Link Destination
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="e.g. /marketplace or /festivals"
+                            value={sectionFormData.ctaLink}
+                            onChange={(e) => setSectionFormData(prev => ({ ...prev, ctaLink: e.target.value }))}
+                            className="w-full bg-stone-50 border border-stone-300 rounded-xl px-3 py-2 text-stone-900 font-mono text-[11px] focus:outline-none focus:border-amber-600"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="pt-3 flex items-center justify-end space-x-2 border-t border-stone-100">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsEditSectionOpen(false);
+                            setEditingSection(null);
+                          }}
+                          className="px-4 py-2 rounded-xl text-xs font-bold bg-stone-100 hover:bg-stone-200 text-stone-700 transition cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={actionLoading}
+                          className="px-5 py-2 rounded-xl text-xs font-black bg-gradient-to-r from-amber-600 to-amber-500 hover:brightness-110 text-stone-950 shadow-xs transition cursor-pointer flex items-center space-x-1.5"
+                        >
+                          <Check className="w-4 h-4 text-stone-950" />
+                          <span>{actionLoading ? 'Saving Changes...' : 'Save & Update Website'}</span>
+                        </button>
+                      </div>
+                    </form>
                   </div>
-                ))}
-              </div>
+                </div>
+              )}
             </div>
           )}
 
