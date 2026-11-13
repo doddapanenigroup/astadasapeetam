@@ -14,7 +14,7 @@ import {
 import { 
   Home, Flame, Sparkles, Calendar, Compass, Landmark, 
   BookOpen, Clock, Video, ShoppingBag, ChevronDown, Search, 
-  ShoppingCart, Menu, X, Bus, Play 
+  ShoppingCart, Menu, X, Bus, Play, User, Package, LogOut 
 } from 'lucide-react';
 
 const iconMap = {
@@ -27,6 +27,8 @@ export default function HeaderNav() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [userRole, setUserRole] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const pathname = usePathname();
 
@@ -36,6 +38,19 @@ export default function HeaderNav() {
     try {
       const role = localStorage.getItem('astada_role');
       if (role) setUserRole(role);
+
+      const syncUserData = () => {
+        try {
+          const storedUser = localStorage.getItem('astada_user');
+          if (storedUser) {
+            setCurrentUser(JSON.parse(storedUser));
+          } else if (role) {
+            setCurrentUser({ name: 'Devotee', role });
+          }
+        } catch {}
+      };
+      syncUserData();
+      window.addEventListener('devoteeUpdated', syncUserData);
 
       const current = getStoredBranding();
       setBranding(current);
@@ -77,6 +92,7 @@ export default function HeaderNav() {
 
       return () => {
         window.removeEventListener('brandingUpdated', handleUpdate);
+        window.removeEventListener('devoteeUpdated', syncUserData);
         window.removeEventListener('cartUpdated', updateCartCount);
         window.removeEventListener('storage', updateCartCount);
         window.removeEventListener('keydown', handleKeyDown);
@@ -295,45 +311,140 @@ export default function HeaderNav() {
           </Link>
 
           {userRole ? (
-            <div className="flex items-center space-x-2 pl-1 border-l border-stone-200">
-              <Link
-                href={
-                  userRole === 'admin' 
-                    ? '/admin' 
-                    : userRole === 'astrologer' 
-                    ? '/astrologer' 
-                    : userRole === 'digital_marketing' 
-                    ? '/marketing' 
-                    : '/'
-                }
-                className={`text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-xs transition flex items-center space-x-1 ${
-                  userRole === 'admin'
-                    ? 'bg-rose-800 hover:bg-rose-900'
-                    : userRole === 'astrologer'
-                    ? 'bg-purple-800 hover:bg-purple-900'
-                    : 'bg-amber-600 hover:bg-amber-700'
-                }`}
-              >
-                <span>
-                  {userRole === 'admin' && '👑 Admin Console'}
-                  {userRole === 'astrologer' && '🔮 Astrologer Workspace'}
-                  {userRole === 'digital_marketing' && '📢 Marketing Studio'}
-                  {userRole === 'devotee' && '🙏 My Profile'}
-                </span>
-              </Link>
-              <button
-                onClick={() => {
-                  localStorage.removeItem('astada_token');
-                  localStorage.removeItem('astada_role');
-                  localStorage.removeItem('astada_user');
-                  setUserRole(null);
-                  window.location.href = '/';
-                }}
-                className="text-[11px] text-stone-500 hover:text-stone-800 underline cursor-pointer"
-                title="Log out"
-              >
-                Logout
-              </button>
+            <div className="flex items-center space-x-2 pl-1 border-l border-stone-200 relative">
+              {/* Quick Admin Console Button for Admins */}
+              {userRole === 'admin' && (
+                <Link
+                  href="/admin"
+                  className="hidden md:inline-flex items-center gap-1 bg-[#78131e] hover:bg-[#600e17] text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg shadow-2xs transition"
+                  title="Admin Console"
+                >
+                  <span>👑 Admin Console</span>
+                </Link>
+              )}
+
+              {/* Devotee Profile Photo / My Account Pill */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setUserMenuOpen(prev => !prev)}
+                  className="flex items-center gap-1.5 p-1 pr-2 rounded-full hover:bg-amber-50 border border-stone-200 hover:border-amber-400 transition cursor-pointer group shadow-2xs"
+                  title="Devotee My Account & Live Tracking"
+                >
+                  <img
+                    src={currentUser?.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80"}
+                    alt={currentUser?.name || "Devotee Profile"}
+                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover border-2 border-amber-400 group-hover:scale-105 transition-transform"
+                  />
+                  <div className="hidden sm:flex flex-col text-left -space-y-0.5">
+                    <span className="text-[11px] font-extrabold text-stone-800 group-hover:text-[#78131e] max-w-[95px] truncate">
+                      {currentUser?.name || (userRole === 'admin' ? 'Gowrav V.' : 'Devotee')}
+                    </span>
+                    <span className="text-[9px] text-amber-800 font-semibold tracking-wider">
+                      My Account ▾
+                    </span>
+                  </div>
+                </button>
+
+                {/* Account & Orders Dropdown Menu */}
+                {userMenuOpen && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-40" 
+                      onClick={() => setUserMenuOpen(false)} 
+                    />
+                    <div className="absolute right-0 top-full mt-2 w-60 bg-white rounded-2xl shadow-xl border border-[#ebdcc7] py-2 z-50 animate-in fade-in zoom-in-95">
+                      <div className="px-3.5 py-2.5 border-b border-stone-100 flex items-center gap-2.5">
+                        <img
+                          src={currentUser?.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80"}
+                          alt=""
+                          className="w-10 h-10 rounded-full object-cover border-2 border-amber-300"
+                        />
+                        <div className="overflow-hidden">
+                          <p className="text-xs font-bold text-stone-900 truncate">
+                            {currentUser?.name || 'Gowrav Vungarala'}
+                          </p>
+                          <p className="text-[10px] text-stone-500 truncate">
+                            {currentUser?.email || (userRole ? `${userRole}@astadasapeetam.com` : 'devotee@astadasapeetam.com')}
+                          </p>
+                          <span className="inline-block mt-0.5 text-[9px] font-black uppercase tracking-wider text-amber-800 bg-amber-100 px-1.5 py-0.2 rounded-full">
+                            {userRole === 'admin' ? '👑 Admin & Devotee' : '🙏 Devotee'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="py-1 text-xs text-stone-700">
+                        <Link
+                          href="/my-account"
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center gap-2.5 px-3.5 py-2 hover:bg-amber-50 hover:text-[#78131e] font-bold text-[#78131e]"
+                        >
+                          <Package className="w-4 h-4 text-[#78131e]" />
+                          <span>My Orders &amp; Package Tracking</span>
+                        </Link>
+
+                        <Link
+                          href="/my-account"
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center gap-2.5 px-3.5 py-2 hover:bg-amber-50 hover:text-[#78131e] font-medium"
+                        >
+                          <User className="w-4 h-4 text-amber-700" />
+                          <span>Devotee Profile &amp; Addresses</span>
+                        </Link>
+
+                        {userRole === 'admin' && (
+                          <Link
+                            href="/admin"
+                            onClick={() => setUserMenuOpen(false)}
+                            className="flex items-center gap-2.5 px-3.5 py-2 hover:bg-rose-50 text-rose-800 font-bold"
+                          >
+                            <span>👑 Admin Console</span>
+                          </Link>
+                        )}
+
+                        {userRole === 'astrologer' && (
+                          <Link
+                            href="/astrologer"
+                            onClick={() => setUserMenuOpen(false)}
+                            className="flex items-center gap-2.5 px-3.5 py-2 hover:bg-purple-50 text-purple-800 font-bold"
+                          >
+                            <span>🔮 Astrologer Workspace</span>
+                          </Link>
+                        )}
+
+                        {userRole === 'digital_marketing' && (
+                          <Link
+                            href="/marketing"
+                            onClick={() => setUserMenuOpen(false)}
+                            className="flex items-center gap-2.5 px-3.5 py-2 hover:bg-amber-50 text-amber-800 font-bold"
+                          >
+                            <span>📢 Marketing Studio</span>
+                          </Link>
+                        )}
+                      </div>
+
+                      <div className="pt-1 border-t border-stone-100">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            localStorage.removeItem('astada_token');
+                            localStorage.removeItem('astada_role');
+                            localStorage.removeItem('astada_user');
+                            setUserRole(null);
+                            setCurrentUser(null);
+                            setUserMenuOpen(false);
+                            window.location.href = '/';
+                          }}
+                          className="w-full flex items-center gap-2.5 px-3.5 py-2 text-stone-600 hover:text-rose-700 hover:bg-rose-50 text-xs font-semibold text-left cursor-pointer"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          <span>Logout</span>
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           ) : (
             <button 
@@ -397,16 +508,54 @@ export default function HeaderNav() {
               </Link>
             );
           })}
-          <div className="pt-2 border-t border-stone-100">
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                setLoginModalOpen(true);
-              }}
-              className="w-full bg-[#78131e] hover:bg-[#600e17] text-white text-xs font-semibold px-4 py-2 rounded-md shadow-sm transition-colors text-center"
-            >
-              Login / Register
-            </button>
+          <div className="pt-2 border-t border-stone-100 space-y-2">
+            {userRole ? (
+              <>
+                <Link
+                  href="/my-account"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full flex items-center justify-center gap-2 bg-amber-50 hover:bg-amber-100 text-[#78131e] border border-amber-300 text-xs font-bold px-4 py-2.5 rounded-xl shadow-xs transition"
+                >
+                  <Package className="w-4 h-4" />
+                  <span>📦 My Orders &amp; Package Tracking</span>
+                </Link>
+
+                {userRole === 'admin' && (
+                  <Link
+                    href="/admin"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full flex items-center justify-center gap-2 bg-rose-800 hover:bg-rose-900 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-xs transition"
+                  >
+                    <span>👑 Open Admin Console</span>
+                  </Link>
+                )}
+
+                <button
+                  onClick={() => {
+                    localStorage.removeItem('astada_token');
+                    localStorage.removeItem('astada_role');
+                    localStorage.removeItem('astada_user');
+                    setUserRole(null);
+                    setCurrentUser(null);
+                    setMobileMenuOpen(false);
+                    window.location.href = '/';
+                  }}
+                  className="w-full text-center text-stone-500 hover:text-stone-800 text-xs underline py-1"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setLoginModalOpen(true);
+                }}
+                className="w-full bg-[#78131e] hover:bg-[#600e17] text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-sm transition-colors text-center"
+              >
+                Login / Register
+              </button>
+            )}
           </div>
         </div>
       )}
