@@ -27,6 +27,7 @@ export default function HeaderNav() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [userRole, setUserRole] = useState(null);
+  const [cartCount, setCartCount] = useState(0);
   const pathname = usePathname();
 
   const [branding, setBranding] = useState(DEFAULT_BRANDING);
@@ -47,6 +48,25 @@ export default function HeaderNav() {
       };
       window.addEventListener('brandingUpdated', handleUpdate);
 
+      // Cart count sync
+      const updateCartCount = () => {
+        try {
+          const raw = localStorage.getItem('astada_cart');
+          if (raw) {
+            const items = JSON.parse(raw);
+            const count = items.reduce((sum, item) => sum + (item.quantity || 1), 0);
+            setCartCount(count);
+          } else {
+            setCartCount(0);
+          }
+        } catch {
+          setCartCount(0);
+        }
+      };
+      updateCartCount();
+      window.addEventListener('cartUpdated', updateCartCount);
+      window.addEventListener('storage', updateCartCount);
+
       const handleKeyDown = (e) => {
         if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
           e.preventDefault();
@@ -57,6 +77,8 @@ export default function HeaderNav() {
 
       return () => {
         window.removeEventListener('brandingUpdated', handleUpdate);
+        window.removeEventListener('cartUpdated', updateCartCount);
+        window.removeEventListener('storage', updateCartCount);
         window.removeEventListener('keydown', handleKeyDown);
       };
     } catch {}
@@ -265,9 +287,11 @@ export default function HeaderNav() {
             aria-label="Cart & Marketplace"
           >
             <ShoppingCart className="w-4 h-4" />
-            <span className="absolute top-0.5 right-0.5 bg-amber-500 text-stone-900 font-bold text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
-              2
-            </span>
+            {cartCount > 0 && (
+              <span className="absolute top-0.5 right-0.5 bg-amber-500 text-stone-900 font-bold text-[10px] w-4 h-4 rounded-full flex items-center justify-center animate-in zoom-in-75">
+                {cartCount}
+              </span>
+            )}
           </Link>
 
           {userRole ? (

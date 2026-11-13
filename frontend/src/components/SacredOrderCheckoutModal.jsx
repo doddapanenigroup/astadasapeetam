@@ -8,7 +8,7 @@ import {
   CheckCircle2, AlertCircle
 } from 'lucide-react';
 
-// Default seeded addresses for the user's phone number matching the screenshots
+// Default seeded addresses matching the user's screenshots exactly
 const DEFAULT_SAVED_ADDRESSES = {
   '8639861707': [
     {
@@ -17,14 +17,14 @@ const DEFAULT_SAVED_ADDRESSES = {
       lastName: 'Chandra',
       addressType: 'Home',
       flat: '14-3127/1, 12th street',
-      area: 'Jayanagar Colony, Ballepalli',
-      landmark: 'Near Bangariaha Function Hall',
+      area: 'Jayanagar Colony, Ballepalli, Ballepalli',
+      landmark: '',
       city: 'KHAMMAM',
       district: 'Khammam',
       state: 'Telangana',
       pincode: '507002',
       phone: '8639861707',
-      alternatePhone: '9848012345',
+      alternatePhone: '',
       email: 'vungowrav19@gmail.com'
     },
     {
@@ -33,8 +33,8 @@ const DEFAULT_SAVED_ADDRESSES = {
       lastName: 'Chandra',
       addressType: 'Office',
       flat: 'Abhishek boys hostel, 2nd floor',
-      area: 'Unites estates block, Vittalwadi',
-      landmark: 'Near Narayanaguda Metro',
+      area: 'Unites estates block, Vittalwadi Vittalwadi.',
+      landmark: '',
       city: 'Hyderabad',
       district: 'Hyderabad',
       state: 'Telangana',
@@ -48,13 +48,29 @@ const DEFAULT_SAVED_ADDRESSES = {
       firstName: 'Gowrav',
       lastName: '-',
       addressType: 'Others',
-      flat: 'Abhishrey boys hostel',
-      area: 'Beside Shanti Theatre, Narayanaguda',
-      landmark: 'Shanti Theatre lane',
+      flat: 'Abhishrey boys hostel near Shanti Theatre',
+      area: 'narayanaguda, Beside Shanti Theatre',
+      landmark: '',
       city: 'Hyderabad',
       district: 'Hyderabad',
       state: 'Telangana',
       pincode: '500029',
+      phone: '8639861707',
+      alternatePhone: '',
+      email: 'vungowrav19@gmail.com'
+    },
+    {
+      id: 'addr-4',
+      firstName: 'Gowrav',
+      lastName: 'Chandra',
+      addressType: 'Home',
+      flat: '14-3-127/1, 12th Street',
+      area: 'Jayanagar Colony, Ballepalli',
+      landmark: 'Near Bangariaha Function Hall',
+      city: 'Khammam',
+      district: 'Khammam',
+      state: 'Telangana',
+      pincode: '507002',
       phone: '8639861707',
       alternatePhone: '',
       email: 'vungowrav19@gmail.com'
@@ -140,16 +156,24 @@ export default function SacredOrderCheckoutModal({
       // Check localStorage for addresses linked to phone
       const phoneKey = 'astada_addresses_' + userPhone;
       const stored = localStorage.getItem(phoneKey);
+      let list = null;
       if (stored) {
-        const parsed = JSON.parse(stored);
-        setSavedAddresses(parsed);
-        if (parsed.length > 0) setSelectedAddressId(parsed[0].id);
-      } else {
-        // Fallback to default sample addresses for this phone
-        const defaults = DEFAULT_SAVED_ADDRESSES[userPhone] || DEFAULT_SAVED_ADDRESSES['8639861707'];
-        setSavedAddresses(defaults);
-        if (defaults.length > 0) setSelectedAddressId(defaults[0].id);
-        localStorage.setItem(phoneKey, JSON.stringify(defaults));
+        try {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) list = parsed;
+        } catch {}
+      }
+      if (!list) {
+        list = DEFAULT_SAVED_ADDRESSES[userPhone] || DEFAULT_SAVED_ADDRESSES['8639861707'];
+        localStorage.setItem(phoneKey, JSON.stringify(list));
+      }
+      setSavedAddresses(list);
+
+      const savedActiveId = localStorage.getItem('astada_active_address_id');
+      if (savedActiveId && list.some(a => a.id === savedActiveId)) {
+        setSelectedAddressId(savedActiveId);
+      } else if (list.length > 0) {
+        setSelectedAddressId(list[0].id);
       }
     } catch {}
   }, [userPhone, isOpen]);
@@ -494,14 +518,25 @@ export default function SacredOrderCheckoutModal({
               </div>
 
               {/* Card 3: Delivery Details */}
-              <div className="bg-white rounded-2xl border border-stone-200/90 shadow-2xs p-4 space-y-2">
+              <div 
+                onClick={() => setCurrentView('saved_addresses')}
+                className="bg-white rounded-2xl border border-stone-200/90 hover:border-amber-400 shadow-2xs p-4 space-y-2 cursor-pointer transition-all group"
+              >
                 <div className="flex items-center justify-between">
-                  <h4 className="font-bold text-stone-900 text-sm">Delivery details</h4>
+                  <h4 className="font-bold text-stone-900 text-sm flex items-center gap-1.5">
+                    <MapPin className="w-4 h-4 text-[#78131e]" />
+                    <span>Delivery details</span>
+                  </h4>
                   <button
-                    onClick={() => setCurrentView('saved_addresses')}
-                    className="text-xs font-bold text-[#78131e] hover:underline cursor-pointer"
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentView('saved_addresses');
+                    }}
+                    className="text-xs font-bold text-[#78131e] group-hover:text-[#9e1c2a] flex items-center gap-0.5 cursor-pointer bg-amber-50 hover:bg-amber-100 px-2 py-0.5 rounded-lg border border-amber-200"
                   >
-                    Change
+                    <span>Change</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
 
@@ -793,6 +828,7 @@ export default function SacredOrderCheckoutModal({
                       key={addr.id}
                       onClick={() => {
                         setSelectedAddressId(addr.id);
+                        try { localStorage.setItem('astada_active_address_id', addr.id); } catch {}
                         setCurrentView('summary');
                       }}
                       className={`p-4 rounded-2xl border transition-all cursor-pointer ${
@@ -809,9 +845,10 @@ export default function SacredOrderCheckoutModal({
                             checked={isSelected}
                             onChange={() => {
                               setSelectedAddressId(addr.id);
+                              try { localStorage.setItem('astada_active_address_id', addr.id); } catch {}
                               setCurrentView('summary');
                             }}
-                            className="mt-1 accent-stone-900 w-4 h-4"
+                            className="mt-1 accent-stone-900 w-4 h-4 cursor-pointer"
                           />
                           <div>
                             <div className="flex items-center gap-2">

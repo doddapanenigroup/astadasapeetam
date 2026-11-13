@@ -64,13 +64,28 @@ export default function MarketplacePage() {
   const [sortBy, setSortBy] = useState('featured');
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   
-  // Cart state - pre-loaded with 1 initial sample item for rich preview
-  const [cartItems, setCartItems] = useState([
-    {
-      ...marketplaceProducts[0],
-      quantity: 1
-    }
-  ]);
+  // Cart state - loaded from localStorage, defaulting to empty
+  const [cartItems, setCartItems] = useState([]);
+
+  // Load cart from localStorage on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('astada_cart');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) setCartItems(parsed);
+      }
+    } catch {}
+  }, []);
+
+  // Sync cart to localStorage whenever it changes & notify header
+  useEffect(() => {
+    try {
+      localStorage.setItem('astada_cart', JSON.stringify(cartItems));
+      window.dispatchEvent(new Event('cartUpdated'));
+    } catch {}
+  }, [cartItems]);
+
   const [cartOpen, setCartOpen] = useState(false);
   const [couponCode, setCouponCode] = useState('');
   const [couponApplied, setCouponApplied] = useState(false);
