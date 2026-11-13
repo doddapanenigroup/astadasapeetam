@@ -7,6 +7,7 @@ import DynamicFestivalAlert from '../components/DynamicFestivalAlert';
 import AstrologerConsultBanner from '../components/AstrologerConsultBanner';
 import ArticlesAndVideos from '../components/ArticlesAndVideos';
 import DynamicMarketplaceSpotlight from '../components/DynamicMarketplaceSpotlight';
+import EpaperSpotlightCard from '../components/EpaperSpotlightCard';
 import ProductsAndFestivalsRow from '../components/ProductsAndFestivalsRow';
 import RightSidebarFull from '../components/RightSidebarFull';
 import FooterNewsletterApp from '../components/FooterNewsletterApp';
@@ -53,9 +54,19 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Marketplace Promotional Ribbon (Dynamic from Admin Console) */}
-        <div className="my-4">
-          <DynamicMarketplaceSpotlight />
+        {/* Marketplace Promotional Spotlight + E-Paper Side-by-Side on the Same Level */}
+        <div className="w-full my-4">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+            {/* Left: 100% Satvik Pooja Kits Banner (Decreased width: Col 8 on LG, Col 9 on XL) */}
+            <div className="lg:col-span-8 xl:col-span-9 flex">
+              <DynamicMarketplaceSpotlight />
+            </div>
+
+            {/* Right: E-Paper Card (Side by side on the exact same level: Col 4 on LG, Col 3 on XL) */}
+            <div className="lg:col-span-4 xl:col-span-3 flex">
+              <EpaperSpotlightCard />
+            </div>
+          </div>
         </div>
 
         {/* Same-Level 3-Card Section: Recommended Devotional Products + Upcoming Festivals + Google Ad */}

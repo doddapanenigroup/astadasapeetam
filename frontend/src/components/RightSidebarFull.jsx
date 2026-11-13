@@ -302,34 +302,6 @@ export default function RightSidebarFull() {
           </div>
         </div>
       </div>
-
-      {/* 10. E-Paper Card */}
-      <div className="bg-[#fffdfa] rounded-2xl border border-[#ebdcc7] p-3.5 shadow-2xs">
-        <h4 className="text-xs font-bold text-[#78131e] font-serif mb-1.5">
-          E-Paper
-        </h4>
-
-        <div className="flex items-center justify-between gap-2">
-          <div>
-            <p className="text-[10px] text-stone-700 leading-snug max-w-[130px] mb-2">
-              Read Today's Devotional News Paper Online
-            </p>
-            <Link
-              href="/epaper"
-              className="inline-block bg-[#78131e] hover:bg-[#5e0d16] text-white text-[9px] font-bold px-3 py-1 rounded shadow-2xs transition-colors"
-            >
-              Read Now &rarr;
-            </Link>
-          </div>
-          <Link href="/epaper" className="shrink-0 hover:opacity-90 transition-opacity">
-            <img
-              src="/images/epaper_thumb.png"
-              alt="E-Paper"
-              className="w-12 h-14 object-contain rounded border border-stone-200 shadow-2xs"
-            />
-          </Link>
-        </div>
-      </div>
     </aside>
   );
 }
