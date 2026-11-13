@@ -9,6 +9,7 @@ import {
   ArrowRight, Lock, Gift, Eye, Heart, Check, Phone, MapPin
 } from 'lucide-react';
 import { marketplaceCategories, marketplaceProducts } from '../../data/marketplaceData';
+import SacredOrderCheckoutModal from '../../components/SacredOrderCheckoutModal';
 
 export default function MarketplacePage() {
   // Live dynamic products synced with Digital Marketing backend
@@ -601,197 +602,15 @@ export default function MarketplacePage() {
         </div>
       )}
 
-      {/* 5. Checkout Modal */}
-      {checkoutModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border border-[#ebdcc7] animate-in fade-in zoom-in-95 duration-200">
-            
-            {!orderConfirmed ? (
-              <div>
-                {/* Header */}
-                <div className="bg-[#78131e] text-white p-4 flex items-center justify-between">
-                  <div>
-                    <h3 className="font-serif font-bold text-lg flex items-center gap-2">
-                      <Lock className="w-4 h-4 text-amber-300" />
-                      <span>Sacred Order Checkout</span>
-                    </h3>
-                    <p className="text-amber-200 text-xs">Vedic sanctified dispatch with Gangajal</p>
-                  </div>
-                  <button 
-                    suppressHydrationWarning
-                    onClick={() => setCheckoutModalOpen(false)}
-                    className="text-stone-300 hover:text-white"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-
-                {/* Form */}
-                <form onSubmit={handlePlaceOrder} className="p-5 space-y-4 text-xs sm:text-sm">
-                  {/* Order Total pill */}
-                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex justify-between items-center text-xs">
-                    <div>
-                      <span className="font-bold text-stone-800">Total Payable ({totalItemsCount} items):</span>
-                      <p className="text-[11px] text-stone-500">Includes sacred packaging & tax</p>
-                    </div>
-                    <span className="text-lg font-black text-[#78131e]">₹{finalTotal.toLocaleString()}</span>
-                  </div>
-
-                  {/* Delivery Inputs */}
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-stone-700 font-bold mb-1">Devotee Full Name *</label>
-                      <input
-                        suppressHydrationWarning
-                        type="text"
-                        required
-                        placeholder="e.g. S. Ramanujam"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full bg-stone-50 border border-stone-300 rounded-lg px-3 py-2 text-xs focus:outline-hidden focus:border-[#78131e]"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-stone-700 font-bold mb-1">WhatsApp / Phone *</label>
-                        <input
-                          suppressHydrationWarning
-                          type="tel"
-                          required
-                          placeholder="+91 98765 43210"
-                          value={formData.phone}
-                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                          className="w-full bg-stone-50 border border-stone-300 rounded-lg px-3 py-2 text-xs focus:outline-hidden focus:border-[#78131e]"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-stone-700 font-bold mb-1">Pin Code *</label>
-                        <input
-                          suppressHydrationWarning
-                          type="text"
-                          required
-                          placeholder="e.g. 500001"
-                          value={formData.pincode}
-                          onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
-                          className="w-full bg-stone-50 border border-stone-300 rounded-lg px-3 py-2 text-xs focus:outline-hidden focus:border-[#78131e]"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-stone-700 font-bold mb-1">Complete Delivery Address *</label>
-                      <textarea
-                        suppressHydrationWarning
-                        rows={2}
-                        required
-                        placeholder="Flat No, House/Building, Street, Landmark, City, State"
-                        value={formData.address}
-                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                        className="w-full bg-stone-50 border border-stone-300 rounded-lg px-3 py-2 text-xs focus:outline-hidden focus:border-[#78131e]"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Payment Method */}
-                  <div>
-                    <label className="block text-stone-700 font-bold mb-1.5">Select Payment Option</label>
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <label className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer ${
-                        formData.paymentMethod === 'upi' ? 'border-[#78131e] bg-amber-50/50 font-bold' : 'border-stone-200'
-                      }`}>
-                        <input
-                          suppressHydrationWarning
-                          type="radio"
-                          name="payment"
-                          checked={formData.paymentMethod === 'upi'}
-                          onChange={() => setFormData({ ...formData, paymentMethod: 'upi' })}
-                          className="text-[#78131e]"
-                        />
-                        <span>⚡ UPI / GPay / PhonePe</span>
-                      </label>
-                      <label className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer ${
-                        formData.paymentMethod === 'cod' ? 'border-[#78131e] bg-amber-50/50 font-bold' : 'border-stone-200'
-                      }`}>
-                        <input
-                          suppressHydrationWarning
-                          type="radio"
-                          name="payment"
-                          checked={formData.paymentMethod === 'cod'}
-                          onChange={() => setFormData({ ...formData, paymentMethod: 'cod' })}
-                          className="text-[#78131e]"
-                        />
-                        <span>💵 Cash on Delivery</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* Sacred Blessing checkbox */}
-                  <label className="flex items-center gap-2 text-xs text-stone-600 bg-stone-50 p-2 rounded-lg cursor-pointer">
-                    <input
-                      suppressHydrationWarning
-                      type="checkbox"
-                      checked={formData.blessingNotes}
-                      onChange={(e) => setFormData({ ...formData, blessingNotes: e.target.checked })}
-                      className="rounded text-[#78131e]"
-                    />
-                    <span>Include complimentary Holy Gangajal & Temple Kumkum in parcel</span>
-                  </label>
-
-                  {/* Submit */}
-                  <button
-                    suppressHydrationWarning
-                    type="submit"
-                    className="w-full bg-[#78131e] hover:bg-[#600e17] text-white font-bold py-3 rounded-xl shadow-md transition-colors text-sm flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <CheckCircle2 className="w-4 h-4 text-amber-300" />
-                    <span>Confirm Order & Pay ₹{finalTotal.toLocaleString()}</span>
-                  </button>
-                </form>
-              </div>
-            ) : (
-              /* Grand Order Confirmed Screen */
-              <div className="p-6 text-center space-y-4">
-                <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto text-emerald-600">
-                  <CheckCircle2 className="w-10 h-10" />
-                </div>
-                <h3 className="text-xl font-serif font-black text-stone-900">
-                  Dhanya Vadamulu! Order Confirmed
-                </h3>
-                <p className="text-xs text-stone-600 max-w-sm mx-auto">
-                  Your sacred order <span className="font-mono font-bold text-stone-900">#AST-{Math.floor(100000 + Math.random() * 900000)}</span> has been received with great reverence. Our Vedic priests will sanctify the package before dispatch.
-                </p>
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-left text-xs space-y-1.5">
-                  <div className="flex justify-between">
-                    <span className="text-stone-500">Devotee:</span>
-                    <span className="font-bold text-stone-800">{formData.name}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-stone-500">Delivery To:</span>
-                    <span className="font-medium text-stone-800 truncate max-w-[200px]">{formData.address}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-stone-500">Expected Dispatch:</span>
-                    <span className="font-bold text-emerald-700">Tomorrow Morning (Auspicious Muhurtham)</span>
-                  </div>
-                </div>
-                <button
-                  suppressHydrationWarning
-                  onClick={() => {
-                    setOrderConfirmed(false);
-                    setCheckoutModalOpen(false);
-                    setCartItems([]);
-                  }}
-                  className="bg-[#78131e] text-white text-xs font-bold px-6 py-2.5 rounded-xl cursor-pointer"
-                >
-                  Continue Exploring Marketplace
-                </button>
-              </div>
-            )}
-
-          </div>
-        </div>
-      )}
+      {/* 5. Sacred Order Checkout Modal (E-commerce Order Summary & Delivery Flow) */}
+      <SacredOrderCheckoutModal
+        isOpen={checkoutModalOpen}
+        onClose={() => setCheckoutModalOpen(false)}
+        cartItems={cartItems}
+        onOrderSuccess={(orderData) => {
+          setCartItems([]);
+        }}
+      />
 
       {/* 6. Product Quick View Modal */}
       {quickViewProduct && (
