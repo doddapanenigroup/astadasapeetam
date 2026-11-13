@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { headerData } from '../data/mockData';
 import LoginModal from './LoginModal';
+import GlobalSmartSearch from './GlobalSmartSearch';
 import { 
   DEFAULT_BRANDING, 
   getStoredBranding, 
@@ -45,7 +46,19 @@ export default function HeaderNav() {
         applyFaviconToDocument(updated);
       };
       window.addEventListener('brandingUpdated', handleUpdate);
-      return () => window.removeEventListener('brandingUpdated', handleUpdate);
+
+      const handleKeyDown = (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+          e.preventDefault();
+          setSearchOpen(prev => !prev);
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+
+      return () => {
+        window.removeEventListener('brandingUpdated', handleUpdate);
+        window.removeEventListener('keydown', handleKeyDown);
+      };
     } catch {}
   }, []);
 
@@ -218,11 +231,28 @@ export default function HeaderNav() {
         </nav>
 
         {/* Action Controls: Search, Cart, Login */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-auto pl-3 bg-white z-10">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-auto pl-2 bg-white z-10">
+          {/* Desktop Global Smart Search Trigger Bar */}
           <button 
             suppressHydrationWarning
-            onClick={() => setSearchOpen(!searchOpen)} 
-            className="p-1.5 sm:p-2 text-stone-600 hover:text-[#78131e] transition-colors rounded-full hover:bg-stone-100 cursor-pointer"
+            onClick={() => setSearchOpen(true)} 
+            className="hidden lg:flex items-center gap-2 bg-[#fcf9f4] hover:bg-[#f6efe4] border border-[#e4d4be] hover:border-amber-400 text-stone-500 hover:text-stone-800 px-3 py-1.5 rounded-full text-xs transition-all cursor-pointer shadow-2xs group"
+            aria-label="Global Smart Search"
+          >
+            <Search className="w-3.5 h-3.5 text-stone-400 group-hover:text-[#78131e] transition-colors" />
+            <span className="text-stone-500 group-hover:text-stone-700 font-medium whitespace-nowrap">
+              Search temples, slokas, festivals, pooja kits...
+            </span>
+            <kbd className="inline-flex items-center bg-white border border-stone-200 text-[10px] text-stone-400 px-1.5 py-0.5 rounded font-mono shadow-2xs ml-1 font-semibold">
+              ⌘K
+            </kbd>
+          </button>
+
+          {/* Mobile/Tablet Search Button */}
+          <button 
+            suppressHydrationWarning
+            onClick={() => setSearchOpen(true)} 
+            className="lg:hidden p-1.5 sm:p-2 text-stone-600 hover:text-[#78131e] transition-colors rounded-full hover:bg-stone-100 cursor-pointer"
             aria-label="Search"
           >
             <Search className="w-4 h-4" />
@@ -303,25 +333,26 @@ export default function HeaderNav() {
         </div>
       </div>
 
-      {/* Expandable Search Input */}
-      {searchOpen && (
-        <div className="bg-[#fcf8f2] px-4 py-2.5 border-t border-[#ebdcc7]">
-          <div className="max-w-2xl mx-auto flex items-center gap-2">
-            <Search className="w-4 h-4 text-stone-400" />
-            <input 
-              suppressHydrationWarning
-              type="text" 
-              placeholder="Search slokas, temples, panchangam, deities, or pooja kits..."
-              className="w-full bg-white border border-[#e2d4be] px-3 py-1.5 rounded-md text-sm outline-none focus:border-[#78131e]"
-              autoFocus
-            />
-          </div>
-        </div>
-      )}
+      {/* Global Smart Search Modal */}
+      <GlobalSmartSearch 
+        isOpen={searchOpen} 
+        onClose={() => setSearchOpen(false)} 
+      />
 
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
-        <div className="xl:hidden bg-white border-t border-[#ebdcc7] px-4 py-4 space-y-2 shadow-lg">
+        <div className="xl:hidden bg-white border-t border-[#ebdcc7] px-4 py-4 space-y-2.5 shadow-lg">
+          {/* Mobile Global Search Button */}
+          <button
+            onClick={() => {
+              setMobileMenuOpen(false);
+              setSearchOpen(true);
+            }}
+            className="w-full flex items-center gap-2.5 px-3 py-2 bg-amber-50/70 hover:bg-amber-100/70 border border-amber-200/90 rounded-xl text-stone-700 text-xs font-semibold transition"
+          >
+            <Search className="w-4 h-4 text-[#78131e]" />
+            <span>Search temples, slokas, festivals, pooja kits...</span>
+          </button>
           {headerData.navItems.map((item, idx) => {
             const isActive = item.href === '/' 
               ? pathname === '/' 

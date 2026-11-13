@@ -44,6 +44,19 @@ export default function SlokasPage() {
     };
   }, []);
 
+  // Read URL query params on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const q = params.get('search');
+        if (q) setSearchQuery(q);
+        const cat = params.get('category');
+        if (cat) setActiveCategory(cat);
+      } catch {}
+    }
+  }, []);
+
   // Filter slokas based on active category and search query
   const filteredSlokas = useMemo(() => {
     return allSlokasData.filter(sloka => {

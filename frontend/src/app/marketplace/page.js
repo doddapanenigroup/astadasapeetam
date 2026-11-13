@@ -47,6 +47,19 @@ export default function MarketplacePage() {
   // State
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Read URL query params on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const q = params.get('search');
+        if (q) setSearchQuery(q);
+        const cat = params.get('category');
+        if (cat) setSelectedCategory(cat);
+      } catch {}
+    }
+  }, []);
   const [sortBy, setSortBy] = useState('featured');
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   
