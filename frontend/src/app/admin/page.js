@@ -1448,35 +1448,10 @@ export default function UnifiedConsolePage() {
                     window.location.href = '/';
                   }}
                   className="text-purple-300 hover:text-rose-300 p-1.5 rounded-lg hover:bg-white/10 transition shrink-0 cursor-pointer"
-                  title="Sign Out"
+                  title="Sign Out / Logout"
                 >
                   <LogOut className="w-4 h-4" />
                 </button>
-              </div>
-
-              {/* Devotee Social Channels Dock */}
-              <div className="pt-2 border-t border-purple-500/20">
-                <div className="text-[9px] uppercase font-mono tracking-wider text-amber-300/80 mb-1.5 flex items-center justify-between">
-                  <span>Devotee Channels</span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-                </div>
-                <div className="grid grid-cols-5 gap-1.5">
-                  <a href={socialProfiles.whatsapp} target="_blank" rel="noreferrer" title="Chat on WhatsApp" className="flex items-center justify-center p-2 rounded-lg bg-[#25D366]/20 hover:bg-[#25D366] text-[#25D366] hover:text-white transition-all duration-200">
-                    <WhatsAppIcon className="w-3.5 h-3.5" />
-                  </a>
-                  <a href={socialProfiles.instagram} target="_blank" rel="noreferrer" title="Open Instagram" className="flex items-center justify-center p-2 rounded-lg bg-[#E1306C]/20 hover:bg-[#E1306C] text-[#E1306C] hover:text-white transition-all duration-200">
-                    <InstagramIcon className="w-3.5 h-3.5" />
-                  </a>
-                  <a href={socialProfiles.facebook} target="_blank" rel="noreferrer" title="Open Facebook" className="flex items-center justify-center p-2 rounded-lg bg-[#1877F2]/20 hover:bg-[#1877F2] text-[#1877F2] hover:text-white transition-all duration-200">
-                    <FacebookIcon className="w-3.5 h-3.5" />
-                  </a>
-                  <a href={socialProfiles.youtube} target="_blank" rel="noreferrer" title="Open YouTube" className="flex items-center justify-center p-2 rounded-lg bg-[#FF0000]/20 hover:bg-[#FF0000] text-[#FF0000] hover:text-white transition-all duration-200">
-                    <YoutubeIcon className="w-3.5 h-3.5" />
-                  </a>
-                  <a href={socialProfiles.twitter} target="_blank" rel="noreferrer" title="Open X" className="flex items-center justify-center p-2 rounded-lg bg-white/10 hover:bg-white/30 text-purple-100 hover:text-white transition-all duration-200">
-                    <TwitterXIcon className="w-3.5 h-3.5" />
-                  </a>
-                </div>
               </div>
             </div>
           ) : (

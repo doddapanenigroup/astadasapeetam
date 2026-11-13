@@ -426,6 +426,27 @@ export default function HeaderNav() {
             )}
           </div>
 
+          {/* Logout Option Right Next to Profile (Shown ONLY when logged in) */}
+          {userRole && (
+            <button
+              type="button"
+              suppressHydrationWarning
+              onClick={() => {
+                localStorage.removeItem('astada_token');
+                localStorage.removeItem('astada_role');
+                localStorage.removeItem('astada_user');
+                setUserRole(null);
+                setCurrentUser(null);
+                setUserMenuOpen(false);
+                window.location.href = '/';
+              }}
+              className="text-xs font-semibold text-stone-600 hover:text-[#78131e] underline cursor-pointer pl-1 transition-colors whitespace-nowrap"
+              title="Logout from account"
+            >
+              Logout
+            </button>
+          )}
+
           {/* Mobile hamburger button */}
           <button 
             suppressHydrationWarning
