@@ -20,6 +20,7 @@ const videoRoutes = require('./src/routes/videoRoutes');
 const festivalCalendarRoutes = require('./src/routes/festivalCalendarRoutes');
 const settingRoutes = require('./src/routes/settingRoutes');
 const publicRoutes = require('./src/routes/publicRoutes');
+const vendorRoutes = require('./src/routes/vendorRoutes');
 const errorHandler = require('./src/middleware/errorHandler');
 
 // Models for auto-seeding
@@ -31,6 +32,7 @@ const Post = require('./src/models/Post');
 const Video = require('./src/models/Video');
 const FestivalCalendar = require('./src/models/FestivalCalendar');
 const Setting = require('./src/models/Setting');
+const Vendor = require('./src/models/Vendor');
 
 const app = express();
 
@@ -80,6 +82,7 @@ app.use('/api/posts', postRoutes);
 app.use('/api/videos', videoRoutes);
 app.use('/api/festival-calendar', festivalCalendarRoutes);
 app.use('/api/settings', settingRoutes);
+app.use('/api', vendorRoutes);
 
 // Custom Error Handler
 app.use(errorHandler);
@@ -737,6 +740,76 @@ const startServer = async () => {
         ];
         await FestivalCalendar.insertMany(initialFestivals);
         console.log(`✅ ${initialFestivals.length} Vedic Festival Calendar Entries Seeded Successfully`);
+      }
+
+      // 8. Seed initial Verified Marketplace Vendors
+      const vendorCount = await Vendor.countDocuments();
+      if (vendorCount === 0) {
+        console.log('🌱 Seeding initial Verified Marketplace Vendors...');
+        const initialVendors = [
+          {
+            shopName: 'Kumbakonam Divine Brass & Idols',
+            contactPerson: 'V. Sunder Raman',
+            phone: '9848012345',
+            email: 'sunder.kumbakonam@sacredcrafts.in',
+            category: 'yantras-idols',
+            commissionRate: 20, // 20% platform profit
+            pickupAddress: {
+              street: '42, Nageswaran South Street, Near Temple Gate',
+              city: 'Kumbakonam',
+              state: 'Tamil Nadu',
+              pincode: '612001'
+            },
+            shiprocketPickupLocation: 'Kumbakonam_Primary',
+            status: 'active',
+            totalOrdersFulfilled: 142,
+            totalSalesGross: 184500,
+            platformCommissionEarned: 36900,
+            pendingVendorPayout: 147600
+          },
+          {
+            shopName: 'Haridwar Siddha Rudraksha Kendra',
+            contactPerson: 'Pt. Rakesh Shastri',
+            phone: '9876543210',
+            email: 'rakesh.haridwar@rudrakshasiddhi.com',
+            category: 'rudraksha',
+            commissionRate: 25, // 25% platform profit
+            pickupAddress: {
+              street: '12, Har Ki Pauri Ghat Marg',
+              city: 'Haridwar',
+              state: 'Uttarakhand',
+              pincode: '249401'
+            },
+            shiprocketPickupLocation: 'Haridwar_Ghat_01',
+            status: 'active',
+            totalOrdersFulfilled: 218,
+            totalSalesGross: 327000,
+            platformCommissionEarned: 81750,
+            pendingVendorPayout: 245250
+          },
+          {
+            shopName: 'Srisailam Temple Pooja Samagri Bhandar',
+            contactPerson: 'K. Narayana Rao',
+            phone: '8639861707',
+            email: 'narayana.srisailam@vedicpooja.org',
+            category: 'pooja-kits',
+            commissionRate: 18, // 18% platform profit
+            pickupAddress: {
+              street: 'Shop 18, Mallikarjuna Temple Ring Road',
+              city: 'Srisailam',
+              state: 'Andhra Pradesh',
+              pincode: '518101'
+            },
+            shiprocketPickupLocation: 'Srisailam_Hub',
+            status: 'active',
+            totalOrdersFulfilled: 95,
+            totalSalesGross: 123400,
+            platformCommissionEarned: 22212,
+            pendingVendorPayout: 101188
+          }
+        ];
+        await Vendor.insertMany(initialVendors);
+        console.log(`✅ ${initialVendors.length} Verified Vendors Seeded Successfully`);
       }
 
 

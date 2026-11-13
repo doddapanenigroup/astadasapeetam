@@ -27,7 +27,8 @@ import {
   TrendingUp,
   RefreshCw,
   Box,
-  Check
+  Check,
+  Building
 } from 'lucide-react';
 
 export default function MarketplaceCommerceStudio({
@@ -37,7 +38,7 @@ export default function MarketplaceCommerceStudio({
   setCampaigns,
   showToast
 }) {
-  // Sub-tabs: 'inventory' | 'orders' | 'payments' | 'coupons'
+  // Sub-tabs: 'inventory' | 'orders' | 'payments' | 'coupons' | 'vendors'
   const [activeSubTab, setActiveSubTab] = useState('inventory');
   const [productCategoryFilter, setProductCategoryFilter] = useState('all');
   const [stockStatusFilter, setStockStatusFilter] = useState('all');
@@ -45,6 +46,108 @@ export default function MarketplaceCommerceStudio({
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const [isAddCouponOpen, setIsAddCouponOpen] = useState(false);
   const [selectedOrderModal, setSelectedOrderModal] = useState(null);
+
+  // Vendor & Shiprocket Logistics state
+  const [vendors, setVendors] = useState([]);
+  const [isAddVendorOpen, setIsAddVendorOpen] = useState(false);
+  const [dispatchResultModal, setDispatchResultModal] = useState(null);
+  const [isDispatching, setIsDispatching] = useState(false);
+  const [newVendorData, setNewVendorData] = useState({
+    shopName: '',
+    contactPerson: '',
+    phone: '',
+    email: '',
+    category: 'all-devotional',
+    commissionRate: 20,
+    street: '',
+    city: '',
+    state: '',
+    pincode: '',
+    accountNumber: '',
+    ifscCode: '',
+    upiId: ''
+  });
+
+  // Fetch verified vendors on mount
+  React.useEffect(() => {
+    fetch('http://localhost:5000/api/vendors')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data) {
+          setVendors(data.data);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleAddNewVendor = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch('http://localhost:5000/api/vendors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          shopName: newVendorData.shopName,
+          contactPerson: newVendorData.contactPerson,
+          phone: newVendorData.phone,
+          email: newVendorData.email,
+          category: newVendorData.category,
+          commissionRate: Number(newVendorData.commissionRate),
+          pickupAddress: {
+            street: newVendorData.street,
+            city: newVendorData.city,
+            state: newVendorData.state,
+            pincode: newVendorData.pincode
+          },
+          bankDetails: {
+            accountNumber: newVendorData.accountNumber,
+            ifscCode: newVendorData.ifscCode,
+            upiId: newVendorData.upiId
+          }
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setVendors([data.data, ...vendors]);
+        setIsAddVendorOpen(false);
+        if (showToast) showToast('success', `Vendor "${data.data.shopName}" registered with ${data.data.commissionRate}% platform commission!`);
+      } else {
+        alert(data.error || 'Failed to register vendor');
+      }
+    } catch (err) {
+      alert('Error registering vendor: ' + err.message);
+    }
+  };
+
+  const handleDispatchCourier = async (order, vendor) => {
+    setIsDispatching(true);
+    try {
+      const res = await fetch('http://localhost:5000/api/logistics/dispatch-pickup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderNumber: order.id,
+          vendorId: vendor?._id,
+          finalPayable: order.finalPaid || order.totalAmount,
+          customer: {
+            name: order.customerName,
+            phone: order.phone,
+            address: order.address
+          },
+          items: order.items
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setDispatchResultModal(data);
+        if (showToast) showToast('success', `Shipment created via ${data.shipment.courierName}! AWB: ${data.shipment.awbCode}`);
+      }
+    } catch (err) {
+      alert('Courier dispatch failed: ' + err.message);
+    } finally {
+      setIsDispatching(false);
+    }
+  };
 
   // Initial Mock Orders demonstrating real ecommerce delivery workflow
   const [orders, setOrders] = useState([
@@ -463,6 +566,18 @@ export default function MarketplaceCommerceStudio({
         >
           <Tag className="w-4 h-4" />
           <span>🎟️ Devotional Coupons &amp; Offers ({couponList.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveSubTab('vendors')}
+          className={`px-4 py-2.5 rounded-xl text-xs font-black transition flex items-center space-x-2 cursor-pointer ${
+            activeSubTab === 'vendors'
+              ? 'bg-[#78131e] text-white shadow-xs'
+              : 'text-stone-700 hover:text-stone-950 hover:bg-white/80'
+          }`}
+        >
+          <Building className="w-4 h-4 text-amber-500" />
+          <span>🏬 Sellers &amp; Shiprocket Logistics ({vendors.length})</span>
         </button>
       </div>
 
@@ -1021,7 +1136,403 @@ export default function MarketplaceCommerceStudio({
       )}
 
       {/* ========================================================================= */}
+      {/* TAB 5: MARKETPLACE SELLERS & SHIPROCKET MULTI-VENDOR LOGISTICS            */}
+      {/* ========================================================================= */}
+      {activeSubTab === 'vendors' && (
+        <div className="space-y-6">
+          {/* Shiprocket Logistics Header Ribbon */}
+          <div className="bg-gradient-to-r from-stone-900 via-stone-850 to-stone-900 rounded-3xl p-6 text-white shadow-md border border-amber-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="space-y-1.5 max-w-2xl">
+              <div className="flex items-center space-x-2">
+                <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full tracking-wider flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span>Shiprocket Multi-Vendor API: Connected</span>
+                </span>
+                <span className="text-xs text-stone-300 font-mono">Doorstep Pickup from Seller Shop</span>
+              </div>
+              <h3 className="text-lg sm:text-xl font-serif font-black tracking-tight text-amber-200">
+                Third-Party Seller Network &amp; Automated Courier Logistics
+              </h3>
+              <p className="text-xs text-stone-300 leading-relaxed">
+                Zero inventory &amp; zero godown required. When devotees place an order, Shiprocket auto-dispatches couriers (Delhivery, Blue Dart, DTDC, India Post) directly to the seller&apos;s shop address. Your platform retains 15%–25% commission on every sale.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => handleDispatchCourier(orders[0], vendors[0])}
+                disabled={isDispatching}
+                className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl border border-white/20 transition cursor-pointer flex items-center space-x-1.5"
+              >
+                <Truck className="w-4 h-4 text-amber-300" />
+                <span>{isDispatching ? 'Dispatching...' : '🚀 Test Live Pickup'}</span>
+              </button>
+
+              <button
+                onClick={() => setIsAddVendorOpen(true)}
+                className="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-black text-xs rounded-xl shadow transition cursor-pointer flex items-center space-x-1.5"
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span>+ Register New Seller</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Revenue & Commission Summary Metrics */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="bg-white p-4 rounded-2xl border border-stone-200 shadow-2xs">
+              <span className="text-stone-500 text-[11px] font-bold uppercase tracking-wider">Verified Sellers</span>
+              <div className="text-xl sm:text-2xl font-black text-stone-900 mt-1">{vendors.length} Shops</div>
+              <div className="text-[10px] text-stone-400 mt-0.5">Kumbakonam, Haridwar, Srisailam</div>
+            </div>
+
+            <div className="bg-white p-4 rounded-2xl border border-stone-200 shadow-2xs">
+              <span className="text-stone-500 text-[11px] font-bold uppercase tracking-wider">Gross Seller Sales</span>
+              <div className="text-xl sm:text-2xl font-black text-stone-900 mt-1">
+                ₹{vendors.reduce((s, v) => s + (v.totalSalesGross || 0), 0).toLocaleString('en-IN')}
+              </div>
+              <div className="text-[10px] text-emerald-600 font-bold mt-0.5">455+ Orders Fulfilled</div>
+            </div>
+
+            <div className="bg-white p-4 rounded-2xl border border-amber-300 bg-amber-50/30 shadow-2xs">
+              <span className="text-amber-800 text-[11px] font-bold uppercase tracking-wider flex items-center gap-1">
+                <span>✨ Your Platform Profit</span>
+              </span>
+              <div className="text-xl sm:text-2xl font-black text-[#78131e] mt-1">
+                ₹{vendors.reduce((s, v) => s + (v.platformCommissionEarned || 0), 0).toLocaleString('en-IN')}
+              </div>
+              <div className="text-[10px] text-amber-900 font-semibold mt-0.5">Avg 21.5% Commission Margin</div>
+            </div>
+
+            <div className="bg-white p-4 rounded-2xl border border-stone-200 shadow-2xs">
+              <span className="text-stone-500 text-[11px] font-bold uppercase tracking-wider">Pending Seller Payouts</span>
+              <div className="text-xl sm:text-2xl font-black text-stone-800 mt-1">
+                ₹{vendors.reduce((s, v) => s + (v.pendingVendorPayout || 0), 0).toLocaleString('en-IN')}
+              </div>
+              <div className="text-[10px] text-stone-400 mt-0.5">Direct NEFT / UPI Transfers</div>
+            </div>
+          </div>
+
+          {/* Registered Sellers Table */}
+          <div className="bg-white rounded-2xl border border-stone-200 shadow-xs overflow-hidden">
+            <div className="p-4 border-b border-stone-200 flex items-center justify-between">
+              <div>
+                <h4 className="font-bold text-stone-900 text-sm">Registered Marketplace Vendors</h4>
+                <p className="text-xs text-stone-500 mt-0.5">
+                  Shiprocket pickups are scheduled directly from each seller&apos;s registered address.
+                </p>
+              </div>
+              <span className="text-xs font-mono bg-stone-100 text-stone-700 px-2.5 py-1 rounded-lg">
+                Multi-Vendor Pincode Engine
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-stone-50 border-b border-stone-200 text-stone-600 font-bold uppercase text-[10px]">
+                  <tr>
+                    <th className="py-3 px-4">Seller &amp; Shop Name</th>
+                    <th className="py-3 px-4">Contact &amp; Phone</th>
+                    <th className="py-3 px-4">Pickup Address &amp; Pincode</th>
+                    <th className="py-3 px-4">Your Commission</th>
+                    <th className="py-3 px-4">Orders Done</th>
+                    <th className="py-3 px-4">Your Profit</th>
+                    <th className="py-3 px-4">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-stone-100">
+                  {vendors.map((vendor) => (
+                    <tr key={vendor._id} className="hover:bg-stone-50/80 transition">
+                      <td className="py-3 px-4">
+                        <div className="font-bold text-stone-900">{vendor.shopName}</div>
+                        <span className="inline-block mt-0.5 text-[9px] font-bold px-2 py-0.2 rounded-full bg-amber-50 text-amber-800 border border-amber-200 uppercase">
+                          {vendor.category}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="font-medium text-stone-800">{vendor.contactPerson}</div>
+                        <div className="text-stone-500 text-[11px]">📞 {vendor.phone}</div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="text-stone-700 max-w-xs truncate">{vendor.pickupAddress?.street}</div>
+                        <div className="text-stone-500 font-mono font-bold text-[11px]">
+                          {vendor.pickupAddress?.city}, {vendor.pickupAddress?.state} - {vendor.pickupAddress?.pincode}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 font-black text-xs">
+                          {vendor.commissionRate}%
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 font-bold text-stone-800">
+                        {vendor.totalOrdersFulfilled || 0}
+                      </td>
+                      <td className="py-3 px-4 font-black text-[#78131e]">
+                        ₹{(vendor.platformCommissionEarned || 0).toLocaleString('en-IN')}
+                      </td>
+                      <td className="py-3 px-4">
+                        <button
+                          onClick={() => handleDispatchCourier(orders[0], vendor)}
+                          className="px-2.5 py-1 bg-stone-900 hover:bg-stone-800 text-white rounded-lg font-bold text-[11px] transition cursor-pointer"
+                        >
+                          Dispatch Pickup
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: ADD NEW MARKETPLACE SELLER (ZERO GODOWN ONBOARDING)                */}
+      {/* ========================================================================= */}
+      {isAddVendorOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-stone-200 space-y-4 my-8">
+            <div className="flex items-center justify-between border-b pb-3">
+              <div>
+                <h3 className="font-black text-lg text-stone-900 flex items-center space-x-2">
+                  <Building className="w-5 h-5 text-amber-600" />
+                  <span>Onboard Marketplace Seller</span>
+                </h3>
+                <p className="text-xs text-stone-500">
+                  Seller ships directly from their shop. You set your profit commission rate.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAddVendorOpen(false)}
+                className="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-600 font-bold flex items-center justify-center cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleAddNewVendor} className="space-y-3.5 text-xs">
+              <div>
+                <label className="font-bold text-stone-700 block mb-1">Seller Shop / Brand Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Varanasi Pure Rudraksha Seva"
+                  value={newVendorData.shopName}
+                  onChange={(e) => setNewVendorData({ ...newVendorData, shopName: e.target.value })}
+                  className="w-full border border-stone-300 rounded-xl p-2.5 text-xs focus:border-[#78131e] font-medium outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-stone-700 block mb-1">Contact Person Name *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Pt. Rakesh Shastri"
+                    value={newVendorData.contactPerson}
+                    onChange={(e) => setNewVendorData({ ...newVendorData, contactPerson: e.target.value })}
+                    className="w-full border border-stone-300 rounded-xl p-2.5 text-xs focus:border-[#78131e] font-medium outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="font-bold text-stone-700 block mb-1">Mobile Phone *</label>
+                  <input
+                    type="tel"
+                    required
+                    placeholder="e.g. 9876543210"
+                    value={newVendorData.phone}
+                    onChange={(e) => setNewVendorData({ ...newVendorData, phone: e.target.value })}
+                    className="w-full border border-stone-300 rounded-xl p-2.5 text-xs focus:border-[#78131e] font-medium outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-stone-700 block mb-1">Category</label>
+                  <select
+                    value={newVendorData.category}
+                    onChange={(e) => setNewVendorData({ ...newVendorData, category: e.target.value })}
+                    className="w-full border border-stone-300 rounded-xl p-2.5 text-xs font-medium outline-none"
+                  >
+                    <option value="pooja-kits">Pooja Kits &amp; Samagri</option>
+                    <option value="rudraksha">Certified Rudraksha</option>
+                    <option value="yantras-idols">Energized Yantras &amp; Idols</option>
+                    <option value="prasadam">Temple Prasadam</option>
+                    <option value="all-devotional">All Devotional</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="font-bold text-stone-700 block mb-1">
+                    Your Commission % <span className="text-emerald-700 font-bold">(Your Profit)</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="80"
+                    required
+                    value={newVendorData.commissionRate}
+                    onChange={(e) => setNewVendorData({ ...newVendorData, commissionRate: e.target.value })}
+                    className="w-full border border-stone-300 rounded-xl p-2.5 text-xs font-bold text-[#78131e] outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Pickup Address */}
+              <div className="bg-stone-50 p-3 rounded-xl border border-stone-200 space-y-2">
+                <span className="font-bold text-stone-800 text-[11px] uppercase tracking-wider block">
+                  📍 Seller Pickup Address (Where Courier will pick up)
+                </span>
+                <input
+                  type="text"
+                  required
+                  placeholder="Street / Shop No / Building *"
+                  value={newVendorData.street}
+                  onChange={(e) => setNewVendorData({ ...newVendorData, street: e.target.value })}
+                  className="w-full border border-stone-300 rounded-lg p-2 text-xs bg-white outline-none"
+                />
+                <div className="grid grid-cols-3 gap-2">
+                  <input
+                    type="text"
+                    required
+                    placeholder="City *"
+                    value={newVendorData.city}
+                    onChange={(e) => setNewVendorData({ ...newVendorData, city: e.target.value })}
+                    className="border border-stone-300 rounded-lg p-2 text-xs bg-white outline-none"
+                  />
+                  <input
+                    type="text"
+                    required
+                    placeholder="State *"
+                    value={newVendorData.state}
+                    onChange={(e) => setNewVendorData({ ...newVendorData, state: e.target.value })}
+                    className="border border-stone-300 rounded-lg p-2 text-xs bg-white outline-none"
+                  />
+                  <input
+                    type="text"
+                    required
+                    placeholder="Pincode *"
+                    value={newVendorData.pincode}
+                    onChange={(e) => setNewVendorData({ ...newVendorData, pincode: e.target.value })}
+                    className="border border-stone-300 rounded-lg p-2 text-xs bg-white outline-none font-bold"
+                  />
+                </div>
+              </div>
+
+              {/* Bank details for payouts */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-stone-700 block mb-1">Seller Bank A/C No</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 50100481920"
+                    value={newVendorData.accountNumber}
+                    onChange={(e) => setNewVendorData({ ...newVendorData, accountNumber: e.target.value })}
+                    className="w-full border border-stone-300 rounded-xl p-2.5 text-xs outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="font-bold text-stone-700 block mb-1">Seller UPI ID</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. seller@okaxis"
+                    value={newVendorData.upiId}
+                    onChange={(e) => setNewVendorData({ ...newVendorData, upiId: e.target.value })}
+                    className="w-full border border-stone-300 rounded-xl p-2.5 text-xs outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2 flex items-center justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddVendorOpen(false)}
+                  className="px-4 py-2 rounded-xl border border-stone-300 text-stone-700 font-bold hover:bg-stone-100 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-[#78131e] hover:bg-[#600e17] text-white font-bold shadow transition cursor-pointer"
+                >
+                  Save &amp; Connect Shiprocket
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: LIVE SHIPROCKET DISPATCH RESULT DIALOG                              */}
+      {/* ========================================================================= */}
+      {dispatchResultModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-stone-200 space-y-4 animate-in zoom-in-95">
+            <div className="text-center space-y-2">
+              <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+                <Truck className="w-8 h-8" />
+              </div>
+              <h3 className="font-black text-lg text-stone-900">
+                Courier Pickup Scheduled!
+              </h3>
+              <p className="text-xs text-stone-500">
+                Shiprocket has assigned <span className="font-bold text-stone-900">{dispatchResultModal.shipment?.courierName}</span> to pick up directly from the seller shop.
+              </p>
+            </div>
+
+            <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200 space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span className="text-stone-500">Order Number:</span>
+                <span className="font-mono font-bold text-stone-900">{dispatchResultModal.shipment?.orderId}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-stone-500">AWB Tracking Code:</span>
+                <span className="font-mono font-bold text-emerald-700">{dispatchResultModal.shipment?.awbCode}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-stone-500">Pickup Location:</span>
+                <span className="font-medium text-stone-800">{dispatchResultModal.shipment?.pickupScheduledFrom} ({dispatchResultModal.shipment?.pickupPincode})</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-stone-500">Estimated Delivery:</span>
+                <span className="font-bold text-stone-800">{dispatchResultModal.shipment?.estimatedDeliveryDays}</span>
+              </div>
+              <div className="flex justify-between border-t border-stone-200 pt-2 text-[#78131e] font-bold">
+                <span>Your Commission Earned:</span>
+                <span>₹{dispatchResultModal.commissionEarned}</span>
+              </div>
+            </div>
+
+            <div className="space-y-2 pt-1">
+              <a
+                href={dispatchResultModal.shipment?.trackingUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="w-full py-2.5 bg-stone-900 hover:bg-stone-800 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+              >
+                <span>Live Shiprocket Tracking</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+
+              <button
+                type="button"
+                onClick={() => setDispatchResultModal(null)}
+                className="w-full py-2 text-stone-600 hover:text-stone-900 text-xs font-semibold cursor-pointer"
+              >
+                Close Dialog
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
       {/* MODAL: ADD NEW PRODUCT WITH QUANTITY & SKU                                */}
+      {/* ========================================================================= */}
       {/* ========================================================================= */}
       {isAddProductOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
