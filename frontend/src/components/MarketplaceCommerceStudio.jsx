@@ -1260,9 +1260,29 @@ export default function MarketplaceCommerceStudio({
                         </div>
                       </td>
                       <td className="py-3 px-4">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 font-black text-xs">
-                          {vendor.commissionRate}%
-                        </span>
+                        <button
+                          onClick={async () => {
+                            const newRate = prompt(`Update platform commission % for ${vendor.shopName}:`, vendor.commissionRate);
+                            if (newRate !== null && !isNaN(newRate)) {
+                              try {
+                                await fetch(`http://localhost:5000/api/vendors/${vendor._id}`, {
+                                  method: 'PUT',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ commissionRate: Number(newRate) })
+                                });
+                                setVendors(prev => prev.map(v => v._id === vendor._id ? { ...v, commissionRate: Number(newRate) } : v));
+                                if (showToast) showToast('success', `Commission for ${vendor.shopName} updated to ${newRate}%`);
+                              } catch (err) {
+                                alert('Failed to update: ' + err.message);
+                              }
+                            }
+                          }}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-black text-xs cursor-pointer transition"
+                          title="Click to edit commission %"
+                        >
+                          <span>{vendor.commissionRate}%</span>
+                          <span className="text-[10px] text-emerald-600 font-normal">✎</span>
+                        </button>
                       </td>
                       <td className="py-3 px-4 font-bold text-stone-800">
                         {vendor.totalOrdersFulfilled || 0}
@@ -1270,13 +1290,23 @@ export default function MarketplaceCommerceStudio({
                       <td className="py-3 px-4 font-black text-[#78131e]">
                         ₹{(vendor.platformCommissionEarned || 0).toLocaleString('en-IN')}
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-4 space-y-1">
                         <button
                           onClick={() => handleDispatchCourier(orders[0], vendor)}
-                          className="px-2.5 py-1 bg-stone-900 hover:bg-stone-800 text-white rounded-lg font-bold text-[11px] transition cursor-pointer"
+                          className="w-full px-2.5 py-1 bg-stone-900 hover:bg-stone-800 text-white rounded-lg font-bold text-[11px] transition cursor-pointer flex items-center justify-center gap-1"
                         >
-                          Dispatch Pickup
+                          <Truck className="w-3 h-3 text-amber-300" />
+                          <span>Dispatch</span>
                         </button>
+
+                        <a
+                          href={`https://wa.me/91${vendor.phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Namaskaram ${vendor.contactPerson} Ji, this is Sri Astadasapeetam Seller Desk regarding order fulfillment for ${vendor.shopName}.`)}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="w-full px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px] transition cursor-pointer flex items-center justify-center gap-1"
+                        >
+                          <span>💬 WhatsApp</span>
+                        </a>
                       </td>
                     </tr>
                   ))}
