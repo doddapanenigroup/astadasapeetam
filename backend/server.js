@@ -21,6 +21,7 @@ const festivalCalendarRoutes = require('./src/routes/festivalCalendarRoutes');
 const settingRoutes = require('./src/routes/settingRoutes');
 const publicRoutes = require('./src/routes/publicRoutes');
 const vendorRoutes = require('./src/routes/vendorRoutes');
+const orderRoutes = require('./src/routes/orderRoutes');
 const errorHandler = require('./src/middleware/errorHandler');
 
 // Models for auto-seeding
@@ -82,6 +83,7 @@ app.use('/api/posts', postRoutes);
 app.use('/api/videos', videoRoutes);
 app.use('/api/festival-calendar', festivalCalendarRoutes);
 app.use('/api/settings', settingRoutes);
+app.use('/api/orders', orderRoutes);
 app.use('/api', vendorRoutes);
 
 // Custom Error Handler

@@ -124,12 +124,14 @@ function AccountContent() {
     }
   }, [searchParams]);
 
-  // Load devotee details and orders from localStorage
+  // Load devotee details and orders from localStorage & backend MongoDB
   useEffect(() => {
+    let currentPhone = '+91 86398 61707';
     try {
       const storedUser = localStorage.getItem('astada_user');
       if (storedUser) {
         const parsed = JSON.parse(storedUser);
+        if (parsed.phone) currentPhone = parsed.phone;
         setDevotee(prev => ({
           ...prev,
           name: parsed.name || prev.name,
@@ -141,16 +143,59 @@ function AccountContent() {
       }
 
       const storedOrders = localStorage.getItem('astada_devotee_orders');
-      if (storedOrders) {
-        const parsedOrders = JSON.parse(storedOrders);
-        if (parsedOrders.length > 0) {
-          setOrders([...parsedOrders, ...DEFAULT_DEVOTEE_ORDERS]);
-          setSelectedOrder(parsedOrders[0]);
-          return;
-        }
-      }
-      setOrders(DEFAULT_DEVOTEE_ORDERS);
-      setSelectedOrder(DEFAULT_DEVOTEE_ORDERS[0]);
+      const localParsed = storedOrders ? JSON.parse(storedOrders) : [];
+
+      // Fetch live MongoDB orders for this devotee's phone
+      fetch(`http://localhost:5000/api/orders/user/${encodeURIComponent(currentPhone)}`)
+        .then(res => res.json())
+        .then(result => {
+          if (result.success && result.data && result.data.length > 0) {
+            const remoteOrders = result.data.map(o => ({
+              orderNumber: o.orderNumber,
+              createdAt: o.createdAt,
+              status: o.delivery?.status === 'DELIVERED' ? 'delivered' : 'in_transit',
+              awbNumber: o.delivery?.awbTrackingNumber || 'SR-DEL-98421048',
+              courierName: o.delivery?.courierPartner || 'Delhivery Surface (Shiprocket)',
+              currentLocation: 'In Transit via Sorting Hub',
+              estimatedDelivery: o.delivery?.estimatedDelivery || '3 to 5 business days',
+              paymentMethod: o.payment?.method || 'upi',
+              totalAmount: o.totalAmount,
+              discountAmount: o.discountAmount || 0,
+              finalPayable: o.finalPayable,
+              items: o.items || [],
+              customer: {
+                name: o.customer?.name,
+                phone: o.customer?.phone,
+                address: `${o.customer?.address?.street || ''}, ${o.customer?.address?.city || ''}, ${o.customer?.address?.state || ''} - ${o.customer?.address?.pincode || ''}`
+              }
+            }));
+
+            // Merge avoiding duplicates
+            const combined = [...remoteOrders];
+            localParsed.forEach(lo => {
+              if (!combined.some(ro => ro.orderNumber === lo.orderNumber)) {
+                combined.push(lo);
+              }
+            });
+            setOrders([...combined, ...DEFAULT_DEVOTEE_ORDERS]);
+            setSelectedOrder(combined[0] || DEFAULT_DEVOTEE_ORDERS[0]);
+          } else if (localParsed.length > 0) {
+            setOrders([...localParsed, ...DEFAULT_DEVOTEE_ORDERS]);
+            setSelectedOrder(localParsed[0]);
+          } else {
+            setOrders(DEFAULT_DEVOTEE_ORDERS);
+            setSelectedOrder(DEFAULT_DEVOTEE_ORDERS[0]);
+          }
+        })
+        .catch(() => {
+          if (localParsed.length > 0) {
+            setOrders([...localParsed, ...DEFAULT_DEVOTEE_ORDERS]);
+            setSelectedOrder(localParsed[0]);
+          } else {
+            setOrders(DEFAULT_DEVOTEE_ORDERS);
+            setSelectedOrder(DEFAULT_DEVOTEE_ORDERS[0]);
+          }
+        });
     } catch {
       setOrders(DEFAULT_DEVOTEE_ORDERS);
       setSelectedOrder(DEFAULT_DEVOTEE_ORDERS[0]);
